@@ -1,0 +1,52 @@
+<?php
+
+$emp_id = [usr_employee_id];
+
+// 1. Verifica se existe QUALQUER tarefa deste mecânico em progresso
+sc_lookup(ds_ativa, "SELECT assignment_id,timesheet_id FROM mro_timesheet 
+                    WHERE employee_id = $emp_id 
+                    AND status = 'IN_PROGRESS' LIMIT 1");
+
+if (!empty({ds_ativa})) {
+    $tarefa_aberta_id = {ds_ativa[0][0]};
+    $id_ts = {ds_ativa[0][1]};
+    
+    // 2. Avisa o usuário e redireciona para o Modal de Pausa da tarefa que está aberta
+    sc_ajax_message("Você já possui a tarefa ID $tarefa_aberta_id em andamento. É obrigatório pausá-la antes de iniciar uma nova.", "Conflito de Atividades", "timeout=2000");
+    
+    // Abre o controle de pausa passando o ID da tarefa que precisa ser interrompida
+    sc_redir('control_pause_task', glo_timesheet_id=$id_ts;glo_assignment_id=$tarefa_aberta_id;glo_assignment_id_sel={assignment_id}, 'modal','', '600', '500');
+
+} else {
+    // Cria a sessão de trabalho
+    /*
+	sc_exec_sql("INSERT INTO mro_timesheet (assignment_id, employee_id, appointment_date, start_time, status) 
+                 VALUES ({assignment_id}, [usr_employee_id], CURRENT_DATE, NOW(), 'IN_PROGRESS')");
+	*/
+	$sql_ts = "INSERT INTO mro_timesheet (assignment_id, employee_id, appointment_date, start_time, status) 
+                 VALUES ({assignment_id}, [usr_employee_id], CURRENT_DATE, NOW(), 'IN_PROGRESS')
+				 RETURNING timesheet_id";
+	
+	sc_lookup(rs_novo_id, $sql_ts);
+	// 2. Captura o ID retornado pelo banco
+	$id_ts = 0;
+	if (!empty({rs_novo_id[0][0]})) {
+		$id_ts = {rs_novo_id[0][0]};
+	}
+
+    //$id_ts = sc_last_insert_id();
+    [glo_timesheet_id] = $id_ts; // Guarda na sessão
+
+    // Grava auditoria
+    sc_exec_sql("INSERT INTO mro_assignment_events (assignment_id, timesheet_id, event_type, performed_by_id) 
+                 VALUES ({assignment_id}, $id_ts, 'START', [usr_employee_id])");
+	
+    // Atualiza a tela
+    {status_code} = 'IN_PROGRESS';
+	sc_ajax_javascript('nm_atualiza', array('alterar'));
+
+	// A MÁGICA: Executa o método JavaScript que criamos no Passo 1
+	sc_ajax_javascript('iniciar_relogio_mro');
+	
+    sc_ajax_message("Cronômetro Iniciado!", "Sucesso", "timeout=2000");
+}

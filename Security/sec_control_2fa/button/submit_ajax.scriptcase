@@ -1,0 +1,64 @@
+<?php
+
+$sql = "SELECT mfa FROM public.sec_users WHERE login = ".  sc_sql_injection([usr_login]);
+sc_lookup(rs, $sql);
+$secret = explode('@@',{rs[0][0]});
+
+if([sett_enable_2fa_api_type] != 'auth' && [sett_enable_2fa_expiration_time] != 0){
+    $diff = sc_time_diff(date("YmdHis"), "yyyymmddhhiiss", end($secret), "yyyymmddhhiiss"); 
+
+    $diff_seconds = $diff[0]*60*60 + $diff[1]*60 + $diff[2];
+
+    if($diff_seconds > [sett_enable_2fa_expiration_time]){
+        sc_alert({lang_sec_2fa_error_msg_expired}, array(
+                    'title' => {lang_sec_2fa_error_title},
+                    'type' => 'error',
+                    'timer' => '10000',
+                    'showConfirmButton' => false,
+                    'position' => 'center',
+                    'toast' => true
+                    )
+              );
+        return;
+    }
+}
+
+switch([sett_enable_2fa_api_type]){
+
+    case 'auth':
+
+        $retorno = sc_check_google_authenticator({code}, $secret[1]);
+        break;
+
+    case 'email':
+
+        $retorno = {code} == $secret[1];
+        break;
+
+    case 'sms':
+        $retorno = {code} == $secret[2];
+        break;
+}
+
+if($retorno){
+    if( [sett_mfa_last_updated] != 0 ){
+        sc_exec_sql("UPDATE public.sec_users SET mfa_last_updated = ". sc_sql_injection(date("Y-m-d H:i:s")) ." WHERE login = ". sc_sql_injection([usr_login]) );
+        
+        
+        $mfa_key = ($_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? '').($_SERVER['REMOTE_ADDR'] ?? '' ). ($_SERVER['HTTP_HOST'] ?? '') . ($_SERVER['SERVER_NAME'] ?? '') . ($_SERVER['HTTP_USER_AGENT'] ?? '');
+        $mfa_key = '_'.hash("md5",$mfa_key);
+        setcookie($mfa_key, sc_encode(date("Y-m-d H:i:s")),time()+60*60*24* [sett_mfa_last_updated], '/');
+    }
+    remember_me_validate();
+    sc_validate_success();
+} else {
+    sc_alert({lang_sec_2fa_error_msg}, array(
+                'title' => {lang_sec_2fa_error_title},
+                'type' => 'error',
+                'timer' => '10000',
+                'showConfirmButton' => false,
+                'position' => 'center',
+                'toast' => true
+                )
+          );
+}

@@ -1,0 +1,16 @@
+<?php
+
+switch([sett_enable_2fa_api_type]){
+    
+    case 'auth':
+        sc_label(help_description) = {lang_sec_2fa_desc_ga};
+        break;
+        
+    case 'email':
+        sc_label(help_description) = {lang_sec_2fa_control_desc_email};
+        break;
+   
+    case 'sms':
+        sc_label(help_description) = {lang_sec_2fa_control_desc_sms};
+        break;
+}

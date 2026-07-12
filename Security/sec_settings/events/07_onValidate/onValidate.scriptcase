@@ -1,0 +1,159 @@
+<?php
+
+$sql = "UPDATE public.sec_settings SET set_value=";
+
+sc_exec_sql($sql . sc_sql_injection({session_expire}) 
+    . " WHERE set_name=". sc_sql_injection('session_expire') );
+
+sc_exec_sql($sql . sc_sql_injection({remember_me}) 
+    . " WHERE set_name=". sc_sql_injection('remember_me') );
+
+sc_exec_sql($sql . sc_sql_injection({cookie_expiration_time}) 
+    . " WHERE set_name=". sc_sql_injection('cookie_expiration_time') );
+
+sc_exec_sql($sql . sc_sql_injection({retrieve_password}) 
+    . " WHERE set_name=". sc_sql_injection('retrieve_password') );
+
+sc_exec_sql($sql . sc_sql_injection({recover_pswd}) 
+    . " WHERE set_name=". sc_sql_injection('recover_pswd') );
+
+sc_exec_sql($sql . sc_sql_injection({new_users}) 
+    . " WHERE set_name=". sc_sql_injection('new_users') );
+
+sc_exec_sql($sql . sc_sql_injection({brute_force}) 
+    . " WHERE set_name=". sc_sql_injection('brute_force') );
+
+sc_exec_sql($sql . sc_sql_injection({brute_force_time_block}) 
+    . " WHERE set_name=". sc_sql_injection('brute_force_time_block') );
+
+sc_exec_sql($sql . sc_sql_injection({brute_force_attempts}) 
+    . " WHERE set_name=". sc_sql_injection('brute_force_attempts') );
+
+sc_exec_sql($sql . sc_sql_injection({enable_2fa}) 
+    . " WHERE set_name=". sc_sql_injection('enable_2fa') );
+
+sc_exec_sql($sql . sc_sql_injection({enable_2fa_expiration_time}) 
+    . " WHERE set_name=". sc_sql_injection('enable_2fa_expiration_time') );
+
+sc_exec_sql($sql . sc_sql_injection({enable_2fa_mode}) 
+    . " WHERE set_name=". sc_sql_injection('enable_2fa_mode') );
+
+sc_exec_sql($sql . sc_sql_injection({mfa_last_updated}) 
+    . " WHERE set_name=". sc_sql_injection('mfa_last_updated') );
+
+if(strpos({enable_2fa_api}, "css_api_obj_fld") !== false){
+    {enable_2fa_api} = '';
+}
+
+sc_exec_sql($sql . sc_sql_injection({enable_2fa_api}) 
+    . " WHERE set_name=". sc_sql_injection('enable_2fa_api') );
+
+sc_exec_sql($sql . sc_sql_injection({enable_2fa_api_type}) 
+    . " WHERE set_name=". sc_sql_injection('enable_2fa_api_type') );
+
+sc_exec_sql($sql . sc_sql_injection({captcha}) 
+    . " WHERE set_name=". sc_sql_injection('captcha') );
+
+sc_exec_sql($sql . sc_sql_injection({theme}) 
+    . " WHERE set_name=". sc_sql_injection('theme') );
+
+sc_exec_sql($sql . sc_sql_injection({req_email_act}) 
+    . " WHERE set_name=". sc_sql_injection('req_email_act') );
+
+sc_exec_sql($sql . sc_sql_injection({send_email_adm}) 
+    . " WHERE set_name=". sc_sql_injection('send_email_adm') );
+
+sc_exec_sql($sql . sc_sql_injection({language}) 
+    . " WHERE set_name=". sc_sql_injection('language') );
+
+if(strpos({smtp_api}, "css_api_obj_fld") !== false){
+    {smtp_api} = '';
+}
+
+sc_exec_sql($sql . sc_sql_injection({smtp_api}) 
+    . " WHERE set_name=". sc_sql_injection('smtp_api') );
+
+sc_exec_sql($sql . sc_sql_injection({smtp_server}) 
+    . " WHERE set_name=". sc_sql_injection('smtp_server') );
+
+sc_exec_sql($sql . sc_sql_injection({smtp_port}) 
+    . " WHERE set_name=". sc_sql_injection('smtp_port') );
+
+sc_exec_sql($sql . sc_sql_injection({smtp_security}) 
+    . " WHERE set_name=". sc_sql_injection('smtp_security') );
+
+sc_exec_sql($sql . sc_sql_injection({smtp_user}) 
+    . " WHERE set_name=". sc_sql_injection('smtp_user') );
+
+sc_exec_sql($sql . sc_sql_injection({smtp_pass}) 
+    . " WHERE set_name=". sc_sql_injection('smtp_pass') );
+
+sc_exec_sql($sql . sc_sql_injection({smtp_from_email}) 
+    . " WHERE set_name=". sc_sql_injection('smtp_from_email') );
+
+sc_exec_sql($sql . sc_sql_injection({smtp_from_name}) 
+    . " WHERE set_name=". sc_sql_injection('smtp_from_name') );
+
+sc_exec_sql($sql . sc_sql_injection({login_mode}) 
+    . " WHERE set_name=". sc_sql_injection('login_mode') );
+
+sc_exec_sql($sql . sc_sql_injection({pswd_last_updated}) 
+    . " WHERE set_name=". sc_sql_injection('pswd_last_updated') );
+
+sc_exec_sql($sql . sc_sql_injection({password_strength}) 
+    . " WHERE set_name=". sc_sql_injection('password_strength') );
+
+sc_exec_sql($sql . sc_sql_injection({password_min}) 
+    . " WHERE set_name=". sc_sql_injection('password_min') );
+
+
+
+
+sc_exec_sql($sql . sc_sql_injection({auth_sn_position}) 
+    . " WHERE set_name=". sc_sql_injection('auth_sn_position') );
+
+sc_exec_sql($sql . sc_sql_injection({auth_sn_fb}) 
+    . " WHERE set_name=". sc_sql_injection('auth_sn_fb') );
+
+sc_exec_sql($sql . sc_sql_injection({auth_sn_fb_app_id}) 
+    . " WHERE set_name=". sc_sql_injection('auth_sn_fb_app_id') );
+
+sc_exec_sql($sql . sc_sql_injection({auth_sn_fb_secret}) 
+    . " WHERE set_name=". sc_sql_injection('auth_sn_fb_secret') );
+
+sc_exec_sql($sql . sc_sql_injection({auth_sn_x}) 
+    . " WHERE set_name=". sc_sql_injection('auth_sn_x') );
+
+sc_exec_sql($sql . sc_sql_injection({auth_sn_x_key}) 
+    . " WHERE set_name=". sc_sql_injection('auth_sn_x_key') );
+
+sc_exec_sql($sql . sc_sql_injection({auth_sn_x_secret}) 
+    . " WHERE set_name=". sc_sql_injection('auth_sn_x_secret') );
+
+sc_exec_sql($sql . sc_sql_injection({auth_sn_google}) 
+    . " WHERE set_name=". sc_sql_injection('auth_sn_google') );
+
+sc_exec_sql($sql . sc_sql_injection({auth_sn_google_client_id}) 
+    . " WHERE set_name=". sc_sql_injection('auth_sn_google_client_id') );
+
+sc_exec_sql($sql . sc_sql_injection({auth_sn_google_secret}) 
+    . " WHERE set_name=". sc_sql_injection('auth_sn_google_secret') );
+
+
+
+sc_exec_sql($sql . sc_sql_injection({group_default}) 
+    . " WHERE set_name=". sc_sql_injection('group_default') );
+
+sc_exec_sql($sql . sc_sql_injection({group_administrator}) 
+    . " WHERE set_name=". sc_sql_injection('group_administrator') );
+
+sc_alert({lang_sec_set_saved}, array(
+                'title' => '',
+                'type' => 'success',
+                'timer' => '10000',
+                'showConfirmButton' => false,
+                'position' => 'center',
+                'toast' => true
+                )
+          );
+get_settings();

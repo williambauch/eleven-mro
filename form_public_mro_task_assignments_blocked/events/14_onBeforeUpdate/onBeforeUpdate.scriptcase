@@ -1,0 +1,20 @@
+<?php
+
+// Lógica para Reatribuição (Troca de mecânico)
+
+/*
+ * Esta macro executa o comando SELECT informado no segundo parâmetro e retorna os dados em uma variável.
+ */
+sc_lookup(rs, "select executed_by_employee_id from mro_task_assignments where assignment_id={assignment_id}");
+
+{sc_field_old_executed_by_employee_id} = {rs[0][0]};
+
+if ({executed_by_employee_id} !== {sc_field_old_executed_by_employee_id} && {status_code} == 'ASSIGNED') {
+    
+    $sql_re = "INSERT INTO mro_assignment_events 
+               (assignment_id, event_type, performed_by_id, old_employee_id, new_employee_id, description, user_agent)
+               VALUES 
+               ({assignment_id}, 'REASSIGNMENT', [usr_employee_id], {sc_field_old_executed_by_employee_id}, {executed_by_employee_id}, 'Troca de executor realizada.','[usr_login]')";
+    
+    sc_exec_sql($sql_re);
+}

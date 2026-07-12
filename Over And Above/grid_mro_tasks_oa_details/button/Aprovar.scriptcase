@@ -1,0 +1,14 @@
+<?php
+
+$arr=[i]; 	
+[total_chked][$arr]={task_code};	
+[i]++; 	
+
+$id = {task_id};
+$user = [usr_login]; // Variável global de login do Scriptcase
+
+// 1. Atualiza o status
+sc_exec_sql("UPDATE mro_tasks SET status_code = 'RELEASED' WHERE task_id = $id");
+
+// 2. Grava o Audit Log (Assinatura Digital)
+sc_exec_sql("INSERT INTO mro_nrc_approval_log (task_id, action_taken, user_login) VALUES ($id, 'APPROVED_BY_CLIENT', '$user')");

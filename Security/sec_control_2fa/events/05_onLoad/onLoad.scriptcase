@@ -1,0 +1,18 @@
+<?php
+
+if([sett_enable_2fa_api_type] != 'auth' && [sett_enable_2fa_expiration_time] != 0){
+    
+    $label = '<span id=counter_display>'.{lang_sec_2fa_counter} .' <span id=counter></span></span><span id=counter_expired>'.{lang_sec_2fa_counter_expired}.'</span>';
+sc_label(counter) = $label;
+    
+    $counter_time = [sett_enable_2fa_expiration_time] ?? 60;
+    echo "<script>
+       $(document).ready(function(){
+           var counterInterval;
+            counter(".$counter_time.");
+            $('#sc_resend_top').on('click', function(){
+                counter(".$counter_time.");
+            });
+        });
+</script>";
+}

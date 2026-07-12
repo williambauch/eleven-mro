@@ -1,0 +1,9 @@
+<?php
+
+if( {auth_sn_google} == 'Y' ){
+	sc_field_display({auth_sn_google_client_id}, on);
+	sc_field_display({auth_sn_google_secret}, on);
+}else{
+	sc_field_display({auth_sn_google_client_id}, off);
+	sc_field_display({auth_sn_google_secret}, off);
+}

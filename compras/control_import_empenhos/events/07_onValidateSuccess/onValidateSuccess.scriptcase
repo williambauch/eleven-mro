@@ -1,0 +1,268 @@
+<?php
+
+// ====================================================================
+// CONFIGURAÇÃO DO DEBUG
+// ====================================================================
+$MODO_DEBUG = true; // Mude para false quando for para produção
+
+// Força o PHP a exibir erros na tela caso algo grave aconteça (evita tela branca)
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+ini_set('memory_limit', '512M');
+set_time_limit(0);
+
+// 1. Limpa os buffers do Scriptcase para permitir a barra de progresso
+while (ob_get_level() > 0) { ob_end_flush(); }
+ob_implicit_flush(true);
+
+// 2. Prepara a Interface (Oculta o form, mostra a barra e cria o Console de Debug)
+echo "<script> 
+        if(document.getElementById('main_table_form')) { document.getElementById('main_table_form').style.display = 'none'; }
+        if(document.getElementById('hidden_bloco_0')) { document.getElementById('hidden_bloco_0').style.display = 'none'; }
+        if(document.getElementById('box_importacao')) { document.getElementById('box_importacao').style.display = 'block'; }
+      </script>";
+
+if ($MODO_DEBUG) {
+    echo "<div id='console_debug' style='width: 100%; max-width: 600px; margin: 20px auto; background: #2b2b2b; color: #00ff00; padding: 10px; font-family: monospace; font-size: 12px; height: 150px; overflow-y: scroll; border-radius: 5px;'>[SISTEMA] Iniciando Debug...<br></div>";
+}
+// O str_pad envia 4KB de espaços invisíveis para forçar o Chrome/Edge a desenhar o ecrã na hora!
+echo str_pad('', 4096); 
+flush();
+
+// Função auxiliar para imprimir no Console de Debug (Usando json_encode para não quebrar o JS com aspas)
+function printDebug($msg) {
+    global $MODO_DEBUG;
+    if ($MODO_DEBUG) {
+        $hora = date('H:i:s');
+        $msg_js = json_encode("[$hora] " . $msg); // json_encode blinda contra aspas duplas, simples e quebras de linha!
+        echo "<script>
+                var consoleDiv = document.getElementById('console_debug');
+                if(consoleDiv) {
+                    consoleDiv.innerHTML += $msg_js + '<br>';
+                    consoleDiv.scrollTop = consoleDiv.scrollHeight;
+                }
+              </script>";
+        echo str_pad('', 4096); // Força a renderização
+        flush();
+    }
+}
+
+printDebug("Verificando sessão do Projeto...");
+
+// Captura o ID do Projeto ativo na sessão
+$projeto_atual = (isset([var_project_id]) && !empty([var_project_id])) ? (int)[var_project_id] : 0;
+
+if ($projeto_atual == 0) {
+    echo "<script> document.getElementById('status_texto').innerHTML = '<span style=\"color:red;\">Erro Crítico: Projeto não identificado na sessão.</span>'; </script>";
+    printDebug("FALHA: Projeto atual é 0.");
+    return;
+}
+
+printDebug("Projeto atual identificado: ID $projeto_atual");
+
+// 3. Validação de Caminhos e Bibliotecas
+$caminho_arquivo = $this->Ini->path_doc . '/' . {arquivo_excel};
+$caminho_lib = $this->Ini->path_lib_php . "/../../libraries/sys/lib_excel/SimpleXLSX.php";
+
+printDebug("Procurando arquivo Excel em: $caminho_arquivo");
+if (!file_exists($caminho_arquivo)) {
+    echo "<script> document.getElementById('status_texto').innerHTML = '<span style=\"color:red;\">Erro: Arquivo Excel não encontrado no servidor.</span>'; </script>";
+    printDebug("FALHA: Arquivo Excel não existe no diretório de destino.");
+    return;
+}
+
+printDebug("Procurando biblioteca em: $caminho_lib");
+if (!file_exists($caminho_lib)) {
+    echo "<script> document.getElementById('status_texto').innerHTML = '<span style=\"color:red;\">Erro: Biblioteca SimpleXLSX não encontrada.</span>'; </script>";
+    printDebug("FALHA: Arquivo SimpleXLSX.php não encontrado.");
+    return;
+}
+
+require_once($caminho_lib);
+printDebug("Biblioteca carregada com sucesso.");
+
+// 4. Inicia a Leitura do Excel
+if ( $xlsx = \Shuchkin\SimpleXLSX::parse($caminho_arquivo) ) {
+    
+    $linhas = $xlsx->rows();
+    $total_linhas = count($linhas) - 1; // Desconta o cabeçalho (Linha 1)
+    
+    printDebug("Excel parseado. Total de linhas detectadas: $total_linhas");
+
+    if ($total_linhas <= 0) {
+        echo "<script> document.getElementById('status_texto').innerHTML = '<span style=\"color:red;\">O arquivo Excel está vazio.</span>'; </script>";
+        return;
+    }
+
+    $empenhos_processados = array();
+    $tarefas_alteradas = array();
+
+    for ($i = 1; $i <= $total_linhas; $i++) {
+        $linha = $linhas[$i];
+
+        // Mapeamento blindado com isset
+        $task_code       = isset($linha[0])  ? trim($linha[0])  : '';
+        $product_code    = isset($linha[9])  ? trim($linha[9])  : '';
+        $material_source = isset($linha[10]) ? strtoupper(trim($linha[10])) : '';
+        $part_number     = isset($linha[11]) ? trim($linha[11]) : '';
+        $description     = isset($linha[12]) ? trim($linha[12]) : '';
+        $planned_qty     = isset($linha[14]) ? (float)str_replace(',', '.', $linha[14]) : 0.00;
+        $committed_qty   = isset($linha[16]) ? (float)str_replace(',', '.', $linha[16]) : 0.00;
+        $stock_location  = isset($linha[18]) ? trim($linha[18]) : '';
+        $unit_cost       = isset($linha[33]) ? (float)str_replace(',', '.', $linha[33]) : 0.00;
+
+        if (empty($task_code) || empty($product_code)) { 
+            printDebug("Linha $i ignorada: Task Code ou Product Code vazios.");
+            continue; 
+        }
+
+        // ====================================================================
+        // SANITIZAÇÃO POSTGRESQL (Duplica a aspa simples em vez de usar a barra)
+        // Isso resolve o problema de produtos como: TAPE 100' ou TAPE 0.039"
+        // ====================================================================
+        $task_segura = str_replace("'", "''", $task_code);
+        $prod_seguro = str_replace("'", "''", $product_code);
+        $pn_seguro   = str_replace("'", "''", $part_number);
+        $desc_segura = str_replace("'", "''", $description);
+        $loc_seguro  = str_replace("'", "''", $stock_location);
+        
+        if ($material_source === 'CLIENTE') {
+            $unit_cost = 0.00;
+        }
+
+        $total_cost           = $planned_qty * $unit_cost;
+        $committed_total_cost = $committed_qty * $unit_cost;
+
+        // PASSO A: RESOLVE O 'TASK_CODE'
+        $sql_get_task = "SELECT task_id, is_nrc, task_type FROM mro_tasks WHERE task_code = '$task_segura' AND project_id = $projeto_atual";
+        sc_lookup(rs_task, $sql_get_task);
+
+        if (empty({rs_task})) { 
+            printDebug("Linha $i: Tarefa $task_code não encontrada neste projeto.");
+            continue; 
+        }
+        
+        $task_id = {rs_task[0][0]};
+        $eh_nrc  = ({rs_task[0][1]} == 't' || {rs_task[0][1]} == 'true' || {rs_task[0][1]} == 1 || {rs_task[0][2]} == 'NR') ? true : false;
+        $tarefas_alteradas[$task_id] = $eh_nrc;
+
+        // PASSO B: UPSERT DO MATERIAL MASTER
+        $sql_check_mat = "SELECT material_id FROM mro_materials WHERE product_code = '$prod_seguro' AND stock_location = '$loc_seguro'";
+        sc_lookup(rs_mat, $sql_check_mat);
+
+        if (empty({rs_mat})) {
+            $sql_ins_mat = "INSERT INTO mro_materials (product_code, part_number, description, unit_cost, stock_location) 
+                            VALUES ('$prod_seguro', '$pn_seguro', '$desc_segura', $unit_cost, '$loc_seguro')";
+            sc_exec_sql($sql_ins_mat);
+            
+            sc_lookup(rs_new, $sql_check_mat);
+            $material_id = {rs_new[0][0]};
+        } else {
+            $material_id = {rs_mat[0][0]};
+            $sql_upd_mat = "UPDATE mro_materials 
+                            SET part_number = '$pn_seguro', description = '$desc_segura', unit_cost = $unit_cost
+                            WHERE material_id = $material_id";
+            sc_exec_sql($sql_upd_mat);
+        }
+
+        // PASSO C: UPSERT DO EMPENHO
+        $sql_check_vinc = "SELECT task_material_id FROM mro_task_materials WHERE task_id = $task_id AND material_id = $material_id";
+        sc_lookup(rs_vinc, $sql_check_vinc);
+
+        if (empty({rs_vinc})) {
+            $sql_ins_empenho = "INSERT INTO mro_task_materials 
+                                (task_id, material_id, planned_qty, committed_qty, unit_cost, total_cost, committed_unit_cost, committed_total_cost, material_source, is_applied, applied_qty) 
+                                VALUES 
+                                ($task_id, $material_id, $planned_qty, $committed_qty, $unit_cost, $total_cost, $unit_cost, $committed_total_cost, '$material_source', false, 0.00)";
+            sc_exec_sql($sql_ins_empenho);
+            
+            sc_lookup(rs_vinc_new, $sql_check_vinc);
+            $task_material_id = {rs_vinc_new[0][0]};
+        } else {
+            $task_material_id = {rs_vinc[0][0]};
+            $sql_upd_empenho = "UPDATE mro_task_materials 
+                                SET planned_qty = $planned_qty, 
+                                    committed_qty = $committed_qty, 
+                                    unit_cost = $unit_cost, 
+                                    total_cost = $total_cost, 
+                                    committed_unit_cost = $unit_cost, 
+                                    committed_total_cost = $committed_total_cost,
+                                    material_source = '$material_source'
+                                WHERE task_material_id = $task_material_id";
+            sc_exec_sql($sql_upd_empenho);
+        }
+
+        $empenhos_processados[] = $task_material_id;
+
+        // FEEDBACK DA BARRA DE PROGRESSO
+        $porcentagem = round(($i / $total_linhas) * 100);
+        $msg_barra = json_encode("Empenhando: <b>" . htmlspecialchars($product_code) . "</b> ({$i}/{$total_linhas})...");
+        
+        echo "<script>
+                if(document.getElementById('barra_progresso')) {
+                    document.getElementById('barra_progresso').style.width = '{$porcentagem}%';
+                    document.getElementById('barra_progresso').innerHTML = '{$porcentagem}%';
+                    document.getElementById('status_texto').innerHTML = $msg_barra;
+                }
+              </script>";
+        echo str_pad('', 4096); 
+        flush(); 
+    }
+
+    printDebug("Processamento concluído. Iniciando limpeza de resíduos...");
+
+    // PASSO D: LIMPEZA INTELIGENTE
+    if (!empty($empenhos_processados)) {
+        $lista_ids_seguros = implode(',', $empenhos_processados);
+        $sql_clean_residues = "DELETE FROM mro_task_materials 
+                               WHERE task_id IN (SELECT task_id FROM mro_tasks WHERE project_id = $projeto_atual)
+                                 AND task_material_id NOT IN ($lista_ids_seguros)
+                                 AND (applied_qty = 0 OR applied_qty IS NULL)";
+        sc_exec_sql($sql_clean_residues);
+    }
+
+    // PASSO E: ATUALIZAR CUSTOS GERAIS
+    printDebug("Atualizando custos gerais e executando Motor de O&A...");
+    if (!empty($tarefas_alteradas)) {
+        echo "<script> document.getElementById('status_texto').innerHTML = 'Atualizando custos e avaliando quebras de O&A...'; </script>";
+        echo str_pad('', 4096); flush();
+        
+        foreach ($tarefas_alteradas as $id_da_tarefa => $eh_nrc) {
+            $sql_sum_mat = "SELECT COALESCE(SUM(total_cost), 0) FROM mro_task_materials 
+                            WHERE task_id = $id_da_tarefa AND material_source != 'CLIENTE'";
+            sc_lookup(rs_sum, $sql_sum_mat);
+            $novo_custo_mat = (float) {rs_sum[0][0]};
+            sc_exec_sql("UPDATE mro_tasks SET estimated_material_cost = $novo_custo_mat WHERE task_id = $id_da_tarefa");
+
+            if ($eh_nrc) {
+                $this->fn_calcular_oa_nrc($id_da_tarefa, $projeto_atual, false);
+            }
+        }
+    }
+
+    printDebug("Processo finalizado com sucesso!");
+
+    echo "<script>
+            if(document.getElementById('status_texto')) {
+                document.getElementById('status_texto').innerHTML = '<span style=\"color:#198754; font-weight:bold;\"><i class=\"fa-solid fa-check\"></i> Importação Concluída!</span>';
+            }
+          </script>";
+          
+    // Se o debug estiver ativo, não recarrega a página automaticamente para dar tempo de ler os logs
+    if (!$MODO_DEBUG) {
+        echo "<script>
+                setTimeout(function(){ 
+                    window.parent.tb_remove(); 
+                    window.parent.location.reload(); 
+                }, 2500);
+              </script>";
+    }
+
+} else {
+    $erro_excel = \Shuchkin\SimpleXLSX::parseError();
+    printDebug("ERRO NA BIBLIOTECA: $erro_excel");
+    $msg_erro = json_encode("<span style='color:red;'>Erro ao ler o arquivo XLSX: $erro_excel</span>");
+    echo "<script> document.getElementById('status_texto').innerHTML = $msg_erro; </script>";
+}

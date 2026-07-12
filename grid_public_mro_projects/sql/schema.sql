@@ -1,0 +1,12 @@
+SELECT
+    project_id,
+    p6_proj_id,
+    project_name,
+    aircraft_id,
+    project_status,
+    start_date,
+    end_date,
+    created_at,
+    updated_at
+FROM
+    "public".mro_projects

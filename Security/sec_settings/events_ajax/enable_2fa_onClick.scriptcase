@@ -1,0 +1,15 @@
+<?php
+
+if({enable_2fa} == 'Y'){
+    sc_field_display({enable_2fa_expiration_time}, "on");
+    sc_field_display({enable_2fa_mode}, "on");
+    sc_field_display({enable_2fa_api}, "on");
+    sc_field_display({enable_2fa_api_type}, "on");
+    sc_field_display({mfa_last_updated}, "on");
+}else{   
+    sc_field_display({enable_2fa_expiration_time}, "off");
+	sc_field_display({enable_2fa_mode}, "off");
+	sc_field_display({enable_2fa_api}, "off");
+	sc_field_display({enable_2fa_api_type}, "off");
+	sc_field_display({mfa_last_updated}, "off");
+}

@@ -1,0 +1,91 @@
+{
+  "nome": "sec_form_edit_users",
+  "tipo": "Form",
+  "nome_tabela": "public.sec_users",
+  "campos": [
+    {
+      "nome": "activation_code",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "active",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "confirm_pswd",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "email",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "login",
+      "tipo": "varchar",
+      "required": false,
+      "pk": true
+    },
+    {
+      "nome": "mfa",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "name",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "phone",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "picture",
+      "tipo": "bytea",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "priv_admin",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "pswd",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "pswd_last_updated",
+      "tipo": "timestamp",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "pswd_rules",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "role",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    }
+  ]
+}

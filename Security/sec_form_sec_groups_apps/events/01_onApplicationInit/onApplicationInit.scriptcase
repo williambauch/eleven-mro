@@ -1,0 +1,5 @@
+<?php
+
+$str_sql = "SELECT description FROM public.sec_groups WHERE group_id = ".sc_sql_injection( [group] );
+sc_lookup(rs, $str_sql);
+[group_desc] = {rs}[0][0];

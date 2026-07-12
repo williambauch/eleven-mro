@@ -1,0 +1,55 @@
+{
+  "nome": "form_public_mro_resources",
+  "tipo": "Form",
+  "nome_tabela": "\"public\".mro_resources",
+  "campos": [
+    {
+      "nome": "created_at",
+      "tipo": "datetime",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "full_name",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "is_active",
+      "tipo": "bool",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "p6_rsrc_id",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "resource_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": true
+    },
+    {
+      "nome": "resource_type",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "skill_code",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "updated_at",
+      "tipo": "datetime",
+      "required": false,
+      "pk": false
+    }
+  ]
+}

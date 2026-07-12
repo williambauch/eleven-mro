@@ -1,0 +1,448 @@
+<?php
+
+// ====================================================================
+// MOTOR DINÂMICO DE IMPORTAÇÃO P6 (ETL COMPLETO - POSTGRESQL E SCRIPTCASE)
+// ====================================================================
+
+// Força o PHP a cuspir o erro na tela (ajuda no debug)
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+ini_set('memory_limit', '512M');
+set_time_limit(0);
+
+// Força a inclusão física ignorando a macro do Scriptcase
+$caminho_lib = $this->Ini->path_lib_php . "/../../libraries/sys/lib_excel/SimpleXLS.php";
+
+if (!file_exists($caminho_lib)) {
+    sc_error_message("O arquivo da biblioteca não foi encontrado no servidor no caminho: $caminho_lib");
+    return;
+}
+require_once($caminho_lib);
+
+$caminho_arquivo = $this->Ini->path_doc . '/' . {arquivo_xlsx};
+$v_projeto_atual = [glo_project_id]; 
+
+// Trava de Segurança Crítica
+if (empty($v_projeto_atual)) {
+    sc_error_message("Operação abortada: O projeto atual não está definido na sessão.");
+    return;
+}
+
+$extensao = strtolower(pathinfo($caminho_arquivo, PATHINFO_EXTENSION));
+
+if ($extensao !== 'xls') {
+    sc_error_message("Formato de arquivo inválido. Por favor, envie um arquivo .xls");
+    return;
+}
+
+// Inicia o parser com o Namespace correto
+$excel = \Shuchkin\SimpleXLS::parse($caminho_arquivo);
+
+if ($excel) {
+    
+    // Variáveis de Auditoria e Auto-Cadastro
+    $resumo_abas  = []; 
+    $log_erros    = []; 
+    $zonas_unicas = []; 
+    
+    $sql_mestre = "SELECT map_id, sheet_index, target_table, description 
+                   FROM mro_import_sheets 
+                   WHERE is_active = true 
+                   ORDER BY execution_order ASC";
+    sc_lookup(rs_mestre, $sql_mestre);
+    
+    if (empty({rs_mestre})) {
+        sc_error_message("Nenhum mapeamento Mestre ativo encontrado.");
+        return;
+    }
+    
+    // ====================================================================
+    // FASE 1: O SUPER LOOP DAS ABAS (EXTRAÇÃO E TRANSFORMAÇÃO)
+    // ====================================================================
+    foreach ({rs_mestre} as $mestre) {
+        
+        $v_map_id       = $mestre[0];
+        $v_sheet_index  = $mestre[1];
+        $v_target_table = $mestre[2];
+        $v_nome_aba     = $mestre[3]; 
+        
+        $resumo_abas[$v_nome_aba] = 0;
+        
+        $linhas = $excel->rows($v_sheet_index);
+        if (!$linhas) { 
+            $log_erros[] = "Aba '$v_nome_aba' não encontrada no arquivo.";
+            continue; 
+        } 
+        
+        // CORREÇÃO P6: A linha com os nomes amigáveis é a 2ª linha (índice 1)
+        $cabecalhos = isset($linhas[1]) ? $linhas[1] : $linhas[0]; 
+        
+        sc_lookup(rs_detalhe, "SELECT excel_header_name, db_column_name, conversion_rule 
+                               FROM mro_import_columns 
+                               WHERE map_id = $v_map_id AND is_active = true");
+        if (empty({rs_detalhe})) { continue; }
+        
+        $colunas_dinamicas = [];
+        foreach ({rs_detalhe} as $detalhe) {
+            $nome_excel = $detalhe[0];
+            $indice_no_excel = array_search($nome_excel, $cabecalhos); 
+            if ($indice_no_excel !== false) {
+                $colunas_dinamicas[] = ['idx' => $indice_no_excel, 'db_field' => $detalhe[1], 'rule' => $detalhe[2]];
+            } else {
+                $log_erros[] = "Aviso Aba '$v_nome_aba': Coluna mapeada '$nome_excel' não encontrada no arquivo.";
+            }
+        }
+        
+        // CORREÇÃO P6: Começa na 3ª linha (índice 2) pois as linhas 0 e 1 são cabeçalhos
+        for ($i = 2; $i < count($linhas); $i++) {
+            $linha_atual = $linhas[$i];
+            $linha_real_excel = $i + 1; 
+            
+            if (empty($linha_atual[0])) { continue; } 
+            
+            $campos_sql = [];
+            $valores_sql = [];
+            $linha_valida = true; 
+            
+            foreach ($colunas_dinamicas as $col) {
+                $valor_bruto = isset($linha_atual[$col['idx']]) ? trim($linha_atual[$col['idx']]) : '';
+                /*
+                // --- MOTOR DE REGRAS ---
+                if ($col['rule'] == 'DECIMAL_BR') {
+                    $v = str_replace(',', '.', $valor_bruto);
+                    $valor_tratado = is_numeric($v) ? $v : 0;
+                
+                // ---> CORREÇÃO P6: Força Maiúsculo para o Tipo de Recurso <---
+                } elseif ($col['db_field'] == 'resource_type') {
+                    $tipo_upper = strtoupper($valor_bruto);
+                    $valor_tratado = "'" . str_replace("'", "''", $tipo_upper) . "'";
+                    
+                } elseif ($col['rule'] == 'STATUS_P6') {
+                    $valor_tratado = "'" . (strtoupper($valor_bruto) == 'COMPLETED' ? 'COMPLETED' : 'NOT_STARTED') . "'"; 
+                    
+                } elseif ($col['rule'] == 'BOOLEAN_RII') {
+                    $valor_tratado = ($valor_bruto == 'Y' || $valor_bruto == 'S') ? 'true' : 'false';
+                    
+                } elseif ($col['rule'] == 'LOOKUP_TASK_ID') {
+                    // Proteção PostgreSQL
+                    $codigo_texto = str_replace("'", "''", $valor_bruto);
+                    $sql_lkp = "SELECT task_id FROM mro_tasks WHERE task_code = '$codigo_texto' AND project_id = $v_projeto_atual";
+                    sc_lookup(rs_lkp, $sql_lkp);
+                    if (!empty({rs_lkp[0][0]})) {
+                        $valor_tratado = {rs_lkp[0][0]}; 
+                    } else {
+                        $log_erros[] = "Aba '$v_nome_aba' (Linha $linha_real_excel): Tarefa '$codigo_texto' inexistente. Vínculo ignorado.";
+                        $linha_valida = false;
+                        break; 
+                    }
+                    
+                } elseif ($col['rule'] == 'MULTIPLE_ZONES') {
+                    if (!empty($valor_bruto)) {
+                        // Quebra por espaço(s)
+                        $zonas_array = preg_split('/\s+/', $valor_bruto, -1, PREG_SPLIT_NO_EMPTY);
+                        foreach ($zonas_array as $z) {
+                            $zonas_unicas[$z] = true; // Guarda para o auto-cadastro
+                        }
+                        // Remonta com ponto e vírgula
+                        $valor_formatado = implode(';', $zonas_array);
+                        $valor_tratado = "'" . str_replace("'", "''", $valor_formatado) . "'";
+                    } else {
+                        $valor_tratado = "NULL"; 
+                    }
+                    
+                } else {
+                    // Tratamento genérico de texto para PostgreSQL
+                    $valor_tratado = "'" . str_replace("'", "''", $valor_bruto) . "'"; 
+                }
+                */
+				// --- MOTOR DE REGRAS ---
+                if ($col['rule'] == 'DECIMAL_BR') {
+                    $v = str_replace(',', '.', $valor_bruto);
+                    $valor_tratado = is_numeric($v) ? $v : 0;
+                
+                // ---> NOVA REGRA: TRATAMENTO DE DATA E HORA (BR -> POSTGRESQL) <---
+                } elseif ($col['rule'] == 'DATETIME_BR') {
+                    if (!empty($valor_bruto)) {
+                        // Tenta ler no formato completo com hora
+                        $dt = DateTime::createFromFormat('d/m/Y H:i:s', $valor_bruto);
+                        if ($dt !== false) {
+                            $valor_tratado = "'" . $dt->format('Y-m-d H:i:s') . "'";
+                        } else {
+                            // Fallback: Se falhar, tenta ler apenas a data (caso a célula não tenha hora)
+                            $dt_only = DateTime::createFromFormat('d/m/Y', $valor_bruto);
+                            if ($dt_only !== false) {
+                                $valor_tratado = "'" . $dt_only->format('Y-m-d 00:00:00') . "'";
+                            } else {
+                                // Data completamente inválida
+                                $valor_tratado = "NULL"; 
+                                $log_erros[] = "Aba '$v_nome_aba' (Linha $linha_real_excel): Data inválida '$valor_bruto' na coluna " . $col['db_field'] . ". Foi importada como nula.";
+                            }
+                        }
+                    } else {
+                        $valor_tratado = "NULL"; 
+                    }
+
+                // ---> CORREÇÃO P6: Força Maiúsculo para o Tipo de Recurso <---
+                } elseif ($col['db_field'] == 'resource_type') {
+                    $tipo_upper = strtoupper($valor_bruto);
+                    $valor_tratado = "'" . str_replace("'", "''", $tipo_upper) . "'";
+                    
+                } elseif ($col['rule'] == 'STATUS_P6') {
+                    $valor_tratado = "'" . (strtoupper($valor_bruto) == 'COMPLETED' ? 'COMPLETED' : 'NOT_STARTED') . "'"; 
+                    
+                } elseif ($col['rule'] == 'BOOLEAN_RII') {
+                    $valor_tratado = ($valor_bruto == 'Y' || $valor_bruto == 'S') ? 'true' : 'false';
+                    
+                } elseif ($col['rule'] == 'LOOKUP_TASK_ID') {
+                    // Proteção PostgreSQL
+                    $codigo_texto = str_replace("'", "''", $valor_bruto);
+                    $sql_lkp = "SELECT task_id FROM mro_tasks WHERE task_code = '$codigo_texto' AND project_id = $v_projeto_atual";
+                    sc_lookup(rs_lkp, $sql_lkp);
+                    if (!empty({rs_lkp[0][0]})) {
+                        $valor_tratado = {rs_lkp[0][0]}; 
+                    } else {
+                        $log_erros[] = "Aba '$v_nome_aba' (Linha $linha_real_excel): Tarefa '$codigo_texto' inexistente. Vínculo ignorado.";
+                        $linha_valida = false;
+                        break; 
+                    }
+                    
+                } elseif ($col['rule'] == 'MULTIPLE_ZONES') {
+                    if (!empty($valor_bruto)) {
+                        // Quebra por espaço(s)
+                        $zonas_array = preg_split('/\s+/', $valor_bruto, -1, PREG_SPLIT_NO_EMPTY);
+                        foreach ($zonas_array as $z) {
+                            $zonas_unicas[$z] = true; // Guarda para o auto-cadastro
+                        }
+                        // Remonta com ponto e vírgula
+                        $valor_formatado = implode(';', $zonas_array);
+                        $valor_tratado = "'" . str_replace("'", "''", $valor_formatado) . "'";
+                    } else {
+                        $valor_tratado = "NULL"; 
+                    }
+                    
+                } else {
+                    // Tratamento genérico de texto para PostgreSQL
+                    if ($valor_bruto === '') {
+                        $valor_tratado = "NULL";
+                    } else {
+                        $valor_tratado = "'" . str_replace("'", "''", $valor_bruto) . "'"; 
+                    }
+                }
+				
+                $campos_sql[] = $col['db_field'];
+                $valores_sql[] = $valor_tratado;
+            }
+            
+            // ====================================================================
+            // FASE 2: INJEÇÃO COM PROTEÇÃO ANTI-DUPLICIDADE E TRAVA DE NULOS
+            // ====================================================================
+            if ($linha_valida && !empty($campos_sql)) {
+                
+                $pular_insert = false;
+                
+                // --- TRAVA DE SEGURANÇA PARA A TABELA DE RECURSOS ---
+                if ($v_target_table == 'mro_resources') {
+                    $idx_code = array_search('resource_code', $campos_sql);
+                    $idx_name = array_search('resource_name', $campos_sql);
+                    
+                    // 1. Verifica se as colunas obrigatórias foram mapeadas
+                    if ($idx_code === false || $idx_name === false) {
+                        $log_erros[] = "Aba '$v_nome_aba' (Linha $linha_real_excel): O dicionário não encontrou as colunas de Código ou Nome no mapeamento.";
+                        $pular_insert = true;
+                    } else {
+                        // 2. Verifica se a célula no Excel não estava em branco
+                        $r_code = $valores_sql[$idx_code];
+                        $r_name = $valores_sql[$idx_name];
+                        
+                        if ($r_code == "''" || $r_name == "''" || $r_code == "NULL" || $r_name == "NULL") {
+                            $pular_insert = true; // Linha em branco, ignora silenciosamente
+                        } else {
+                            // 3. Checa a Duplicidade
+                            sc_lookup(chk_dup, "SELECT 1 FROM mro_resources WHERE resource_code = $r_code");
+                            if (!empty({chk_dup})) {
+                                $pular_insert = true; 
+                            }
+                        }
+                    }
+                }
+                
+                // --- TRAVA DE SEGURANÇA PARA A TABELA DE TAREFAS ---
+                if ($v_target_table == 'mro_tasks') {
+                    $idx_task = array_search('task_code', $campos_sql);
+                    if ($idx_task === false || $valores_sql[$idx_task] == "''" || $valores_sql[$idx_task] == "NULL") {
+                        $pular_insert = true; // Ignora se não tiver o ID da atividade
+                    }
+                }
+                
+                // --- EXECUÇÃO FINAL DO INSERT ---
+                if (!$pular_insert) {
+                    
+                    // Impede a injeção de project_id na tabela mestre global
+                    if ($v_target_table !== 'mro_resources') {
+                        $campos_sql[] = 'project_id';
+                        $valores_sql[] = $v_projeto_atual; 
+                    }
+                    
+                    $str_campos = implode(", ", $campos_sql);
+                    $str_valores = implode(", ", $valores_sql);
+                    
+                    $sql_dinamico = "INSERT INTO $v_target_table ($str_campos) VALUES ($str_valores)";
+                    sc_exec_sql($sql_dinamico);
+                    
+                    $resumo_abas[$v_nome_aba]++;
+                }
+            }
+        }
+    }
+    
+    // ====================================================================
+    // FASE 3: AUTO-CADASTRO INTELIGENTE (COM PROTEÇÃO POSTGRESQL)
+    // ====================================================================
+    
+    // 3.1 - MRO RESOURCES
+    $sql_orphans = "SELECT DISTINCT tr.resource_code 
+                    FROM mro_task_resources tr 
+                    WHERE tr.project_id = $v_projeto_atual 
+                    AND NOT EXISTS (SELECT 1 FROM mro_resources r WHERE r.resource_code = tr.resource_code)";
+    sc_lookup(rs_orphans, $sql_orphans);
+
+    if (!empty({rs_orphans})) {
+        $qtd_auto_cadastrados = 0;
+        foreach ({rs_orphans} as $orphan) {
+            $novo_rsrc = str_replace("'", "''", $orphan[0]);
+            $sql_auto_insert = "INSERT INTO mro_resources (resource_code, resource_name, resource_type) 
+                                VALUES ('$novo_rsrc', 'AUTO-CADASTRO: $novo_rsrc', 'LABOR')";
+            sc_exec_sql($sql_auto_insert);
+            $qtd_auto_cadastrados++;
+        }
+        $log_erros[] = "<strong>Recursos Básicos:</strong> $qtd_auto_cadastrados novo(s) código(s) detectado(s) e auto-cadastrado(s) na mro_resources.";
+    }
+
+    // 3.2 - MRO SKILLS
+    $sql_orphan_skills = "SELECT DISTINCT r.resource_code, r.resource_name 
+                          FROM mro_task_resources tr
+                          JOIN mro_resources r ON tr.resource_code = r.resource_code
+                          WHERE tr.project_id = $v_projeto_atual 
+                          AND r.resource_type = 'LABOR'
+                          AND NOT EXISTS (SELECT 1 FROM mro_skills s WHERE s.skill_code = r.resource_code)";
+    sc_lookup(rs_skills, $sql_orphan_skills);
+
+    if (!empty({rs_skills})) {
+        $qtd_skills_cadastradas = 0;
+        foreach ({rs_skills} as $skill) {
+            $s_code = str_replace("'", "''", $skill[0]);
+            $s_name = str_replace("'", "''", $skill[1]); 
+            
+            $sql_skill_insert = "INSERT INTO mro_skills (skill_code, skill_name) VALUES ('$s_code', '$s_name')";
+            sc_exec_sql($sql_skill_insert);
+            $qtd_skills_cadastradas++;
+        }
+        $log_erros[] = "<strong>Especialidades (Skills):</strong> $qtd_skills_cadastradas nova(s) especialidade(s) auto-cadastrada(s) na mro_skills.";
+    }
+
+    // 3.3 - MRO TOOLS
+    $sql_orphan_tools = "SELECT DISTINCT r.resource_code, r.resource_name 
+                         FROM mro_task_resources tr
+                         JOIN mro_resources r ON tr.resource_code = r.resource_code
+                         WHERE tr.project_id = $v_projeto_atual 
+                         AND r.resource_type = 'NONLABOR'
+                         AND NOT EXISTS (SELECT 1 FROM mro_tools t WHERE t.part_number = r.resource_code)";
+    sc_lookup(rs_tools, $sql_orphan_tools);
+
+    if (!empty({rs_tools})) {
+        $qtd_tools_cadastradas = 0;
+        foreach ({rs_tools} as $tool) {
+            $t_code = str_replace("'", "''", $tool[0]);
+            $t_name = str_replace("'", "''", $tool[1]); 
+            
+            $sql_tool_insert = "INSERT INTO mro_tools (part_number, description) VALUES ('$t_code', '$t_name')";
+            sc_exec_sql($sql_tool_insert);
+            $qtd_tools_cadastradas++;
+        }
+        $log_erros[] = "<strong>Ferramentas (Tools):</strong> $qtd_tools_cadastradas nova(s) ferramenta(s) auto-cadastrada(s) na mro_tools.";
+    }
+
+    // 3.4 - MRO ZONES
+    if (!empty($zonas_unicas)) {
+        $qtd_zonas_cadastradas = 0;
+        foreach ($zonas_unicas as $zona => $val) {
+            $z_code = str_replace("'", "''", $zona);
+            sc_lookup(chk_zona, "SELECT 1 FROM mro_zones WHERE zone_code = '$z_code'");
+            
+            if (empty({chk_zona})) {
+                sc_exec_sql("INSERT INTO mro_zones (zone_code, description) VALUES ('$z_code', 'AUTO-CADASTRO: Zona $z_code')");
+                $qtd_zonas_cadastradas++;
+            }
+        }
+        if ($qtd_zonas_cadastradas > 0) {
+            $log_erros[] = "<strong>Zonas da Aeronave:</strong> $qtd_zonas_cadastradas nova(s) zona(s) auto-cadastrada(s) na mro_zones.";
+        }
+    }
+
+    // ====================================================================
+    // FASE 4: ROTEAMENTO FINAL (Com JOINs Inteligentes)
+    // ====================================================================
+    
+    // Roteamento de Mão de Obra
+	/*
+    $sql_labor = "INSERT INTO mro_task_assignments (task_id, skill_id, status_code, planned_qty_hours)
+                  SELECT tr.task_id, s.skill_id, 'NOT_STARTED', tr.budgeted_hours
+                  FROM mro_task_resources tr
+                  JOIN mro_resources r ON tr.resource_code = r.resource_code
+                  JOIN mro_skills s ON r.resource_code = s.skill_code
+                  WHERE r.resource_type = 'LABOR' 
+                  AND tr.project_id = $v_projeto_atual
+                  AND NOT EXISTS (
+                      SELECT 1 FROM mro_task_assignments a 
+                      WHERE a.task_id = tr.task_id AND a.skill_id = s.skill_id
+                  )";
+    sc_exec_sql($sql_labor);
+	*/
+    // Roteamento de Ferramentas
+    $sql_tools_route = "INSERT INTO mro_task_tools (task_id, tool_id, quantity_required)
+                        SELECT tr.task_id, t.tool_id, tr.budgeted_hours
+                        FROM mro_task_resources tr
+                        JOIN mro_resources r ON tr.resource_code = r.resource_code
+                        JOIN mro_tools t ON r.resource_code = t.part_number
+                        WHERE r.resource_type = 'NONLABOR' 
+                        AND tr.project_id = $v_projeto_atual
+                        AND NOT EXISTS (
+                            SELECT 1 FROM mro_task_tools mt 
+                            WHERE mt.task_id = tr.task_id AND mt.tool_id = t.tool_id
+                        )";
+    sc_exec_sql($sql_tools_route);
+    
+    // ====================================================================
+    // FASE 5: MONTAGEM DO PAINEL DE FEEDBACK (COM TRAVA DE RELOAD)
+    // ====================================================================
+    $html_msg = "<div style='font-family: Arial, sans-serif; padding: 20px; background-color: #fff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 600px; margin: 50px auto;'>";
+    $html_msg .= "<h3 style='color: #2c3e50;'>Resumo da Integração P6</h3><ul style='margin-bottom: 20px; font-size: 16px;'>";
+    
+    $teve_sucesso = false;
+    foreach ($resumo_abas as $nome_aba => $qtd) {
+        $html_msg .= "<li><b>$nome_aba:</b> $qtd registro(s) processado(s)</li>";
+        if ($qtd > 0) $teve_sucesso = true;
+    }
+    $html_msg .= "</ul>";
+    
+    if (!empty($log_erros)) {
+        $html_msg .= "<h4 style='color: #856404;'>Avisos e Auto-Correções (" . count($log_erros) . ")</h4>";
+        $html_msg .= "<div style='max-height: 250px; overflow-y: auto; background-color: #fff3cd; color: #856404; padding: 10px; border: 1px solid #ffeeba; border-radius: 4px; font-size: 14px;'><ul>";
+        foreach ($log_erros as $erro) {
+            $html_msg .= "<li style='margin-bottom: 8px;'>$erro</li>";
+        }
+        $html_msg .= "</ul></div>";
+    }
+    
+    $html_msg .= "<br><button onclick='window.history.back()' style='padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;'>Voltar</button>";
+    $html_msg .= "</div>";
+    
+    echo $html_msg;
+    die();
+
+} else {
+    $erro_msg = \Shuchkin\SimpleXLS::parseError();
+    sc_error_message("Erro crítico de Leitura: " . $erro_msg);
+}

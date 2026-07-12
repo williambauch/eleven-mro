@@ -1,0 +1,13 @@
+{
+  "nome": "sec_sync_apps",
+  "tipo": "Form",
+  "nome_tabela": "sec_sync_apps",
+  "campos": [
+    {
+      "nome": "check_deleted",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    }
+  ]
+}

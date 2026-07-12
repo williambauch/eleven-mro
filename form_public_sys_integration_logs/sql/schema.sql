@@ -1,0 +1,1 @@
+SELECT * FROM "public".sys_integration_logs

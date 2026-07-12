@@ -1,0 +1,4 @@
+<?php
+
+// Toda NRC nasce como Rascunho
+//{status_code} = 'DRAFT';

@@ -1,0 +1,11 @@
+SELECT
+    tool_id,
+    part_number,
+    serial_number,
+    description,
+    calibration_due_date,
+    last_calibration_date,
+    status,
+    "location"
+FROM
+    "public".mro_tools

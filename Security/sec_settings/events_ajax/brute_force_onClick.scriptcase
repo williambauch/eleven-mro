@@ -1,0 +1,9 @@
+<?php
+
+if({brute_force} == 'Y'){
+    sc_field_display({brute_force_time_block}, "on");
+    sc_field_display({brute_force_attempts}, "on");
+}else{   
+    sc_field_display({brute_force_time_block}, "off");
+    sc_field_display({brute_force_attempts}, "off");
+}

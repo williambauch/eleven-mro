@@ -1,0 +1,25 @@
+{
+  "nome": "sec_control_2fa",
+  "tipo": "Form",
+  "nome_tabela": "sec_control_2fa",
+  "campos": [
+    {
+      "nome": "code",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "counter",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "help_description",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    }
+  ]
+}

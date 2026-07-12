@@ -1,0 +1,115 @@
+{
+  "nome": "form_public_mro_task_assignments_progress",
+  "tipo": "Form",
+  "nome_tabela": "\"public\".mro_task_assignments",
+  "campos": [
+    {
+      "nome": "actual_qty_hours",
+      "tipo": "numeric",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "assignment_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": true
+    },
+    {
+      "nome": "created_at",
+      "tipo": "datetime",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "created_by",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "employee_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "executed_by_employee_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "planned_qty_hours",
+      "tipo": "numeric",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "planned_skill_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "project_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "resource_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "role_id",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "skill_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "status_code",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "supervisor_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "task_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "updated_at",
+      "tipo": "datetime",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "updated_by",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "ver_historico",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    }
+  ]
+}

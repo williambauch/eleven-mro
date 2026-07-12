@@ -1,0 +1,25 @@
+{
+  "nome": "form_public_mro_skills",
+  "tipo": "Form",
+  "nome_tabela": "\"public\".mro_skills",
+  "campos": [
+    {
+      "nome": "anac_license_type",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "description",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "skill_code",
+      "tipo": "varchar",
+      "required": false,
+      "pk": true
+    }
+  ]
+}

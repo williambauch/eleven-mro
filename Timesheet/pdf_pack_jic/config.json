@@ -1,0 +1,145 @@
+{
+  "nome": "pdf_pack_jic",
+  "tipo": "Form",
+  "nome_tabela": "pdf_pack_jic",
+  "campos": [
+    {
+      "nome": "a.model",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "ac_work_order",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "aircraft_esn",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "aircraft_registration",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "barcode",
+      "tipo": "text",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "corrective_action_description",
+      "tipo": "text",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "customer_name",
+      "tipo": "text",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "discrepancy_title",
+      "tipo": "text",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "origin_document",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "originated_by_name",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "project",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "t.access_panels",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "t.ata_chapter",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "t.document_reference",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "t.estimated_hours",
+      "tipo": "numeric",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "t.is_rii",
+      "tipo": "bool",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "t.skill_code",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "t.status_code",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "t.task_code",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "t.task_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "t.task_type",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "t.zone_area",
+      "tipo": "text",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "type",
+      "tipo": "text",
+      "required": false,
+      "pk": false
+    }
+  ]
+}

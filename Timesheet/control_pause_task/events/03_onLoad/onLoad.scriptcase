@@ -1,0 +1,5 @@
+<?php
+
+{id_timesheet}=[glo_timesheet_id];
+{assignment_id}=[glo_assignment_id];
+{assignment_id_sel} = [glo_assignment_id_sel] ?? '';

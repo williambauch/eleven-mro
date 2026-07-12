@@ -1,0 +1,37 @@
+{
+  "nome": "ctrl_import_p6",
+  "tipo": "Form",
+  "nome_tabela": "ctrl_import_p6",
+  "campos": [
+    {
+      "nome": "csv_assignments",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "csv_predecessors",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "csv_resources",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "csv_tasks",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "project_id",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    }
+  ]
+}

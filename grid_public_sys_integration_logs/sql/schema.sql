@@ -1,0 +1,11 @@
+SELECT
+    log_id,
+    system_origin,
+    endpoint,
+    direction,
+    payload,
+    status_code,
+    error_message,
+    created_at
+FROM
+    "public".sys_integration_logs

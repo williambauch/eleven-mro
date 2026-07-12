@@ -1,0 +1,37 @@
+{
+  "nome": "sec_add_2fa",
+  "tipo": "Form",
+  "nome_tabela": "sec_add_2fa",
+  "campos": [
+    {
+      "nome": "code",
+      "tipo": "integer",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "counter",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "google_auth_img",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "help_description",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "phone",
+      "tipo": "integer",
+      "required": false,
+      "pk": false
+    }
+  ]
+}

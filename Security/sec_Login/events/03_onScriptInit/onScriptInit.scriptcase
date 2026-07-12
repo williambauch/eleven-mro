@@ -1,0 +1,41 @@
+<?php
+
+if([sett_smtp_api] == 'custom'){
+	[sett_smtp] = array(
+		'settings' => array(
+			'gateway'       => 'smtp',
+			'smtp_server'   => [sett_smtp_server],
+			'smtp_protocol' => [sett_smtp_security],
+			'smtp_port'     => [sett_smtp_port],
+			'smtp_user'     => [sett_smtp_user],
+			'smtp_password' => [sett_smtp_pass],
+			'from_email'    => [sett_smtp_from_email],
+			'from_name'     => [sett_smtp_from_name],
+		)
+	);
+}else{
+	[sett_smtp] = array('profile' => $_SESSION['sett_smtp_api']);
+}
+
+sc_set_theme([sett_theme]);
+
+if([sett_captcha] == 'Y'){
+    sc_captcha_display('on');
+}else{
+    sc_captcha_display('off');
+}
+
+
+
+
+
+sc_reset_apl_status();
+
+sc_reset_global([usr_login], [usr_email], [usr_name], [usr_phone], [usr_picture]);
+
+if(isset([sett_remember_me]) && [sett_remember_me] == 'Y'){
+    remember_me_init();
+}
+else{ 
+    sc_field_display({remember_me}, 'off');
+}

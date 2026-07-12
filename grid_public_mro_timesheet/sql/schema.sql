@@ -1,0 +1,12 @@
+SELECT
+    timesheet_id,
+    task_id,
+    resource_id,
+    check_in,
+    check_out,
+    duration_minutes,
+    is_ojt_session,
+    instructor_id,
+    comments
+FROM
+    "public".mro_timesheet

@@ -1,0 +1,31 @@
+{
+  "nome": "form_mro_task_tools",
+  "tipo": "Form",
+  "nome_tabela": "\"public\".mro_task_tools",
+  "campos": [
+    {
+      "nome": "quantity_required",
+      "tipo": "numeric",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "task_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "task_tool_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": true
+    },
+    {
+      "nome": "tool_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false
+    }
+  ]
+}

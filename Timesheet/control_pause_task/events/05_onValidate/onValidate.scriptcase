@@ -1,0 +1,7 @@
+<?php
+
+if({motivo_pausa}!=1 && {motivo_pausa}!=6){
+	if({passagem_servico}==''){
+		sc_error_message("Passagem de serviço Obrigatória");
+	}
+}

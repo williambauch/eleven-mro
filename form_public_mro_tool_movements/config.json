@@ -1,0 +1,49 @@
+{
+  "nome": "form_public_mro_tool_movements",
+  "tipo": "Form",
+  "nome_tabela": "\"public\".mro_tool_movements",
+  "campos": [
+    {
+      "nome": "checkin_time",
+      "tipo": "datetime",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "checkout_time",
+      "tipo": "datetime",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "movement_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": true
+    },
+    {
+      "nome": "resource_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "return_condition",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "task_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "tool_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false
+    }
+  ]
+}

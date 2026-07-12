@@ -1,0 +1,19 @@
+{
+  "nome": "chart_public_mro_tasks",
+  "tipo": "Chart",
+  "nome_tabela": "public.mro_tasks",
+  "campos": [
+    {
+      "nome": "qtde",
+      "tipo": "int8",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "status_code",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    }
+  ]
+}

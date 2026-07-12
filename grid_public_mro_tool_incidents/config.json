@@ -1,0 +1,61 @@
+{
+  "nome": "grid_public_mro_tool_incidents",
+  "tipo": "Grid",
+  "nome_tabela": "public.mro_tool_incidents",
+  "campos": [
+    {
+      "nome": "description",
+      "tipo": "text",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "incident_date",
+      "tipo": "date",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "incident_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": true
+    },
+    {
+      "nome": "incident_type",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "project_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "report_pdf_url",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "resource_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "status",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "tool_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false
+    }
+  ]
+}

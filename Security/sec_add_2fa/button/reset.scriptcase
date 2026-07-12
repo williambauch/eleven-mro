@@ -1,0 +1,13 @@
+<?php
+
+sc_exec_sql("UPDATE public.sec_users SET mfa =". sc_sql_injection('') ." WHERE login = ". sc_sql_injection([usr_login]) );
+
+sc_alert({lang_sec_2fa_reset_msg}, array(
+                'title' => {lang_sec_2fa_success_title},
+                'type' => 'success',
+                'timer' => '5000',
+                'showConfirmButton' => false,
+                'position' => 'center',
+                'toast' => true
+                )
+          );

@@ -1,0 +1,31 @@
+{
+  "nome": "grid_public_mro_training_types",
+  "tipo": "Grid",
+  "nome_tabela": "public.mro_training_types",
+  "campos": [
+    {
+      "nome": "is_mandatory",
+      "tipo": "bool",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "training_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": true
+    },
+    {
+      "nome": "training_name",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "validity_months",
+      "tipo": "int4",
+      "required": false,
+      "pk": false
+    }
+  ]
+}

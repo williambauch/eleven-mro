@@ -1,0 +1,80 @@
+<?php
+
+sc_apl_conf('sec_form_add_users', 'start', 'new');
+
+if(isset([return_msg_email_act]) && [return_msg_email_act] == 1){
+    sc_alert({lang_sec_add_user_success}, array(
+			'title' => {lang_sec_2fa_success_title},
+			'type' => 'success',
+			'timer' => '5000',
+			'showConfirmButton' => false,
+			'position' => 'center',
+			'toast' => true
+			)
+	  );
+    [return_msg_email_act]=0;
+}
+
+if([sett_new_users] != 'Y'){
+    sc_field_display({new_user}, 'off');
+}
+
+if([sett_retrieve_password] != 'Y'){
+    sc_field_display({retrieve_pswd}, 'off');
+}
+//if([sett_language] != 'Y'){
+    sc_field_display({language}, 'off');
+//}
+
+
+$arr_btn_social = ['#bfacebook_b', '#btwitter_b', '#bgoogle_b', '#sub_form_b'];
+
+if([sett_auth_sn_fb] != 'Y'){
+	unset($arr_btn_social[0]);
+	sc_btn_display("facebook","off");
+}
+
+if([sett_auth_sn_x] != 'Y'){
+	unset($arr_btn_social[1]);
+	sc_btn_display("twitter","off");
+}
+
+if([sett_auth_sn_google] != 'Y'){
+	unset($arr_btn_social[2]);
+	sc_btn_display("google","off");
+}
+
+$str_btn_social = implode(', ', $arr_btn_social);
+
+if([sett_auth_sn_position] == 'below'){
+	echo <<<CSS
+	<style>
+		$str_btn_social
+		{
+			margin: 10px 20px;
+			display: block !important;
+		}
+		.scFormToolbarPadding:not(:has(.sc-unique-btn-1)){
+			width: 0 !important;
+			padding: 0px;
+		}
+		.scFormToolbarPadding:has(.sc-unique-btn-1){
+			width:100% !important;
+			padding:4px;
+		}
+	</style>
+CSS;
+}
+
+switch( [sett_login_mode] ){
+	default:
+	case 'username':
+		sc_label('login') = {lang_field_login};
+		break;
+	case 'email':
+		sc_label('login') = {lang_field_email};
+		break;
+	case 'both':
+		sc_label('login') = {lang_field_both};
+		break;
+}

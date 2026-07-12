@@ -1,0 +1,31 @@
+<?php
+
+// Ícone de Material
+if ({is_blocked_material} == 't' || {is_blocked_material} == 1) {
+    {btn_mat} = "<i class='fa-solid fa-box-open' style='color:#dc3545; font-size:16px;' title='Bloqueio de Material'></i>";
+} else {
+    {btn_mat} = "<i class='fa-solid fa-box-open' style='color:#ced4da; font-size:16px;' title='Material OK'></i>";
+}
+
+// Ícone de Ferramenta
+if ({is_blocked_tool} == 't' || {is_blocked_tool} == 1) {
+    {btn_fer} = "<i class='fa-solid fa-screwdriver-wrench' style='color:#6f42c1; font-size:16px;' title='Bloqueio de Ferramenta'></i>";
+} else {
+    {btn_fer} = "<i class='fa-solid fa-screwdriver-wrench' style='color:#ced4da; font-size:16px;' title='Ferramenta OK'></i>";
+}
+
+// Ícone de Mão de Obra
+if ({is_blocked_labor} == 't' || {is_blocked_labor} == 1) {
+    {btn_mao} = "<i class='fa-solid fa-user-clock' style='color:#fd7e14; font-size:16px;' title='Falta Mão de Obra'></i>";
+} else {
+    {btn_mao} = "<i class='fa-solid fa-user-clock' style='color:#ced4da; font-size:16px;' title='Mão de Obra OK'></i>";
+}
+
+// Ícone visual para diferenciar Rotina de Não Rotina (NRC) nas Grids
+if ({is_nrc} == 't' || {is_nrc} == 1 || {is_nrc} === true) {
+    // Não Rotina: Ícone de Alerta em Laranja (Destaca a discrepância/trabalho extra)
+    {nr} = "<i class='fa-solid fa-triangle-exclamation' style='color:#fd7e14; font-size:16px;' title='Não Rotina (NRC)'></i>";
+} else {
+    // Rotina: Ícone de Tarefa/Checklist no Azul Digex (Identidade visual da empresa)
+    {nr} = "<i class='fa-solid fa-list-check' style='color:#004080; font-size:16px;' title='Rotina'></i>";
+}

@@ -1,0 +1,5 @@
+<?php
+
+// Grava o utilizador logado no sistema e o nome original do ficheiro
+{uploaded_by} = [usr_login];
+{uploaded_at} = date('Y-m-d H:i:s');

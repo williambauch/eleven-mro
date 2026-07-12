@@ -1,0 +1,13 @@
+SELECT
+    event_id,
+    assignment_id,
+    event_type,
+    performed_by_id,
+    old_employee_id,
+    new_employee_id,
+    event_timestamp,
+    description,
+    ip_address,
+    user_agent
+FROM
+    "public".mro_assignment_events

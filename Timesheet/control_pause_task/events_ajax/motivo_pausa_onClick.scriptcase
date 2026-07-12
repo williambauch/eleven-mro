@@ -1,0 +1,8 @@
+<?php
+
+// Se o motivo for Almoço (ID 1), esconde a obrigatoriedade. Caso contrário, exige a nota.
+if ({motivo_pausa} == 1 || {motivo_pausa} == 6) {
+    sc_field_display({passagem_servico}, 'off');
+} else {
+    sc_field_display({passagem_servico}, 'on');
+}

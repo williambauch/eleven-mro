@@ -1,0 +1,12 @@
+SELECT
+    incident_id,
+    tool_id,
+    resource_id,
+    project_id,
+    incident_type,
+    incident_date,
+    description,
+    report_pdf_url,
+    status
+FROM
+    "public".mro_tool_incidents

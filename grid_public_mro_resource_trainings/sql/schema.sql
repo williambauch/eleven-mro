@@ -1,0 +1,10 @@
+SELECT
+    id,
+    resource_id,
+    training_id,
+    completion_date,
+    expiration_date,
+    certificate_url,
+    status
+FROM
+    "public".mro_resource_trainings

@@ -1,0 +1,26 @@
+<?php
+
+// Injeta a biblioteca do SweetAlert e cria um "escutador" de clique exclusivo para o botão OK
+echo "
+<script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script>
+<script>
+    // Usa o jQuery (padrão do Scriptcase) para aguardar a tela carregar
+    $(document).ready(function() {
+        
+        // Amarra o alerta DE CARREGAMENTO EXCLUSIVAMENTE ao botão OK (id='sub_form_b')
+        $('#sub_form_b').on('click', function() {
+            Swal.fire({
+              title: 'Robô Trabalhando...',
+              html: 'Lendo as abas do Primavera P6, cadastrando zonas, skills, ferramentas e distribuindo as tarefas na base de dados.<br><br><b>Por favor, aguarde.</b>',
+              allowOutsideClick: false,
+              allowEscapeKey: false,
+              showConfirmButton: false,
+              didOpen: () => {
+                Swal.showLoading();
+              }
+            });
+        });
+        
+    });
+</script>
+";

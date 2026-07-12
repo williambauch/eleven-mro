@@ -1,0 +1,55 @@
+{
+  "nome": "form_public_mro_resource_roster",
+  "tipo": "Form",
+  "nome_tabela": "\"public\".mro_resource_roster",
+  "campos": [
+    {
+      "nome": "aircraft_model",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "authorization_date",
+      "tipo": "date",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "customer_name",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "is_authorized",
+      "tipo": "bool",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "notes",
+      "tipo": "text",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "resource_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "roster_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": true
+    },
+    {
+      "nome": "updated_at",
+      "tipo": "datetime",
+      "required": false,
+      "pk": false
+    }
+  ]
+}

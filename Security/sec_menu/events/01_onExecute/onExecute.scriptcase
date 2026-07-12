@@ -1,0 +1,9 @@
+<?php
+
+if({sc_script_name} == 'sec_Login'){
+    
+    if(isset($_COOKIE['usr_data'])){
+        unset($_COOKIE['usr_data']);
+        setcookie("usr_data", '',time()+60*60*24*30,'/');
+    }
+}

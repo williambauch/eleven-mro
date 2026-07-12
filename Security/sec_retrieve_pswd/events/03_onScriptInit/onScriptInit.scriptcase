@@ -1,0 +1,46 @@
+<?php
+
+if(isset($_GET['act_code']) && !empty($_GET['act_code']))
+{
+	$act_code = trim($_GET['act_code']);
+	$sql = 	"SELECT 
+			login 
+		FROM 
+			public.sec_users 
+		WHERE 
+			activation_code = ". sc_sql_injection($act_code);
+	sc_lookup(rs, $sql);
+
+	if({rs} !== FALSE && isset({rs}[0][0]))
+	{
+        $usr_login = {rs[0][0]};
+	
+		sc_set_global($usr_login);
+		sc_apl_status('sec_change_pswd', 'on');
+		sc_redir("sec_change_pswd", act_code=$act_code; usr_login=$usr_login);
+	}
+	else
+	{
+		sc_alert( {lang_act_code_error} );
+	}
+//sc_exit(ok);
+}
+
+
+if(isset([usr_login]) && !empty([usr_login]))
+{
+	switch([sett_recover_pswd]){
+		case 'send_pswd':
+			send_pswd_mail();
+			break;
+		case 'reset_send':
+			send_new_pswd();
+			break;
+		default:
+		case 'send_link':
+			send_act();
+			break;
+	}
+	
+	//sc_redir('login');
+}

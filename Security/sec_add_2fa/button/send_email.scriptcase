@@ -1,0 +1,10 @@
+<?php
+
+sc_btn_disabled("submit_ajax", "off");
+
+sc_field_display({code}, "on");
+sc_field_display({counter}, "on");
+
+sc_2fa_send_email();
+
+sc_btn_label("send_email", {lang_sec_btn_resend_email});

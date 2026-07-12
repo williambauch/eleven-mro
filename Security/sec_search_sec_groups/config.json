@@ -1,0 +1,13 @@
+{
+  "nome": "sec_search_sec_groups",
+  "tipo": "Form",
+  "nome_tabela": "public.sec_groups",
+  "campos": [
+    {
+      "nome": "group_id",
+      "tipo": "int",
+      "required": false,
+      "pk": true
+    }
+  ]
+}

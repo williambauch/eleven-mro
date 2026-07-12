@@ -1,0 +1,18 @@
+<?php
+
+/*------------------ Page 1 -----------------*/
+            sc_pdf_print($cell_skill);
+            sc_pdf_print($cell_company);
+            sc_pdf_print($cell_origin_doc);
+            sc_pdf_print($cell_16);
+            sc_pdf_print($cell_17);
+            sc_pdf_print($cell_18);
+            sc_pdf_print($cell_19);
+            sc_pdf_print($cell_20);
+            sc_pdf_print($cell_21);
+            sc_pdf_print($cell_22);
+            sc_pdf_print($cell_23);
+            sc_pdf_print($cell_24);
+            sc_pdf_print($cell_25);
+            sc_pdf_print($cell_26);
+          /*-------------------------------------------*/

@@ -1,0 +1,12 @@
+SELECT
+    signoff_id,
+    task_id,
+    resource_id,
+    signoff_type,
+    signoff_time,
+    digital_signature_hash,
+    auth_method,
+    geo_location,
+    device_ip
+FROM
+    "public".mro_task_signoffs

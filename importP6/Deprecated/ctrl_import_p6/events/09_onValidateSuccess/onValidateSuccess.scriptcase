@@ -1,0 +1,239 @@
+<?php
+
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+set_time_limit(0); 
+ini_set('memory_limit', '512M'); 
+
+// Função mágica para resolver acentos (ISO-8859-1 -> UTF-8) e aspas simples (PostgreSQL)
+function limpa_csv($texto) {
+    if (empty($texto)) return '';
+    
+    // 1. Converte de Windows/Latin1 para UTF-8
+    $texto_utf8 = mb_convert_encoding(trim($texto), 'UTF-8', 'ISO-8859-1');
+    
+    // 2. Prepara as aspas simples para o PostgreSQL (substitui ' por '')
+    $texto_limpo = str_replace("'", "''", $texto_utf8);
+    
+    return $texto_limpo;
+}
+
+$id_projeto = [glo_project_id]; 
+$path = $this->Ini->path_doc . '/';
+
+$resumo = ['wbs'=>0, 'task_upd'=>0, 'task_ins'=>0, 'rsrc'=>0, 'assig'=>0, 'pred'=>0];
+$usuario_logado = [usr_login];
+
+// ====================================================================================
+// FASE 1: IMPORTAR RECURSOS - ROTEADOR INTELIGENTE (RSRC.csv)
+// ====================================================================================
+if (!empty({csv_resources}) && file_exists($path . {csv_resources})) {
+    $file = fopen($path . {csv_resources}, 'r');
+    fgetcsv($file, 10000, ";"); fgetcsv($file, 10000, ";"); 
+    
+    while (($dados = fgetcsv($file, 10000, ";")) !== FALSE) {
+        $p6_id  = isset($dados[0]) ? limpa_csv($dados[0]) : ''; 
+        $r_name = isset($dados[1]) ? limpa_csv($dados[1]) : ''; 
+        $r_type = isset($dados[2]) ? strtoupper(limpa_csv($dados[2])) : ''; 
+        
+        if(empty($p6_id)) continue;
+        
+        if($r_type == 'NON LABOR' || $r_type == 'NONLABOR') $r_type = 'NONLABOR';
+        else if ($r_type == 'LABOR') $r_type = 'LABOR';
+        else $r_type = 'MATERIAL';
+
+        // ROTEADOR
+        if ($r_type == 'LABOR') {
+            // Mão de Obra -> mro_resources
+            sc_lookup(rs, "SELECT resource_id FROM mro_resources WHERE p6_rsrc_id = '$p6_id'");
+            if(!isset({rs[0][0]})) {
+                sc_exec_sql("INSERT INTO mro_resources (p6_rsrc_id, full_name, resource_type) VALUES ('$p6_id', '$r_name', '$r_type')");
+            } else {
+                sc_exec_sql("UPDATE mro_resources SET full_name = '$r_name', updated_at = NOW() WHERE resource_id = " . {rs[0][0]});
+            }
+        } 
+        else {
+            // É NONLABOR ou MATERIAL. Vamos ler a descrição para decidir:
+            if (stripos($r_name, 'TOOL') !== false) {
+                // Tem 'TOOL' no nome -> É FERRAMENTA
+                sc_lookup(rs_tool, "SELECT tool_id FROM mro_tools WHERE part_number = '$p6_id'");
+                if(!isset({rs_tool[0][0]})) {
+                    sc_exec_sql("INSERT INTO mro_tools (part_number, description) VALUES ('$p6_id', '$r_name')");
+                }
+            } else {
+                // NÃO tem 'TOOL' no nome -> É MATERIAL/PEÇA
+                sc_lookup(rs_mat, "SELECT material_id FROM mro_materials WHERE part_number = '$p6_id'");
+                if(!isset({rs_mat[0][0]})) {
+                    sc_exec_sql("INSERT INTO mro_materials (part_number, description) VALUES ('$p6_id', '$r_name')");
+                }
+            }
+        }
+    }
+    fclose($file);
+}
+
+// ====================================================================================
+// FASE 2: IMPORTAR TAREFAS E WBS (TASK.csv)
+// ====================================================================================
+if (!empty({csv_tasks}) && file_exists($path . {csv_tasks})) {
+    $file = fopen($path . {csv_tasks}, 'r');
+    fgetcsv($file, 10000, ";"); fgetcsv($file, 10000, ";"); 
+    
+    while (($dados = fgetcsv($file, 10000, ";")) !== FALSE) {
+        $t_code = isset($dados[0]) ? limpa_csv($dados[0]) : ''; 
+        $w_name = isset($dados[5]) ? limpa_csv($dados[5]) : ''; 
+        $t_name = isset($dados[6]) ? limpa_csv($dados[6]) : ''; 
+        $hh_raw = isset($dados[13]) ? trim($dados[13]) : '0';
+        $hh_est = (float) str_replace(',', '.', $hh_raw); 
+        
+        if(empty($t_code) || empty($w_name)) continue;
+
+        $sql_wbs = "SELECT wbs_id FROM mro_wbs WHERE project_id = $id_projeto AND wbs_name = '$w_name'";
+        sc_lookup(rs_w, $sql_wbs);
+        if(isset({rs_w[0][0]})) {
+            $wbs_id = {rs_w[0][0]};
+        } else {
+            sc_exec_sql("INSERT INTO mro_wbs (project_id, wbs_name) VALUES ($id_projeto, '$w_name')");
+            sc_lookup(rs_new_w, "SELECT wbs_id FROM mro_wbs WHERE project_id = $id_projeto AND wbs_name = '$w_name' ORDER BY wbs_id DESC LIMIT 1");
+            $wbs_id = isset({rs_new_w[0][0]}) ? {rs_new_w[0][0]} : 0;
+            if ($wbs_id > 0) $resumo['wbs']++;
+        }
+
+		// ... dentro da FASE 2 ...
+
+        if ($wbs_id > 0) {
+            $sql_task = "SELECT t.task_id FROM mro_tasks t WHERE t.project_id = $id_projeto AND t.task_code = '$t_code'";
+            sc_lookup(rs_t, $sql_task);
+            
+            if(isset({rs_t[0][0]})) {
+                $task_id = {rs_t[0][0]};
+                // Adicionado o project_id no UPDATE
+                sc_exec_sql("UPDATE mro_tasks SET task_name = '$t_name', estimated_hours = $hh_est, wbs_id = $wbs_id, project_id = $id_projeto WHERE task_id = $task_id");
+                $resumo['task_upd']++;
+            } else {
+                // Adicionado o project_id no INSERT
+                sc_exec_sql("INSERT INTO mro_tasks (project_id, wbs_id, task_code, task_name, estimated_hours, status_code, is_nrc) VALUES ($id_projeto, $wbs_id, '$t_code', '$t_name', $hh_est, 'PLANNED', FALSE)");
+                $resumo['task_ins']++;
+            }
+        }
+/*		
+        if ($wbs_id > 0) {
+            $sql_task = "SELECT t.task_id FROM mro_tasks t JOIN mro_wbs w ON t.wbs_id = w.wbs_id WHERE w.project_id = $id_projeto AND t.task_code = '$t_code'";
+            sc_lookup(rs_t, $sql_task);
+            
+            if(isset({rs_t[0][0]})) {
+                $task_id = {rs_t[0][0]};
+                sc_exec_sql("UPDATE mro_tasks SET task_name = '$t_name', estimated_hours = $hh_est, wbs_id = $wbs_id WHERE task_id = $task_id");
+                $resumo['task_upd']++;
+            } else {
+                sc_exec_sql("INSERT INTO mro_tasks (wbs_id, task_code, task_name, estimated_hours, status_code, is_nrc) VALUES ($wbs_id, '$t_code', '$t_name', $hh_est, 'PLANNED', FALSE)");
+                $resumo['task_ins']++;
+            }
+        }
+*/
+    }
+    fclose($file);
+}
+
+// ====================================================================================
+// FASE 3: IMPORTAR ASSIGNMENTS - ROTEADOR INTELIGENTE (TASKRSRC.csv)
+// ====================================================================================
+if (!empty({csv_assignments}) && file_exists($path . {csv_assignments})) {
+    $file = fopen($path . {csv_assignments}, 'r');
+    fgetcsv($file, 10000, ";"); fgetcsv($file, 10000, ";"); 
+    
+    while (($dados = fgetcsv($file, 10000, ";")) !== FALSE) {
+        $t_code  = isset($dados[0]) ? limpa_csv($dados[0]) : ''; 
+        $p6_r_id = isset($dados[2]) ? limpa_csv($dados[2]) : ''; 
+        $qty_raw = isset($dados[7]) ? trim($dados[7]) : '0';
+        $qty     = (float) str_replace(',', '.', $qty_raw); 
+        $r_type  = isset($dados[12]) ? strtoupper(limpa_csv($dados[12])) : 'LABOR'; 
+        
+        if(empty($t_code) || empty($p6_r_id)) continue;
+
+        if($r_type == 'NON LABOR' || $r_type == 'NONLABOR') $r_type = 'NONLABOR';
+
+        // Encontra a tarefa
+        $sql_t = "SELECT t.task_id FROM mro_tasks t JOIN mro_wbs w ON t.wbs_id = w.wbs_id WHERE w.project_id = $id_projeto AND t.task_code = '$t_code'";
+        sc_lookup(rs_t, $sql_t);
+        
+        if(isset({rs_t[0][0]})) {
+            $task_id = {rs_t[0][0]};
+            
+            // ROTEADOR DE LIGAÇÃO
+            if ($r_type == 'LABOR') {
+                sc_lookup(rs_r, "SELECT resource_id FROM mro_resources WHERE p6_rsrc_id = '$p6_r_id'");
+                if(isset({rs_r[0][0]})) {
+                    $res_id = {rs_r[0][0]};
+                    sc_exec_sql("DELETE FROM mro_task_assignments WHERE task_id = $task_id AND resource_id = $res_id");
+                    sc_exec_sql("INSERT INTO mro_task_assignments (task_id, resource_id, planned_qty_hours, created_by) VALUES ($task_id, $res_id, $qty, '$usuario_logado')");
+                    $resumo['assig']++;
+                }
+            } 
+            else {
+                // Se não é Labor, procuramos primeiro nas Ferramentas...
+                sc_lookup(rs_tool, "SELECT tool_id FROM mro_tools WHERE part_number = '$p6_r_id'");
+                if(isset({rs_tool[0][0]})) {
+                    $tool_id = {rs_tool[0][0]};
+                    sc_exec_sql("DELETE FROM mro_tool_movements WHERE task_id = $task_id AND tool_id = $tool_id");
+                    sc_exec_sql("INSERT INTO mro_tool_movements (task_id, tool_id, created_at, resource_id) VALUES ($task_id, $tool_id, NOW(), $res_id)");
+                    $resumo['assig']++;
+                } 
+                else {
+                    // ...se não achou nas ferramentas, é porque deve ser Material
+                    sc_lookup(rs_mat, "SELECT material_id FROM mro_materials WHERE part_number = '$p6_r_id'");
+                    if(isset({rs_mat[0][0]})) {
+                        $mat_id = {rs_mat[0][0]};
+                        sc_exec_sql("DELETE FROM mro_task_materials WHERE task_id = $task_id AND material_id = $mat_id");
+                        sc_exec_sql("INSERT INTO mro_task_materials (task_id, material_id, planned_qty) VALUES ($task_id, $mat_id, $qty)");
+                        $resumo['assig']++;
+                    }
+                }
+            }
+        }
+    }
+    fclose($file);
+}
+
+// ====================================================================================
+// FASE 4: IMPORTAR PREDECESSORAS (TASKPRED.csv)
+// ====================================================================================
+if (!empty({csv_predecessors}) && file_exists($path . {csv_predecessors})) {
+    $file = fopen($path . {csv_predecessors}, 'r');
+    fgetcsv($file, 10000, ";"); fgetcsv($file, 10000, ";"); 
+    
+    while (($dados = fgetcsv($file, 10000, ";")) !== FALSE) {
+        $pred_code = isset($dados[0]) ? limpa_csv($dados[0]) : ''; 
+        $succ_code = isset($dados[1]) ? limpa_csv($dados[1]) : ''; 
+        $type      = isset($dados[2]) ? limpa_csv($dados[2]) : 'FS'; 
+        
+        if(empty($pred_code) || empty($succ_code)) continue;
+
+        $sql_p = "SELECT t.task_id FROM mro_tasks t JOIN mro_wbs w ON t.wbs_id = w.wbs_id WHERE w.project_id = $id_projeto AND t.task_code = '$pred_code'";
+        sc_lookup(rs_p, $sql_p);
+        
+        $sql_s = "SELECT t.task_id FROM mro_tasks t JOIN mro_wbs w ON t.wbs_id = w.wbs_id WHERE w.project_id = $id_projeto AND t.task_code = '$succ_code'";
+        sc_lookup(rs_s, $sql_s);
+        
+        if(isset({rs_p[0][0]}) && isset({rs_s[0][0]})) {
+            $pred_id = {rs_p[0][0]};
+            $succ_id = {rs_s[0][0]};
+            
+            sc_exec_sql("DELETE FROM mro_task_dependencies WHERE successor_task_id = $succ_id AND predecessor_task_id = $pred_id");
+            sc_exec_sql("INSERT INTO mro_task_dependencies (successor_task_id, predecessor_task_id, dep_type, created_by) VALUES ($succ_id, $pred_id, '$type', '$usuario_logado')");
+            $resumo['pred']++;
+        }
+    }
+    fclose($file);
+}
+
+$msg = "<b>Importação Primavera P6 Concluída!</b><br><br>";
+$msg .= "✅ Fases (WBS) criadas: " . $resumo['wbs'] . "<br>";
+$msg .= "✅ Novas Tarefas inseridas: " . $resumo['task_ins'] . "<br>";
+$msg .= "🔄 Tarefas atualizadas: " . $resumo['task_upd'] . "<br>";
+$msg .= "✅ Recursos mapeados: " . $resumo['rsrc'] . " | Atribuições inseridas: " . $resumo['assig'] . "<br>";
+$msg .= "✅ Rede (Predecessoras): " . $resumo['pred'] . "<br>";
+
+// Se o modo debug estiver ligado, não podemos usar o sc_redir direto, por isso desative o "ini_set" se o pop-up der erro
+sc_alert($msg);
+sc_redir('form_public_mro_projects', '', '_parent');

@@ -1,0 +1,71 @@
+<?php
+
+// 1. Oculta os campos numéricos originais do banco de dados para o usuário não ver
+sc_field_display({tool_id}, 'off');
+sc_field_display({employee_id}, 'off');
+sc_field_display({task_id}, 'off');
+sc_field_display({project_id}, 'off');
+
+// 2. Oculta campos gerenciais (Só a qualidade vai ver isso depois)
+sc_field_display({manager_evaluation}, 'off');
+sc_field_display({manager_user}, 'off');
+sc_field_display({manager_signature_date}, 'off');
+
+// 3. Regras de Inclusão (Preenchimento Automático)
+// Verifica se a chave primária está vazia (Garante que é um registro novo sem causar erro 500)
+if (empty({report_id})) {
+    {report_type} = [v_tipo];
+    {tool_id}     = [v_tool];
+    {employee_id} = [v_emp];
+    {task_id}     = [v_task];
+    {project_id}  = [v_proj];
+    {report_date} = date('Y-m-d H:i:s');
+}
+
+// ====================================================================
+// 4. PREENCHIMENTO DOS LABELS BONITOS (BUSCA NO BANCO)
+// ====================================================================
+if (!empty({tool_id})) {
+    $sql_tool = "SELECT part_number, description FROM mro_tools WHERE tool_id = " . (int){tool_id};
+    sc_lookup(rs_t, $sql_tool);
+    if (!empty({rs_t})) {
+        {lbl_ferramenta} = "<b>" . {rs_t[0][0]} . "</b> - " . {rs_t[0][1]};
+    }
+}
+
+if (!empty({employee_id})) {
+    $sql_emp = "SELECT employee_registration, full_name FROM mro_employees WHERE employee_id = " . (int){employee_id};
+    sc_lookup(rs_e, $sql_emp);
+    if (!empty({rs_e})) {
+        {lbl_mecanico} = "<b>" . {rs_e[0][0]} . "</b> - " . {rs_e[0][1]};
+    }
+}
+
+if (!empty({task_id})) {
+    $sql_task = "SELECT task_code, task_name FROM mro_tasks WHERE task_id = " . (int){task_id};
+    sc_lookup(rs_k, $sql_task);
+    if (!empty({rs_k})) {
+        {lbl_tarefa} = "<b>" . {rs_k[0][0]} . "</b> - " . {rs_k[0][1]};
+    }
+}
+
+// ====================================================================
+// 5. REGRA DE NEGÓCIO: DANO vs PERDA
+// ====================================================================
+if ({report_type} == 'TF-60-013') {
+    // É DANO
+    sc_field_display({tool_belongs_to}, 'off');
+    sc_field_display({lost_date}, 'off');
+    sc_field_display({found_date}, 'off');
+    
+    // Sintaxe corrigida conforme o manual do Scriptcase!
+    sc_label("occurrence_description") = "Descrição da Avaria / Mal Funcionamento";
+    
+} elseif ({report_type} == 'TF-60-041') {
+    // É PERDA
+    sc_field_display({take_out_date}, 'off');
+    sc_field_display({return_date}, 'off');
+    
+    // Sintaxe corrigida conforme o manual do Scriptcase!
+    sc_label("occurrence_description") = "Última vez vista em uso (Local / Situação)";
+}

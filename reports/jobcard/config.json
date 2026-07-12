@@ -1,0 +1,103 @@
+{
+  "nome": "jobcard",
+  "tipo": "Form",
+  "nome_tabela": "jobcard",
+  "campos": [
+    {
+      "nome": "amm",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "ata_chapter",
+      "tipo": "text",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "company",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "instruction",
+      "tipo": "text",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "is_nrc",
+      "tipo": "bool",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "logo",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "mh",
+      "tipo": "numeric",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "model",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "origin_doc",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "project_name",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "reg",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "skill",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "task_code",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "task_name",
+      "tipo": "text",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "work_order",
+      "tipo": "text",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "zone",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    }
+  ]
+}

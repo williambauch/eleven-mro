@@ -1,0 +1,114 @@
+<?php
+
+$v_ts_id  = {id_timesheet};
+$v_ass_id = {assignment_id};
+$v_motivo = {motivo_pausa};
+$v_ass_id_sel = {assignment_id_sel};
+
+// 1. Correção de quebra de SQL com addslashes e validação segura (empty)
+$v_notas = !empty({passagem_servico}) ? addslashes({passagem_servico}) : 'Pausa rotineira (Almoço / Descanso)';
+
+// 2. Correção: Trocado $v_decisao por $v_motivo em toda a estrutura
+if($v_motivo == 1) {
+    // ROTA 1: PAUSA CURTA (Mantém com o mecânico, apenas pausa)
+    $motivo_txt = '';
+    $status_code = 'PAUSED';
+    $status_ts = 'PAUSED';
+    $status_type = "Pausa - Notas: $v_notas";
+	
+} elseif (in_array($v_motivo, [3, 4, 5])) {
+    // ROTA 2: IMPEDIMENTOS / GARGALOS (Alerta as áreas de apoio!)
+    $motivo_txt = ($v_motivo == 3) ? 'Falta de Material' : (($v_motivo == 4) ? 'Falta de Ferramenta/GSE' : 'Aguardando Qualidade/Eng.');
+    $status_code = 'BLOCKED';
+    $status_ts = 'PAUSED';
+    $status_type = "Impedimento ($motivo_txt) - Notas: $v_notas";
+	
+    // Mapeando a decisão para true/false 
+    $b_mat  = ($v_motivo == 3) ? 'true' : 'false';
+    $b_ferr = ($v_motivo == 4) ? 'true' : 'false';
+    $b_mao  = ($v_motivo == 5) ? 'true' : 'false';
+
+    $sql_flags = "UPDATE mro_tasks 
+                  SET is_blocked_material = $b_mat, 
+                      is_blocked_tool = $b_ferr, 
+                      is_blocked_labor = $b_mao 
+                  WHERE task_id = (SELECT task_id FROM mro_task_assignments WHERE assignment_id = $v_ass_id)";
+    sc_exec_sql($sql_flags);
+	
+} elseif ($v_motivo == 2) { 
+    // ROTA 3: FIM DE TURNO / REPASSE (Devolve pro Supervisor)
+    $motivo_txt = '';
+    $status_code = 'PENDING_HANDOVER';
+    $status_ts = 'COMPLETED';
+    $status_type = "Repasse de Turno - Notas: $v_notas";
+	
+} elseif ($v_motivo == 6) { 
+    // ROTA 4: CONCLUSÃO (Vai para o Inspetor/Supervisor assinar)
+    $motivo_txt = '';
+    $status_code = 'SUPSIG';
+    $status_ts = 'COMPLETED';
+    $status_type = "Tarefa 100% Concluída.";
+} else {
+	// SEGURANÇA: Se o motivo vier vazio ou não mapeado, cancela a operação
+	sc_error_message("Motivo de ação não identificado.");
+	sc_error_exit();
+}
+
+// 1. Fecha o Timesheet atual (Calculando os minutos no Postgres)
+$sql_ts1 = "UPDATE mro_timesheet 
+            SET end_time = NOW(), 
+                status = '$status_ts', 
+                pause_reason = '$motivo_txt',
+                handover_notes = '$v_notas',
+                duration_minutes = ROUND(EXTRACT(EPOCH FROM (NOW() - start_time)) / 60)
+            WHERE timesheet_id = $v_ts_id";
+sc_exec_sql($sql_ts1);
+
+// 2. Registra o Evento de Auditoria
+$sql_ev = "INSERT INTO mro_assignment_events 
+           (assignment_id, timesheet_id, event_type, performed_by_id, description) 
+           VALUES ($v_ass_id, $v_ts_id, '$status_code', [usr_employee_id], '$status_type')";
+sc_exec_sql($sql_ev);
+
+// 3. Muda a tarefa atual para o Status correspondente da Rota
+$sql_pause2 = "UPDATE mro_task_assignments 
+               SET status_code = '$status_code' 
+               WHERE assignment_id = $v_ass_id";
+sc_exec_sql($sql_pause2);
+
+// ========================================================
+// ROTA 5: O MECÂNICO ESCOLHEU PULAR PARA UMA NOVA TAREFA
+// ========================================================
+if (!empty($v_ass_id_sel) && $v_ass_id_sel != $v_ass_id) {
+	
+	// Gera novo relógio (Timesheet)
+	$sql_ts = "INSERT INTO mro_timesheet (assignment_id, employee_id, appointment_date, start_time, status) 
+               VALUES ($v_ass_id_sel, [usr_employee_id], CURRENT_DATE, NOW(), 'IN_PROGRESS')
+               RETURNING timesheet_id";
+	sc_lookup(rs_novo_id, $sql_ts);
+	
+	$id_ts = 0;
+	if (!empty({rs_novo_id[0][0]})) {
+		$id_ts = {rs_novo_id[0][0]};
+	}
+
+    [glo_timesheet_id] = $id_ts; // Guarda na sessão o NOVO cronômetro
+
+    // Grava auditoria na nova tarefa apontada
+	$sql_ev2 = "INSERT INTO mro_assignment_events (assignment_id, timesheet_id, event_type, performed_by_id) 
+                VALUES ($v_ass_id_sel, $id_ts, 'START', [usr_employee_id])";
+    sc_exec_sql($sql_ev2);
+	
+	// 3. Muda a nova tarefa para Em Progresso (Removido update 'PAUSED' redundante que existia antes)
+	$sql_prog = "UPDATE mro_task_assignments 
+                 SET status_code = 'IN_PROGRESS' 
+                 WHERE assignment_id = $v_ass_id_sel";
+	sc_exec_sql($sql_prog);
+}
+
+// Comita transações no banco
+sc_commit_trans();
+	
+// Limpa a sessão e fecha o Modal
+sc_reset_global([glo_current_timesheet]); 
+echo "<script> window.parent.tb_remove(); window.parent.location.reload(); </script>";

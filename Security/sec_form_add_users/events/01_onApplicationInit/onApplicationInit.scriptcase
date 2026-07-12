@@ -1,0 +1,7 @@
+<?php
+
+if(isset($_GET['a']) && substr($_GET['a'],0,4) == 'new_')
+{
+	sc_exec_sql("UPDATE public.sec_users SET active = 'Y', activation_code ='' WHERE activation_code = ". sc_sql_injection($_GET['a']) );
+	sc_redir('sec_Login');
+}

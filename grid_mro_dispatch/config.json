@@ -1,0 +1,49 @@
+{
+  "nome": "grid_mro_dispatch",
+  "tipo": "Grid",
+  "nome_tabela": "grid_mro_dispatch",
+  "campos": [
+    {
+      "nome": "a.assignment_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "a.executed_by_employee_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "a.planned_qty_hours",
+      "tipo": "numeric",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "a.status_code",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "mechanic_name",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "t.task_code",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "t.task_name",
+      "tipo": "text",
+      "required": false,
+      "pk": false
+    }
+  ]
+}

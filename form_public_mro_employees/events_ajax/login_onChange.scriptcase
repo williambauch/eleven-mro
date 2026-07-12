@@ -1,0 +1,9 @@
+<?php
+
+sc_lookup(Dataset, "select name from sec_users where login='{login}'");
+
+{full_name} = {Dataset[0][0]};
+
+sc_lookup(Dataset, "select * from sec_users_groups where login='{login}' and group_id=6");
+
+{is_supervisor} = empty({Dataset}) ? 0 : 1;

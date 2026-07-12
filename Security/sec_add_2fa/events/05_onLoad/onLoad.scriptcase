@@ -1,0 +1,83 @@
+<?php
+
+sc_field_display({phone}, "off");
+sc_field_display({google_auth_img}, "off");
+sc_field_display({code}, "off");
+sc_field_display({counter}, "off");
+
+sc_btn_display("send_sms","off");
+sc_btn_display("send_email","off");
+
+sc_btn_disabled("submit_ajax", "on");
+
+
+
+if( [sett_enable_2fa] == 'N'){
+	{help_description} = {lang_sec_2fa_disable_desc};
+	sc_btn_display("submit_ajax","off");
+	sc_btn_display("reset","off");
+}
+else
+{
+	sc_lookup(rs, "SELECT mfa FROM public.sec_users WHERE login = ". sc_sql_injection([usr_login]) );
+	if(!empty({rs[0][0]})){
+
+		if([sett_enable_2fa_mode] != 'all'){
+			{help_description} = {lang_sec_2fa_reset_desc};
+		}
+		else{
+			{help_description} = {lang_sec_2fa_reset_mode_all_desc};
+			sc_btn_display("reset","off");
+		}
+	}
+	else{
+		sc_btn_display("reset","off");
+		switch([sett_enable_2fa_api_type]){
+
+			case 'auth':
+				sc_field_display({google_auth_img}, "on");
+				sc_2fa_ga_generate_img();
+				{help_description} = {lang_sec_2fa_desc_ga};
+				sc_btn_disabled("submit_ajax", "off");
+				sc_field_display({code}, "on");
+				break;
+
+			case 'email':
+				{help_description} = {lang_sec_2fa_desc_email};
+				sc_btn_display("send_email","on");
+				break;
+
+			case 'sms':
+				sc_btn_display("send_sms","on");
+				sc_field_display({phone}, "on");
+				{help_description} = {lang_sec_2fa_desc_sms};
+				break;
+		}
+        
+        
+        if([sett_enable_2fa_api_type] != 'auth' && [sett_enable_2fa_expiration_time] != 0){
+            $counter_time = [sett_enable_2fa_expiration_time] ?? 60;
+            
+            
+            $label = '<span id=counter_display>'.{lang_sec_2fa_counter} .' <span id=counter></span></span><span id=counter_expired>'.{lang_sec_2fa_counter_expired}.'</span>';
+            
+            sc_label(counter) = $label;
+            
+            echo "<script>
+               $(document).ready(function(){
+                    var counterInterval;
+                    $('#sc_send_email_bot').on('click', function(){
+                        counter(".$counter_time.");
+                    });
+                    $('#sc_send_sms_bot').on('click', function(){
+                        counter(".$counter_time.");
+                    });
+                    $('#sc_reset_bot').on('click', function(){
+                        $('#counter').html('');
+                    });
+                });
+            </script>";
+        }
+        
+	}
+}

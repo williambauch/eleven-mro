@@ -1,0 +1,8 @@
+<?php
+
+if ({deferment_status} == 't' || {deferment_status} == 1) {
+    sc_field_display({deferment_reason}, 'on'); // Mostra o campo
+} else {
+    sc_field_display({deferment_reason}, 'off'); // Esconde o campo
+    {deferment_reason} = ''; // Limpa o valor se a pessoa desmarcar
+}

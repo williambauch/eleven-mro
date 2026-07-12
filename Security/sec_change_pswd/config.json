@@ -1,0 +1,37 @@
+{
+  "nome": "sec_change_pswd",
+  "tipo": "Form",
+  "nome_tabela": "sec_change_pswd",
+  "campos": [
+    {
+      "nome": "confirm_pswd",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "description",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "old_pswd",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "pswd",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "pswd_rules",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    }
+  ]
+}

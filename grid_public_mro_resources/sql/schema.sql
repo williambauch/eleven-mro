@@ -1,0 +1,11 @@
+SELECT
+    resource_id,
+    p6_rsrc_id,
+    full_name,
+    skill_code,
+    is_active,
+    created_at,
+    updated_at,
+    resource_type
+FROM
+    "public".mro_resources

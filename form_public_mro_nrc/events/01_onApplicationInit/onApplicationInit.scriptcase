@@ -1,0 +1,5 @@
+<?php
+
+sc_apl_conf("form_public_mro_nrc", "insert", "off");
+
+  //sc_apl_conf("form_public_mro_nrc", "delete", "off");

@@ -1,0 +1,6 @@
+<?php
+
+sc_reset_apl_conf("sec_form_add_users");
+sc_reset_apl_conf("sec_retrieve_pswd");
+
+get_settings();

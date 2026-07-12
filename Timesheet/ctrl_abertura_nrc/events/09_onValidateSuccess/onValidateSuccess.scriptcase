@@ -1,0 +1,111 @@
+<?php
+
+// ====================================================================
+// 0. CAPTURA DE VARIÁVEIS E PROTEÇÃO DE SESSÃO
+// ====================================================================
+
+$is_backoffice = (isset([glo_origem]) && [glo_origem] == 'backoffice');
+
+if (!$is_backoffice) {
+    if (!isset([usr_employee_id]) || empty([usr_employee_id])) {
+        sc_error_message("Erro de Sessão: Não foi possível identificar o seu ID de Funcionário.");
+        sc_error_exit();
+    }
+    $emp_id = [usr_employee_id];
+} else {
+    $emp_id = isset([usr_employee_id]) && !empty([usr_employee_id]) ? [usr_employee_id] : 0;
+}
+
+// Preparando as strings com aspas para evitar erro fatal (tela branca) no SQL
+$v_titulo     = "'" . addslashes({titulo_nrc}) . "'";
+$v_desc       = "'" . addslashes({descricao_detalhada}) . "'";
+$v_impeditivo = {impeditivo};
+
+// ====================================================================
+// 1. ROTEAMENTO: MECÂNICO VS BACKOFFICE
+// ====================================================================
+if (!$is_backoffice) {
+    // ROTA 1: MECÂNICO
+    $sql_busca = "SELECT a.assignment_id, a.status_code, 
+                         (SELECT timesheet_id FROM mro_timesheet WHERE assignment_id = a.assignment_id AND status = 'IN_PROGRESS' LIMIT 1) as ts_ativo
+                  FROM mro_task_assignments a 
+                  WHERE a.executed_by_employee_id = $emp_id 
+                  AND a.status_code IN ('ASSIGNED', 'IN_PROGRESS', 'PAUSED') 
+                  LIMIT 1";
+    sc_lookup(ds_ativa, $sql_busca);
+
+    if (empty({ds_ativa})) {
+        sc_error_message("Erro: Nenhuma tarefa alocada a você para gerar a NRC.");
+        sc_error_exit(); 
+    }
+
+    $v_parent_assignment = {ds_ativa[0][0]};
+    $v_status_atual      = {ds_ativa[0][1]};
+    $v_ts_id             = {ds_ativa[0][2]}; 
+    
+    sc_lookup(rs_assignment, "SELECT task_id FROM mro_task_assignments WHERE assignment_id = $v_parent_assignment");
+    $v_parent_task = {rs_assignment[0][0]};
+
+} else {
+    // ROTA 2: BACKOFFICE
+    $v_parent_task = [task_id_origem];
+}
+
+$sql_parent = "SELECT task_code, project_id FROM mro_tasks WHERE task_id = $v_parent_task";
+sc_lookup(rs_parent, $sql_parent);
+
+$parent_code  = {rs_parent[0][0]};
+$v_project_id = {rs_parent[0][1]}; 
+
+// ====================================================================
+// 3. LÓGICA DE GERAÇÃO DO CÓDIGO DA NRC
+// ====================================================================
+$base_code = (substr($parent_code, 0, 2) === 'NR') ? $parent_code : 'NR' . $parent_code;
+
+$sql_last_child = "SELECT task_code FROM mro_tasks WHERE parent_task_id = $v_parent_task AND task_code LIKE '$base_code-%' ORDER BY task_id DESC LIMIT 1";
+sc_lookup(rs_child, $sql_last_child);
+
+$next_seq = 1;
+if (!empty({rs_child[0][0]})) {
+    $parts = explode('-', {rs_child[0][0]});
+    $last_seq = (int) end($parts); 
+    $next_seq = $last_seq + 1;
+}
+$novo_task_code = $base_code . '-' . str_pad($next_seq, 2, '0', STR_PAD_LEFT);
+
+// ====================================================================
+// 4. INSERT DA NOVA NRC
+// ====================================================================
+// Repare que $v_titulo e $v_desc não precisam de aspas aqui, pois já as adicionamos lá em cima
+$sql_nrc = "INSERT INTO mro_tasks 
+            (task_type, task_code, task_name, instruction_text, project_id, parent_task_id, origin_document, nrc_status, status_code, is_nrc, created_by) 
+            VALUES ('NRC', '$novo_task_code', $v_titulo, $v_desc, $v_project_id, $v_parent_task,'$parent_code', 'DRAFT', 'DRAFT', true, '[usr_login]') 
+            RETURNING task_id";
+            
+sc_lookup(rs_nrc, $sql_nrc);
+$nova_nrc_id = {rs_nrc[0][0]};
+
+// ====================================================================
+// 5. ATUALIZAÇÕES DE IMPEDIMENTO (SOMENTE MECÂNICO)
+// ====================================================================
+if (!$is_backoffice) {
+    if ($v_impeditivo == 'S') {
+        if ($v_status_atual == 'IN_PROGRESS' && !empty($v_ts_id)) {
+            sc_exec_sql("UPDATE mro_timesheet SET end_time = NOW(), status = 'PAUSED', pause_reason = 'Aguardando Avaliação da NRC $novo_task_code', duration_minutes = ROUND(EXTRACT(EPOCH FROM (NOW() - start_time)) / 60) WHERE timesheet_id = $v_ts_id");
+        }
+        
+        sc_exec_sql("UPDATE mro_task_assignments SET status_code = 'BLOCKED' WHERE assignment_id = $v_parent_assignment");
+        sc_exec_sql("UPDATE mro_tasks SET is_blocked_labor = true WHERE task_id = $v_parent_task");
+        
+        $ts_log = !empty($v_ts_id) ? $v_ts_id : "NULL";
+        sc_exec_sql("INSERT INTO mro_assignment_events (assignment_id, timesheet_id, event_type, performed_by_id, description) 
+                     VALUES ($v_parent_assignment, $ts_log, 'BLOCKED', $emp_id, 'Achado impeditivo. NRC $novo_task_code gerada.')");
+
+    } else {
+        $ts_log = !empty($v_ts_id) ? $v_ts_id : "NULL";
+        sc_exec_sql("INSERT INTO mro_assignment_events (assignment_id, timesheet_id, event_type, performed_by_id, description) 
+                     VALUES ($v_parent_assignment, $ts_log, 'NRC_CREATED', $emp_id, 'Achado relatado paralelamente: NRC $novo_task_code.')");    
+    }
+}
+
+    sc_redir(form_public_mro_nrc, task_id=$nova_nrc_id, "_parent");

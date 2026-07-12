@@ -1,0 +1,8 @@
+<?php
+
+{pswd} = hash("md5",{pswd});
+
+[req_active_by_email] = 'N';
+if([sett_req_email_act] == 'N'){
+	[req_active_by_email] = 'Y';
+}

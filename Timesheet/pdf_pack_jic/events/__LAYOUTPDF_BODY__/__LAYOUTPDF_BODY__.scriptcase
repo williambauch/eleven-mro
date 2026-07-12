@@ -1,0 +1,22 @@
+<?php
+
+/*------------------ Page 1 -----------------*/
+            sc_pdf_print($cell_t_task_code);
+            sc_pdf_print_mult($cell_discrepancy_title, 2.8222222222222);
+            sc_pdf_print_mult($cell_corrective_action_description, 2.8222222222222);
+            sc_pdf_print($cell_origin_document);
+            sc_pdf_print($cell_t_document_reference);
+            sc_pdf_print($cell_t_ata_chapter);
+            sc_pdf_print_mult($cell_t_zone_area, 2.8222222222222);
+            sc_pdf_print($cell_t_estimated_hours);
+            sc_pdf_print($cell_ac_work_order);
+            sc_pdf_print($cell_aircraft_registration);
+            sc_pdf_print($cell_aircraft_esn);
+            sc_pdf_print($cell_originated_by_name);
+            sc_pdf_print($cell_project);
+            sc_pdf_print($cell_a_model);
+            sc_pdf_print_mult($cell_type, 3.5277777777778);
+            sc_pdf_print_img($cell_barcode, 0, 0);
+            sc_pdf_print_mult($cell_customer_name, 2.8222222222222);
+            sc_pdf_print($cell_skill_code);
+          /*-------------------------------------------*/

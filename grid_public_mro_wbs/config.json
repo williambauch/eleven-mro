@@ -1,0 +1,37 @@
+{
+  "nome": "grid_public_mro_wbs",
+  "tipo": "Grid",
+  "nome_tabela": "public.mro_wbs",
+  "campos": [
+    {
+      "nome": "phase_type",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "project_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "wbs_code",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "wbs_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": true
+    },
+    {
+      "nome": "wbs_name",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    }
+  ]
+}

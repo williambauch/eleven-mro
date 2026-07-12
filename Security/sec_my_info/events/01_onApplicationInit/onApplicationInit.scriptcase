@@ -1,0 +1,3 @@
+<?php
+
+[str_where] = "login = ".sc_sql_injection([usr_login]);

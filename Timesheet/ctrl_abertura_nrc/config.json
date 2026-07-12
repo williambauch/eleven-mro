@@ -1,0 +1,37 @@
+{
+  "nome": "ctrl_abertura_nrc",
+  "tipo": "Form",
+  "nome_tabela": "ctrl_abertura_nrc",
+  "campos": [
+    {
+      "nome": "descricao_detalhada",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "foto_defeito",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "impeditivo",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "referencia_passo",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "titulo_nrc",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    }
+  ]
+}

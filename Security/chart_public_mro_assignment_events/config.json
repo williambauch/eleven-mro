@@ -1,0 +1,67 @@
+{
+  "nome": "chart_public_mro_assignment_events",
+  "tipo": "Chart",
+  "nome_tabela": "public.mro_assignment_events",
+  "campos": [
+    {
+      "nome": "assignment_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "description",
+      "tipo": "text",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "event_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": true
+    },
+    {
+      "nome": "event_timestamp",
+      "tipo": "datetime",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "event_type",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "ip_address",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "new_employee_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "old_employee_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "performed_by_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "user_agent",
+      "tipo": "text",
+      "required": false,
+      "pk": false
+    }
+  ]
+}

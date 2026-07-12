@@ -1,0 +1,16 @@
+<?php
+
+if([sett_send_email_adm] == 'Y'){
+	send_mail_to_admin();
+}
+
+$return_msg_email_act = 0;
+if([sett_req_email_act] == 'Y'){
+	send_mail_to_new_user();
+    $return_msg_email_act=1;
+}
+
+add_user_to_group({login});
+
+sc_commit_trans();
+sc_redir('sec_Login', return_msg_email_act=$return_msg_email_act);

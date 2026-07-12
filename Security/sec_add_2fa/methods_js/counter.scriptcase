@@ -1,0 +1,25 @@
+<?php
+
+var timer = duration, minutes, seconds;
+    if(typeof counterInterval !== 'undefined'){
+        clearInterval(counterInterval);
+    }
+    $('#counter_expired').hide();
+    $('#counter_display').show();
+    counterInterval = setInterval(function () {
+        if (--timer < 0) {
+            $('#counter_display').hide();
+            $('#counter_expired').show();
+            clearInterval(counterInterval);
+
+            return false;
+        }
+        minutes = parseInt(timer / 60, 10);
+        seconds = parseInt(timer % 60, 10);
+
+        minutes = minutes < 10 ? "0" + minutes : minutes;
+        seconds = seconds < 10 ? "0" + seconds : seconds;
+
+        $('#counter').text(minutes + ":" + seconds);
+
+    }, 1000);

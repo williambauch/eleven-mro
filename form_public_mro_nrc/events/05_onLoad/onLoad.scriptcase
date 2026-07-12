@@ -1,0 +1,148 @@
+<?php
+
+// ====================================================================
+// PROTEÇÃO E ATRIBUIÇÃO DE VARIÁVEIS GLOBAIS
+// ====================================================================
+// Se por acaso abrir em modo de inserção (o que não deve ocorrer), puxa as globais
+if (empty({task_id})) {
+    if (!empty([parent_task_id])) { {parent_task_id} = [parent_task_id]; }
+    if (!empty([wbs_id]))         { {wbs_id}         = [wbs_id]; }
+    if (!empty([skill_code]))     { {skill_code}     = [skill_code]; }
+}
+
+$ids_brutos = is_array([usr_groups]) ? implode(',', [usr_groups]) : [usr_groups];
+$ids_brutos = str_replace(' ', '', $ids_brutos); // Limpa espaços
+
+$meus_grupos = []; // Array vazio que vai receber os textos
+
+if (!empty($ids_brutos)) {
+    // Faz a busca no banco de dados do módulo de segurança
+    $sql_grupos = "SELECT description FROM sec_groups WHERE group_id IN ($ids_brutos)";
+    
+    sc_lookup(rs_grupos, $sql_grupos);
+    
+    if (!empty({rs_grupos})) {
+        foreach ({rs_grupos} as $grupo) {
+            // Salva os nomes em MAIÚSCULAS para facilitar o IF lá embaixo
+            $meus_grupos[] = strtoupper(trim($grupo[0])); 
+        }
+    }
+}
+
+// ====================================================================
+// CONTROLE VISUAL DE BLOCOS E CAMPOS
+// ====================================================================
+sc_field_display({deferment_reason}, 'off');
+if ({deferment_status} == 't' || {deferment_status} == 1) {
+    sc_field_display({deferment_reason}, 'on');
+}
+
+// Exibe ou esconde o bloco de HH/Materiais baseado na necessidade de Engenharia
+// (Ajuste 'bloco_recursos' para o nome exato do seu bloco no Scriptcase)
+/*
+if ({requires_engineering} == 'S' || {requires_engineering} == true) {
+    sc_block_display('bloco_recursos', 'off');
+} else {
+    sc_block_display('bloco_recursos', 'on');
+}
+*/
+// ====================================================================
+// 3. WORKFLOW E BOTÕES DE AÇÃO (Fluxo MRO Completo)
+// ====================================================================
+
+// Esconde TODOS os botões por padrão (Segurança Máxima)
+$botoes = ['btn_enviar_eng','btn_aprovar_cliente', 'btn_reprovar_cliente', 'btn_enviar_cliente',  'btn_enviar_prog', 'btn_enviar_coord', 'btn_validar_prog', 'btn_cancelar'];
+foreach ($botoes as $btn) { sc_btn_display($btn, 'off'); }
+
+//Desabilita o botão de Excluir por padrão, liberando somente para o mecâmoco nos status DRAFT
+sc_btn_display('delete', 'off');
+
+//Desabilita o botão de Atualizar por padrão, liberando somente para o perfil autorizado por Status
+sc_btn_display('update', 'off');
+//Desabilita o bloco financeiro enquanto o O&A não é regado
+sc_block_display('bloco_financeiro', 'off');
+
+// Avaliação de Status
+if ({status_code} == 'DRAFT') {
+    // ----------------------------------------------------
+    // FASE 1: MECÂNICO
+    // ----------------------------------------------------
+    if (in_array('MECANICO', $meus_grupos)) {
+		sc_btn_display('btn_enviar_eng', 'on'); 
+		sc_btn_display('btn_enviar_prog', 'on');
+		sc_btn_display('delete', 'on');
+		sc_btn_display('update', 'on');
+	}
+
+} elseif ({status_code} == 'PENDING_ENG') {
+    // ----------------------------------------------------
+    // FASE 2: ENGENHARIA
+    // ----------------------------------------------------
+    sc_field_readonly({description}, 'on'); // Ninguém muda o relato original
+    
+    // Se for da Engenharia, pode mandar pra Programação ou pro Coordenador
+    if (in_array('ENGENHARIA', $meus_grupos)) {
+        sc_btn_display('btn_enviar_prog', 'on'); 
+        sc_btn_display('btn_enviar_coord', 'on'); 
+        sc_btn_display('btn_cancelar', 'on'); // Cancelar NRC
+		sc_btn_display('update', 'on');
+    }
+
+} elseif ({status_code} == 'PENDING_COORD') {
+    // ----------------------------------------------------
+    // FASE 3: COORDENADOR DE PROJETO
+    // ----------------------------------------------------
+    //sc_field_readonly({description}, 'on');
+    if (in_array('COORDENADOR', $meus_grupos)) {
+        sc_btn_display('btn_enviar_eng', 'on'); // Devolve pra Engenharia
+        sc_btn_display('btn_enviar_prog', 'on'); // Manda direto pra Programação
+        sc_btn_display('btn_cancelar', 'on'); // Cancelar NRC
+		sc_btn_display('update', 'on');
+    }
+
+} elseif ({status_code} == 'PENDING_PROG') {
+    // ----------------------------------------------------
+    // FASE 4: PROGRAMAÇÃO
+    // ----------------------------------------------------
+    sc_field_readonly({description}, 'on');
+    if (in_array('PROGRAMACAO', $meus_grupos)) {
+        sc_btn_display('btn_enviar_coord', 'on'); // Se algo estiver errado, devolve pro Coord.
+        sc_btn_display('btn_validar_prog', 'on'); // Se OK, roda o Motor O&A!
+        sc_btn_display('btn_cancelar', 'on'); // Cancelar NRC
+		sc_btn_display('update', 'on');
+    }
+
+} elseif ({status_code} == 'PENDING_OA') {
+    // ----------------------------------------------------
+    // FASE 5: AGUARDANDO CLIENTE
+    // ----------------------------------------------------    
+    if (in_array('CLIENTE', $meus_grupos) || in_array('COMERCIAL', $meus_grupos)) {
+        sc_btn_display('btn_aprovar_cliente', 'on');
+        sc_btn_display('btn_reprovar_cliente', 'on');
+    }
+	
+    if (!in_array('MECANICO', $meus_grupos)) {
+		sc_block_display('bloco_financeiro', 'on');
+	}
+
+} elseif ({status_code} == 'COMMERCIAL_REVIEW') {
+    // ----------------------------------------------------
+    // FASE 6: NEGOCIAÇÃO COMERCIAL (Cliente Recusou)
+    // ---------------------------------------------------- 
+    if (in_array('COMERCIAL', $meus_grupos)) {  
+        sc_btn_display('btn_enviar_prog', 'on'); // Se conseguiu negociar e mudou algo, volta o fluxo
+        sc_btn_display('btn_enviar_cliente', 'on'); // Se conseguiu negociar sem mudar algo
+        sc_btn_display('btn_cancelar', 'on'); // Cancelar NRC caso o cliente não aprove de jeito nenhum
+		sc_btn_display('update', 'on');
+    }
+		
+    if (!in_array('MECANICO', $meus_grupos)) {
+		sc_block_display('bloco_financeiro', 'on');
+	}
+
+} else {
+    // FASE 7: RELEASED (Liberado) ou Outros	
+    if (!in_array('MECANICO', $meus_grupos)) {
+		sc_block_display('bloco_financeiro', 'on');
+	}
+}

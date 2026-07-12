@@ -1,0 +1,149 @@
+<?php
+
+// 1. TRAVA DE SEGURANÇA (Evita tela branca se o ID vier vazio)
+$assignment_id = isset([glo_assignment_id]) && !empty([glo_assignment_id]) ? [glo_assignment_id] : 0;
+
+if ($assignment_id == 0) {
+    echo "<div style='padding: 20px; font-family: sans-serif; color: #d93025;'>
+            <h3>⚠️ Atenção</h3>
+            <p>O ID da Tarefa não foi recebido. Feche esta aba e clique no botão da tarefa na Grid.</p>
+          </div>";
+    return;
+}
+
+// 2. BUSCA NO BANCO DE DADOS
+$sql = "SELECT 
+            e.event_type,
+            e.event_timestamp,
+            e.description,
+            sup.full_name as supervisor_name,
+            old_m.full_name as old_mechanic_name,
+            new_m.full_name as new_mechanic_name
+        FROM mro_assignment_events e
+        LEFT JOIN mro_employees sup   ON e.performed_by_id = sup.employee_id
+        LEFT JOIN mro_employees old_m ON e.old_employee_id = old_m.employee_id
+        LEFT JOIN mro_employees new_m ON e.new_employee_id = new_m.employee_id
+        WHERE e.assignment_id = $assignment_id
+        ORDER BY e.event_timestamp ASC";
+
+sc_select(rs, $sql);
+
+if ({rs} === false) {
+    echo "<h3>Erro no Banco de Dados:</h3>" . {rs_erro};
+    return;
+}
+
+// 3. INÍCIO DO HTML E CSS
+?>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    
+    <style>
+        /* RESET E CONTAINER */
+        body { background-color: #f4f6f8; margin: 0; padding: 20px; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+        .timeline-box { background: #ffffff; max-width: 700px; margin: 0 auto; padding: 40px 30px; border-radius: 10px; box-shadow: 0 2px 15px rgba(0,0,0,0.05); }
+
+        /* ESTRUTURA DA LINHA DO TEMPO */
+        .tl-item { display: flex; position: relative; margin-bottom: 0px; }
+        
+        /* COLUNA 1: Ícones */
+        .tl-icon { width: 35px; text-align: center; font-size: 16px; padding-top: 15px; z-index: 2; }
+        
+        /* COLUNA 2: Bolinhas e Linha Tracejada */
+        .tl-node-col { width: 30px; display: flex; flex-direction: column; align-items: center; position: relative; margin-right: 15px; }
+        .tl-node { width: 14px; height: 14px; border-radius: 50%; margin-top: 18px; z-index: 2; }
+        .tl-line { position: absolute; top: 32px; bottom: -18px; border-left: 2px dashed #d0d7de; z-index: 1; }
+        .tl-item:last-child .tl-line { display: none; /* Esconde a linha no último item */ }
+
+        /* COLUNA 3: Conteúdo de Texto */
+        .tl-content { flex: 1; padding-bottom: 30px; }
+        .tl-time { font-family: 'Courier New', Courier, monospace; font-size: 12px; color: #57606a; margin-bottom: 4px; font-weight: 600; }
+        .tl-title { font-size: 16px; font-weight: 800; color: #24292f; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .tl-actors { font-size: 14px; color: #57606a; margin-bottom: 6px; }
+        .tl-desc { font-size: 13px; color: #8c959f; line-height: 1.4; }
+
+        /* SISTEMA DE CORES IDÊNTICO À IMAGEM */
+        .c-blue { color: #1a73e8; } .bg-blue { background-color: #1a73e8; }
+        .c-yellow { color: #d99000; } .bg-yellow { background-color: #f2a900; }
+        .c-green { color: #188038; } .bg-green { background-color: #188038; }
+        .c-red { color: #d93025; } .bg-red { background-color: #d93025; }
+    </style>
+</head>
+<body>
+
+<div class="timeline-box">
+
+<?php
+// 4. O LAÇO DE REPETIÇÃO (Desenhando o HTML linha a linha)
+if ({rs}->EOF) {
+    echo "<p style='text-align:center; color:#666;'>Nenhum evento registrado para esta tarefa ainda.</p>";
+}
+
+while (!$rs->EOF) {
+    // Tratamento dos dados do banco
+    $tipo = strtoupper($rs->fields[0]);
+    $data = date("d/m, H:i", strtotime($rs->fields[1]));
+    $desc = $rs->fields[2];
+    $supervisor = $rs->fields[3] ? $rs->fields[3] : "Sistema";
+    $mecanico_antigo = $rs->fields[4];
+    $mecanico_novo = $rs->fields[5];
+
+    // Lógica de Atores (De -> Para)
+    $atores = "";
+    if ($tipo == 'ASSIGNMENT') {
+        $nome_mec = $mecanico_novo ? $mecanico_novo : "Não definido";
+        $atores = "Realizado por: Sup. $supervisor &rarr; Mec. $nome_mec";
+    } elseif ($tipo == 'REASSIGNMENT') {
+        $atores = "Realizado por: Sup. $supervisor <br> Mec. $mecanico_antigo &rarr; Mec. $mecanico_novo";
+    } else {
+        $nome_final = $mecanico_novo ? $mecanico_novo : $supervisor;
+        $atores = "Realizado por: Mec. $nome_final";
+    }
+
+    // Lógica de Cores e Ícones
+    $cor = "blue"; 
+    $icone = "fas fa-user-plus";
+    
+    if ($tipo == 'ASSIGNMENT') { 
+        $cor = "blue"; $icone = "fas fa-user-plus"; 
+    }
+    if ($tipo == 'REASSIGNMENT') { 
+        $cor = "yellow"; $icone = "fas fa-exchange-alt"; 
+    }
+    if ($tipo == 'START' || $tipo == 'IN_PROGRESS') { 
+        $cor = "green"; $icone = "fas fa-play"; 
+    }
+    if ($tipo == 'PAUSE' || $tipo == 'NON_ROUTINE' || $tipo == 'NRC_OPENED') { 
+        $cor = "red"; $icone = "fas fa-exclamation-triangle"; 
+    }
+
+    // Imprime o Bloco HTML processado
+    echo "
+    <div class='tl-item'>
+        <div class='tl-icon c-{$cor}'>
+            <i class='{$icone}'></i>
+        </div>
+        <div class='tl-node-col'>
+            <div class='tl-node bg-{$cor}'></div>
+            <div class='tl-line'></div>
+        </div>
+        <div class='tl-content'>
+            <div class='tl-time'>{$data}</div>
+            <div class='tl-title'>{$tipo}</div>
+            <div class='tl-actors'>{$atores}</div>
+            <div class='tl-desc'>{$desc}</div>
+        </div>
+    </div>
+    ";
+
+    $rs->MoveNext();
+}
+$rs->Close();
+?>
+
+</div> </body>
+</html>
+<?

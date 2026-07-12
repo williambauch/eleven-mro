@@ -1,0 +1,5 @@
+<?php
+
+$sql = "INSERT INTO public.sec_groups_apps(group_id, app_name)
+	     SELECT '". {group_id}."', app_name FROM public.sec_apps ";
+sc_exec_sql($sql);

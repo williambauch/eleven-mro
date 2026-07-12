@@ -1,0 +1,109 @@
+{
+  "nome": "pdf_jobcard",
+  "tipo": "Form",
+  "nome_tabela": "pdf_jobcard",
+  "campos": [
+    {
+      "nome": "ac_registration",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "ac_sn",
+      "tipo": "int4",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "ac_type",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "ac_work_order",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "area_zone",
+      "tipo": "text",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "ata",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "company",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "corrective_action",
+      "tipo": "text",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "discrepancy",
+      "tipo": "text",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "document_no",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "estimated_hours",
+      "tipo": "numeric",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "instruction_text",
+      "tipo": "text",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "origin_doc",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "originated_by",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "origination_date",
+      "tipo": "datetime",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "project_number",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "skill",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    }
+  ]
+}

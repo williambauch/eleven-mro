@@ -1,0 +1,19 @@
+<?php
+
+if({smtp_api} == 'custom'){
+	sc_field_display({smtp_server}, on);
+	sc_field_display({smtp_port}, on);
+	sc_field_display({smtp_security}, on);
+	sc_field_display({smtp_user}, on);
+	sc_field_display({smtp_pass}, on);
+	sc_field_display({smtp_from_email}, on);
+	sc_field_display({smtp_from_name}, on);
+}else{
+	sc_field_display({smtp_server}, off);
+	sc_field_display({smtp_port}, off);
+	sc_field_display({smtp_security}, off);
+	sc_field_display({smtp_user}, off);
+	sc_field_display({smtp_pass}, off);
+	sc_field_display({smtp_from_email}, off);
+	sc_field_display({smtp_from_name}, off);
+}

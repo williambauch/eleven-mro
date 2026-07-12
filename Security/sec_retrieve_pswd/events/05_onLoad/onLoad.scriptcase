@@ -1,0 +1,14 @@
+<?php
+
+switch( [sett_login_mode] ){
+	default:
+	case 'username':
+		sc_label('login') = {lang_field_login};
+		break;
+	case 'email':
+		sc_label('login') = {lang_field_email};
+		break;
+	case 'both':
+		sc_label('login') = {lang_field_both};
+		break;
+}

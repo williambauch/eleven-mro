@@ -1,0 +1,98 @@
+<?php
+
+if(isset([act_code]) && !empty([act_code]))
+{
+	sc_field_display({old_pswd}, 'off');
+	sc_field_no_validate({old_pswd});
+	sc_btn_display("exit","off");
+}
+else
+{
+	sc_field_display({old_pswd}, 'on');
+	sc_btn_display("exit","on");
+}
+
+if(isset([pswd_expired]) && [pswd_expired] == 1){
+	{description} = {lang_sec_pswd_expired};
+}else{
+	sc_block_display("description", "off");
+}
+
+$arr_check = explode(';',[sett_password_strength]);
+$arr_check[] = 'equal_pswd';
+$arr_check[] = 'min_chars';
+$arr_html_rules = ['',''];
+foreach($arr_check as $k => $check){
+    if(empty($check)){ continue; }
+	$lang = $this->Ini->Nm_lang[ 'lang_sec_pswd_rules_opt_' . $check ];
+	if($check == 'min_chars'){
+		$lang = sprintf($lang, [sett_password_min]);
+	}
+	$arr_html_rules[ $k%2 ] .= '<div class="bullet item pswd_ruler" id="sec_pswd_rules_'. $check .'">' . $lang .'</div>';
+}
+
+$pswd_min = [sett_password_min];
+$pswd_field = strtolower("pswd");
+
+$html_pswd = '<div class="scFormTable scFormPage help_pswd scFormErrorTable" style="width: 100%;height: inherit;padding: 10px 0px;margin:0px;">
+<div class="header" id="lang_login_help" style="margin-bottom: 0.5rem;padding-left:2px;">'.{lang_sec_pswd_rules_title}.'</div>
+	<div id="nm_help_pass" style="display:flex;padding-left: 4px;">
+		<div style="width:50%">
+			' . $arr_html_rules[0] .'
+		</div>
+		<div style="width:50%">
+			' . $arr_html_rules[1] .'
+		</div>
+	</div>
+</div>
+<style>
+.help_pswd::before{ width: 95%;margin-left:5px; }
+.bullet.item::before {
+    content: "\2022";
+    margin-right: 0.1rem;
+}
+.header{
+	font-weight:600;
+	}
+.nm_help_green{
+    color:green !important;
+}
+.nm_help_red{
+    color:red !important;
+}
+</style>
+<script>
+function checkPassword(){
+    v = $("#id_sc_field_'.$pswd_field.'").val();
+    $(".pswd_ruler").removeClass("nm_help_green").addClass("nm_help_red");
+    if(v.length >= '. $pswd_min .'){
+        $("#sec_pswd_rules_min_chars").removeClass("nm_help_red").addClass("nm_help_green");
+    }
+    
+    if(v.match(/[a-z]+/)) {
+        $("#sec_pswd_rules_lowercase_letter").removeClass("nm_help_red").addClass("nm_help_green");
+    }
+    
+    if(v.match(/[A-Z]+/)) {
+        $("#sec_pswd_rules_uppercase_letter").removeClass("nm_help_red").addClass("nm_help_green");
+    }
+    
+    if(v.match(/[0-9]+/)) {
+        $("#sec_pswd_rules_numbers").removeClass("nm_help_red").addClass("nm_help_green");
+    }
+    
+    if(v.match(/[^\w]+/)) {
+        $("#sec_pswd_rules_special_chars").removeClass("nm_help_red").addClass("nm_help_green");
+    }
+    
+    if(v == $("#id_sc_field_confirm_pswd").val() ) {
+        $("#sec_pswd_rules_equal_pswd").removeClass("nm_help_red").addClass("nm_help_green");
+    }
+}
+
+$("#id_sc_field_'.$pswd_field.'").keyup(function(){ checkPassword() });
+$("#id_sc_field_confirm_pswd").keyup(function(){ checkPassword() });
+
+</script>';
+
+{pswd_rules} = strtr($html_pswd, ["\n" => "", "\r" => ""]);

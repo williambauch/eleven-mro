@@ -1,0 +1,19 @@
+{
+  "nome": "login",
+  "tipo": "Form",
+  "nome_tabela": "login",
+  "campos": [
+    {
+      "nome": "login",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "senha",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    }
+  ]
+}

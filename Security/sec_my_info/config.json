@@ -1,0 +1,79 @@
+{
+  "nome": "sec_my_info",
+  "tipo": "Form",
+  "nome_tabela": "public.sec_users",
+  "campos": [
+    {
+      "nome": "activation_code",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "active",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "email",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "login",
+      "tipo": "varchar",
+      "required": false,
+      "pk": true
+    },
+    {
+      "nome": "mfa",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "name",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "phone",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "picture",
+      "tipo": "bytea",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "priv_admin",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "pswd",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "pswd_last_updated",
+      "tipo": "datetime",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "role",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    }
+  ]
+}

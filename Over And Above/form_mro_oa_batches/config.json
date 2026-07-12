@@ -1,0 +1,73 @@
+{
+  "nome": "form_mro_oa_batches",
+  "tipo": "Form",
+  "nome_tabela": "\"public\".mro_oa_batches",
+  "campos": [
+    {
+      "nome": "approved_at",
+      "tipo": "datetime",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "batch_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": true
+    },
+    {
+      "nome": "created_at",
+      "tipo": "datetime",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "created_by",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "iten",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "project_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "remarks",
+      "tipo": "text",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "status",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "submitted_at",
+      "tipo": "datetime",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "total_hh",
+      "tipo": "numeric",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "total_material_cost",
+      "tipo": "numeric",
+      "required": false,
+      "pk": false
+    }
+  ]
+}

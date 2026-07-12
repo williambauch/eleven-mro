@@ -1,0 +1,7 @@
+<?php
+
+if({remember_me} == 'Y'){
+    sc_field_display({cookie_expiration_time}, "on");
+}else{   
+    sc_field_display({cookie_expiration_time}, "off");
+}

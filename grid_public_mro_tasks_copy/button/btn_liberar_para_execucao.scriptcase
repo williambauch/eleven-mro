@@ -1,0 +1,57 @@
+<?php
+
+// Captura os dados da linha atual na Grid
+$v_task_id = {task_id};
+$v_status  = {status_code};
+$v_projeto = {project_id};
+
+// ====================================================================
+// CRÍTICA DE STATUS: Só processa se estiver como NOT_STARTED
+// ====================================================================
+if ($v_status == 'PLANNING' || $v_status == 'NOT_STARTED') {
+    
+    // 1. Atualiza o status do documento da tarefa para RELEASED (Liberado)
+    sc_exec_sql("UPDATE mro_tasks SET status_code = 'RELEASED' WHERE task_id = $v_task_id");
+    
+    // 2. Busca os recursos do tipo LABOR (Mão de Obra) importados do P6
+    $sql_resources = "SELECT DISTINCT tr.resource_code, tr.budgeted_hours
+                      FROM mro_task_resources tr
+                      JOIN mro_resources r ON tr.resource_code = r.resource_code
+                      WHERE tr.task_id = $v_task_id 
+                      AND r.resource_type = 'LABOR'";
+                      
+    sc_lookup(rs_resources, $sql_resources);
+    
+    if (!empty({rs_resources})) {
+        
+        // Varre cada recurso (Especialidade) encontrado para esta tarefa
+        foreach ({rs_resources} as $res) {
+            $v_res_code = $res[0]; // Ex: 'MEC', 'AVI'
+            $v_hours    = !empty($res[1]) ? (float)$res[1] : {estimated_hours}; // Pega as horas do P6
+            
+            // Busca o ID numérico da especialidade (skill_id) na sua tabela de domínio
+            sc_lookup(rs_s_id, "SELECT skill_id FROM mro_skills WHERE skill_code = '$v_res_code'");
+            $v_skill_id = !empty({rs_s_id}) ? {rs_s_id[0][0]} : "NULL";
+            
+            // Cria o "Slot" de trabalho EXATO para a especialidade com a carga horária fragmentada
+            $sql_ins_assign = "INSERT INTO mro_task_assignments 
+                               (task_id, skill_id, status_code, planned_qty_hours, project_id) 
+                               VALUES ($v_task_id, $v_skill_id, 'NOT_STARTED', $v_hours, $v_projeto)";
+            sc_exec_sql($sql_ins_assign);			
+        }
+        
+    } else {
+        // Fallback: Se por algum motivo o P6 não enviou recursos LABOR para esta tarefa,
+        // cria uma alocação genérica usando o total de horas para o Supervisor não perder a tarefa.
+        $v_horas_fallback = {estimated_hours};
+		
+		// Busca o ID numérico da especialidade (skill_id) na sua tabela de domínio
+		sc_lookup(rs_s_id_fb, "SELECT skill_id FROM mro_skills WHERE skill_code = '{skill_code]'");
+		$v_skill_id_fallback = !empty({rs_s_id_fb}) ? {rs_s_id_fb[0][0]} : "NULL";
+		
+        $sql_ins_assign = "INSERT INTO mro_task_assignments 
+                           (task_id, skill_id, status_code, planned_qty_hours, project_id) 
+                           VALUES ($v_task_id, $v_skill_id_fallback, 'NOT_STARTED', $v_horas_fallback, $v_projeto)";
+        sc_exec_sql($sql_ins_assign);
+    }
+}

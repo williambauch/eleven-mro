@@ -1,0 +1,16 @@
+SELECT
+    project_id,
+    task_id,
+    task_code,
+    task_name,
+    parent_task_id,
+    ata_chapter,
+    estimated_hours,
+    oa_hours,
+    estimated_material_cost,
+    oa_material_cost,
+    status_code
+FROM
+    "public".mro_tasks
+WHERE
+    oa_batch_id=[batch_id]

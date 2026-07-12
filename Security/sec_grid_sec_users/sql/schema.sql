@@ -1,0 +1,9 @@
+SELECT 
+    picture,
+    login,
+    name,
+    email,
+    active,
+    priv_admin
+FROM 
+    public.sec_users

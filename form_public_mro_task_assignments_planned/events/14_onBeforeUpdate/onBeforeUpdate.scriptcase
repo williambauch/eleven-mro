@@ -1,0 +1,19 @@
+<?php
+
+// Lógica para Atribuição de mecânico
+if (!empty({executed_by_employee_id}) && {status_code} == 'PLANNED') {
+    
+    // Define o supervisor logado como dono da tarefa
+    {supervisor_id} = [usr_employee_id];
+    
+    // Atualiza o status para Atribuído
+    {status_code} = 'ASSIGNED';
+    
+    // 2. Grava o Evento de Atribuição na tabela de rastreabilidade
+    $sql_log = "INSERT INTO mro_assignment_events 
+                (assignment_id, event_type, performed_by_id, new_employee_id, description, user_agent)
+                VALUES 
+                ({assignment_id}, 'ASSIGNMENT', [usr_employee_id], {executed_by_employee_id}, 'Tarefa distribuída pelo supervisor.','[usr_login]')";
+    
+    sc_exec_sql($sql_log);
+}

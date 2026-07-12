@@ -1,0 +1,37 @@
+{
+  "nome": "sec_grid_sec_users_groups",
+  "tipo": "Form",
+  "nome_tabela": "public.sec_users",
+  "campos": [
+    {
+      "nome": "active",
+      "tipo": "text",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "email",
+      "tipo": "text",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "group",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "login",
+      "tipo": "text",
+      "required": false,
+      "pk": true
+    },
+    {
+      "nome": "name",
+      "tipo": "text",
+      "required": false,
+      "pk": false
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+SELECT
+    roster_id,
+    resource_id,
+    customer_name,
+    aircraft_model,
+    is_authorized,
+    authorization_date,
+    notes,
+    updated_at
+FROM
+    "public".mro_resource_roster

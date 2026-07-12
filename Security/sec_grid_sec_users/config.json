@@ -1,0 +1,43 @@
+{
+  "nome": "sec_grid_sec_users",
+  "tipo": "Grid",
+  "nome_tabela": "public.sec_users",
+  "campos": [
+    {
+      "nome": "active",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "email",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "login",
+      "tipo": "varchar",
+      "required": false,
+      "pk": true
+    },
+    {
+      "nome": "name",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "picture",
+      "tipo": "bytea",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "priv_admin",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    }
+  ]
+}

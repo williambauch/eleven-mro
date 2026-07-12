@@ -1,0 +1,19 @@
+{
+  "nome": "ctrl_import_excel",
+  "tipo": "Form",
+  "nome_tabela": "ctrl_import_excel",
+  "campos": [
+    {
+      "nome": "arquivo_xlsx",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "project_id",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    }
+  ]
+}

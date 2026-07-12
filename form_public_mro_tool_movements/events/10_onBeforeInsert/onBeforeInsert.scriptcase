@@ -1,0 +1,27 @@
+<?php
+
+// Verifica a situação da ferramenta antes de confirmar o empréstimo
+$sql_tool = "SELECT calibration_due_date, status FROM mro_tools WHERE tool_id = " . {tool_id};
+sc_lookup(rs_tool, $sql_tool);
+
+if (isset({rs_tool[0][0]})) {
+    $vencimento = {rs_tool[0][0]};
+    $status_atual = {rs_tool[0][1]};
+    $hoje = date('Y-m-d');
+
+    // Regra 1: Calibração Vencida
+    if (!empty($vencimento) && $vencimento < $hoje) {
+        sc_error_message("BLOQUEIO DE QUALIDADE: Esta ferramenta está com a calibração VENCIDA (" . date('d/m/Y', strtotime($vencimento)) . ") e não pode ser utilizada.");
+        sc_error_exit(); // Impede o insert
+    }
+
+    // Regra 2: Ferramenta não disponível
+    if ($status_atual != 'AVAILABLE') {
+        sc_error_message("Esta ferramenta não está disponível no momento. Status atual: " . $status_atual);
+        sc_error_exit();
+    }
+    
+    // Se passou nas regras, nós "reservamos" a ferramenta mudando o status no banco principal
+    $sql_update_status = "UPDATE mro_tools SET status = 'IN_USE' WHERE tool_id = " . {tool_id};
+    sc_exec_sql($sql_update_status);
+}

@@ -1,0 +1,29 @@
+<?php
+
+sc_lookup(rs, "SELECT mfa FROM public.sec_users WHERE login = ". sc_sql_injection([usr_login]));
+$d = explode('@@', $rs[0][0]);
+
+switch([type_2fa]){
+    
+    case 'auth':
+        break;
+        
+    case 'email':
+        sc_2fa_send_email();
+        break;
+   
+    case 'sms':
+        $phone = $d[1];
+        sc_2fa_send_sms($phone);
+        break;
+}
+
+sc_alert({lang_sec_2fa_resend_msg}, array(
+                'title' => {lang_sec_2fa_resend},
+                'type' => 'success',
+                'timer' => '5000',
+                'showConfirmButton' => false,
+                'position' => 'center',
+                'toast' => true
+                )
+          );

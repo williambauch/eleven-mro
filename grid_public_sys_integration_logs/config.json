@@ -1,0 +1,55 @@
+{
+  "nome": "grid_public_sys_integration_logs",
+  "tipo": "Grid",
+  "nome_tabela": "public.sys_integration_logs",
+  "campos": [
+    {
+      "nome": "created_at",
+      "tipo": "datetime",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "direction",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "endpoint",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "error_message",
+      "tipo": "text",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "log_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": true
+    },
+    {
+      "nome": "payload",
+      "tipo": "jsonb",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "status_code",
+      "tipo": "int4",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "system_origin",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    }
+  ]
+}

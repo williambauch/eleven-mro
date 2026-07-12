@@ -1,0 +1,14 @@
+<?php
+
+[i] = 0;
+[total_chked] = array ();
+
+sc_exec_sql("
+    UPDATE mro_oa_batches 
+    SET 
+        total_hh = (SELECT COALESCE(SUM(oa_hours), 0) FROM mro_tasks WHERE oa_batch_id = " . [batch_id] . "),
+        total_material_cost = (SELECT COALESCE(SUM(oa_material_cost), 0) FROM mro_tasks WHERE oa_batch_id = " . [batch_id] . ")
+    WHERE batch_id = " . [batch_id]
+);
+
+//sc_ajax_javascript("parent.location.reload();");

@@ -1,0 +1,13 @@
+{
+	"servers": {
+		"MCP-mysql-vetweb": {
+			"type": "stdio",
+			"command": "dbhub",
+			"args": [
+				"--config",
+				".vscode/dbhub-config.toml"
+			],
+			"env": {}
+		}
+	}
+}

@@ -1,0 +1,37 @@
+{
+  "nome": "control_pause_task",
+  "tipo": "Control",
+  "nome_tabela": "control_pause_task",
+  "campos": [
+    {
+      "nome": "assignment_id",
+      "tipo": "integer",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "assignment_id_sel",
+      "tipo": "integer",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "id_timesheet",
+      "tipo": "integer",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "motivo_pausa",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "passagem_servico",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    }
+  ]
+}

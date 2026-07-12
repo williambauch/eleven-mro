@@ -1,0 +1,10 @@
+SELECT
+    aircraft_id,
+    registration,
+    model,
+    msn,
+    customer_name,
+    created_at,
+    updated_at
+FROM
+    "public".mro_aircraft

@@ -1,0 +1,56 @@
+<?php
+
+$log_output = sc_log_split({description});
+if (!is_array($log_output))
+{
+   {log_ok} = $log_output;
+}
+else
+{
+    $list_key        = "";
+    $list_field      = "";
+    $list_old        = "";
+    $list_new      = "";
+    $list_header = "<td style=\"vertical-align: top; font-weight:bold;\">Key</td>";
+    foreach  ($log_output['keys'] as $key => $val_k)
+    {
+        $list_key .= (empty($list_key)) ? "" : "<br>";
+        $list_key .= $key . " = " . $val_k;
+    }
+    $list_key = "<td style=\"vertical-align: top\">" . $list_key . "</td>";
+    if (isset($log_output['fields']))
+    {
+        $list_header .= "<td style=\"vertical-align: top; font-weight:bold;\">Field</td>";
+        if (isset($log_output['fields']['old'] ))
+        {
+	    $list_field      = "";
+            $list_header .= "<td style=\"vertical-align: top; font-weight:bold;\">Old</td>";
+            foreach  ($log_output['fields']['old'] as $field => $val_f)
+            {
+                $list_field   .= (empty($list_field)) ? "" : "<br>";
+                $list_old     .= (empty($list_old))   ? "" : "<br>";
+                $list_field   .= $field;
+                $list_old     .= $val_f;
+            }
+            $list_old = "<td style=\"vertical-align: top\">" . $list_old . "</td>";
+        }
+        if (isset($log_output['fields']['new'] ))
+        {
+	    $list_field      = "";
+            $list_header .= "<td style=\"vertical-align: top; font-weight:bold;\">New</td>";
+            foreach  ($log_output['fields']['new'] as $field => $val_f)
+            {
+                $list_field   .= (empty($list_field)) ? "" : "<br>";
+                $list_new   .= (empty($list_new))   ? "" : "<br>";
+                $list_field   .= $field;
+                $list_new   .= $val_f;
+            }
+            $list_new   = "<td style=\"vertical-align: top\">" . $list_new . "</td>";
+        }
+        $list_field = "<td style=\"vertical-align: top\">" . $list_field . "</td>";
+    }
+    {log_ok}  = "<table style=\"padding: 0px; border-spacing: 0px; border-width: 0px; vertical-align: top;\"><tr>";
+    {log_ok} .= $list_header . "</tr><tr>";
+    {log_ok} .= $list_key . $list_field . $list_old . $list_new;
+    {log_ok} .= "</tr></table>";
+}

@@ -1,0 +1,12 @@
+<?php
+
+// Injeta o HTML da Barra de Progresso na tela (Fica invisível inicialmente)
+echo "
+<div id='box_importacao' style='display:none; width: 100%; max-width: 600px; margin: 50px auto; font-family: Arial, sans-serif;'>
+    <h3 style='color: #333;'><i class='fa-solid fa-boxes-packing'></i> Importando Empenhos de Materiais...</h3>
+    <div style='width: 100%; background-color: #e9ecef; border-radius: 8px; overflow: hidden; height: 25px; margin-top: 20px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);'>
+        <div id='barra_progresso' style='width: 0%; height: 100%; background-color: #0d6efd; text-align: center; line-height: 25px; color: white; font-weight: bold; transition: width 0.1s;'>0%</div>
+    </div>
+    <div id='status_texto' style='margin-top: 15px; color: #6c757d; font-size: 14px;'>Preparando arquivo...</div>
+</div>
+";

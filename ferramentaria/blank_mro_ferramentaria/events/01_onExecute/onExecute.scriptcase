@@ -1,0 +1,485 @@
+<?php
+
+/* * ============================================================================
+ * MRO SYSTEM - PORTAL DA FERRAMENTARIA (COM MODAL DE RELATÓRIOS SGSO)
+ * ============================================================================
+ */
+
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+// Recupera o ID da sessão como padrão inicial se existir
+$session_project_id = (isset([var_project_id]) && !empty([var_project_id])) ? [var_project_id] : 0; 
+
+// Captura do usuário logado para auditoria ANAC
+$usuario_logado = (isset([usr_login]) && !empty([usr_login])) ? trim([usr_login]) : 'SISTEMA_CRIB';
+
+// ----------------------------------------------------------------------------
+// 1. PROCESSAMENTO AJAX (BACKEND)
+// ----------------------------------------------------------------------------
+if (isset($_POST['action_mro'])) {
+    header('Content-Type: application/json');
+    
+    $action      = $_POST['action_mro'];
+    $project_id  = (int)$_POST['project_id']; 
+    $jic         = trim($_POST['jic']);
+    $matricula   = trim($_POST['matricula']);
+    $ferramenta  = trim($_POST['ferramenta']);
+    $condicao    = isset($_POST['condicao']) ? $_POST['condicao'] : 'OK';
+
+    $response = array('status' => 'error', 'msg' => '', 'redirect_form' => '');
+
+    if (empty($project_id)) {
+        $response['msg'] = "Por favor, selecione um projeto aeronáutico ativo antes de bipar.";
+        echo json_encode($response); die();
+    }
+    if (empty($jic) || empty($matricula) || empty($ferramenta)) {
+        $response['msg'] = "Todos os campos (JIC, Matrícula e Ferramenta) são obrigatórios.";
+        echo json_encode($response); die();
+    }
+
+    // Validação 1: JIC / Tarefa
+    $sql_task = "SELECT task_id, task_name FROM mro_tasks WHERE task_code = '$jic' AND project_id = $project_id";
+    sc_lookup(rs_task, $sql_task);
+    if (empty({rs_task})) {
+        $response['msg'] = "A tarefa '$jic' não pertence ao projeto selecionado ou não existe.";
+        echo json_encode($response); die();
+    }
+    $task_id = {rs_task[0][0]};
+
+    // Validação 2: Mecânico
+    $sql_emp = "SELECT employee_id, full_name FROM mro_employees WHERE employee_registration = '$matricula'";
+    sc_lookup(rs_emp, $sql_emp);
+    if (empty({rs_emp})) {
+        $response['msg'] = "Mecânico não localizado pelo crachá ou matrícula.";
+        echo json_encode($response); die();
+    }
+    $emp_id   = {rs_emp[0][0]};
+    $emp_name = {rs_emp[0][1]};
+
+    // Validação 2.1: Atividade atribuída
+    $sql_ass = "SELECT assignment_id FROM mro_task_assignments WHERE task_id = $task_id AND executed_by_employee_id = $emp_id";
+    sc_lookup(rs_ass, $sql_ass);
+    if (empty({rs_ass})) {
+        $response['msg'] = "Atividade não atribuída ao mecânico $emp_name.";
+        echo json_encode($response); die();
+    }
+    $ass_id   = {rs_ass[0][0]};
+    
+    // Trava de Clock-in Ativo
+    $sql_check_assign = "SELECT 1 FROM mro_timesheet WHERE assignment_id = $ass_id AND employee_id = $emp_id AND end_time IS NULL";
+    sc_lookup(rs_assign, $sql_check_assign);
+
+    if (empty({rs_assign})) {
+        $response['msg'] = "ACESSO NEGADO: O mecânico $emp_name não possui um Clock-In ativo para a tarefa '$jic'. A retirada de ferramentas só é permitida para profissionais executando a tarefa no momento.";
+        echo json_encode($response); die();
+    }
+
+    // Validação 3: Busca da Ferramenta
+    $sql_tool = "SELECT tool_id, status, calibration_due_date, description FROM mro_tools WHERE part_number = '$ferramenta'";
+    sc_lookup(rs_tool, $sql_tool);
+    if (empty({rs_tool})) {
+        $response['msg'] = "Ferramenta/Part Number não cadastrado no sistema.";
+        echo json_encode($response); die();
+    }
+    $tool_id     = {rs_tool[0][0]};
+    $tool_status = {rs_tool[0][1]};
+    $tool_calib  = {rs_tool[0][2]};
+    $tool_desc   = {rs_tool[0][3]};
+
+    // EXECUÇÃO DO CHECK-OUT
+    if ($action == 'CHECKOUT') {
+        if (!empty($tool_calib) && strtotime($tool_calib) < strtotime(date('Y-m-d'))) {
+            $sql_calib_upd = "UPDATE mro_tools SET status = 'FERRAMENTA EM CALIBRAÇÃO' WHERE tool_id = $tool_id";
+            sc_exec_sql($sql_calib_upd);
+            $response['msg'] = "BLOQUEIO DE COMPLIANCE ANAC: A ferramenta '$tool_desc' está com calibração vencida (" . date('d/m/Y', strtotime($tool_calib)) . ") e foi retida.";
+            echo json_encode($response); die();
+        }
+
+        if ($tool_status == 'FERRAMENTA EM EMPRESTIMO') {
+            $response['msg'] = "A ferramenta '$tool_desc' já consta como emprestada no sistema.";
+            echo json_encode($response); die();
+        }
+
+        $warning_append = "";
+        $sql_empenho = "SELECT 1 FROM mro_task_tools WHERE tool_id = $tool_id AND task_id = $task_id";
+        sc_lookup(rs_emp_check, $sql_empenho);
+        if (empty({rs_emp_check})) {
+            $warning_append = " (Aviso: Item fora do empenho planejado desta JIC)";
+        }
+
+        $sql_ins_trans = "INSERT INTO mro_tool_transactions (tool_id, employee_id, task_id, checkout_time, checkout_user, status) VALUES ($tool_id, $emp_id, $task_id, NOW(), '$usuario_logado', 'ACTIVE')";
+        sc_exec_sql($sql_ins_trans);
+        
+        $sql_upd_tool_out = "UPDATE mro_tools SET status = 'FERRAMENTA EM EMPRESTIMO' WHERE tool_id = $tool_id";
+        sc_exec_sql($sql_upd_tool_out);
+
+        $response['status'] = 'success';
+        $response['msg']    = "Check-out concluído para $emp_name! Item: $tool_desc" . $warning_append;
+        echo json_encode($response); die();
+    }
+
+    // EXECUÇÃO DO CHECK-IN
+    if ($action == 'CHECKIN') {
+        $sql_trans_check = "SELECT transaction_id FROM mro_tool_transactions WHERE tool_id = $tool_id AND employee_id = $emp_id AND task_id = $task_id AND status = 'ACTIVE'";
+        sc_lookup(rs_trans, $sql_trans_check);
+        if (empty({rs_trans})) {
+            $response['msg'] = "Nenhum empréstimo ativo localizado para este conjunto JIC/Mecânico/Ferramenta.";
+            echo json_encode($response); die();
+        }
+        $trans_id = {rs_trans[0][0]};
+
+        if ($condicao == 'DANO') {
+            $sql_dano = "UPDATE mro_tools SET status = 'FERRAMENTA DANIFICADA' WHERE tool_id = $tool_id";
+            sc_exec_sql($sql_dano);
+            $response['redirect_form'] = 'TF-60-013';
+            $response['msg'] = "Check-in registrado. Ferramenta retida por avaria. Por favor, preencha o relatório que abrirá na tela.";
+            
+        } elseif ($condicao == 'PERDA') {
+            $sql_perda = "UPDATE mro_tools SET status = 'FERRAMENTA EXTRAVIADA' WHERE tool_id = $tool_id";
+            sc_exec_sql($sql_perda);
+            $response['redirect_form'] = 'TF-60-041';
+            $response['msg'] = "Aviso de extravio processado. Por favor, preencha o relatório de perda que abrirá na tela.";
+            
+        } else {
+            $sql_disp = "UPDATE mro_tools SET status = 'DISPONIVEL' WHERE tool_id = $tool_id";
+            sc_exec_sql($sql_disp);
+            $response['msg'] = "Check-in limpo realizado com sucesso! Item disponível em estoque.";
+        }
+
+        $sql_fechar_trans = "UPDATE mro_tool_transactions SET checkin_time = NOW(), status = 'CLOSED', condition_on_return = '$condicao', checkin_user = '$usuario_logado' WHERE transaction_id = $trans_id";
+        sc_exec_sql($sql_fechar_trans);
+        
+        $sql_liberar_task = "UPDATE mro_tasks SET is_blocked_tool = false WHERE task_id = $task_id";
+        sc_exec_sql($sql_liberar_task);
+
+        // INJEÇÃO DOS IDs PARA O MODAL SGSO
+        $response['tool_id']    = $tool_id;
+        $response['emp_id']     = $emp_id;
+        $response['task_id']    = $task_id;
+        $response['project_id'] = $project_id;
+
+        $response['status'] = 'success';
+        echo json_encode($response); die();
+    }
+}
+
+// ----------------------------------------------------------------------------
+// 2. CARGA DE PROJETOS DO BANCO
+// ----------------------------------------------------------------------------
+$sql_proj_list = "SELECT project_id, p6_proj_id FROM mro_projects ORDER BY project_name ASC";
+sc_lookup(rs_all_projects, $sql_proj_list);
+
+$options_html = "<option value=''>-- Selecione o Projeto/Aeronave --</option>";
+if (!empty({rs_all_projects})) {
+    foreach ({rs_all_projects} as $proj) {
+        $id_p   = $proj[0];
+        $name_p = $proj[1];
+        $selected = ($id_p == $session_project_id) ? "selected" : "";
+        $options_html .= "<option value='{$id_p}' {$selected}>#{$id_p} - " . htmlspecialchars($name_p, ENT_QUOTES, 'UTF-8') . "</option>";
+    }
+}
+?>
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>MRO System - Controle de Ferramental</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="/libs/syncfusion/styles/material3.css" rel="stylesheet">
+    <script src="/libs/syncfusion/scripts/ej2-syncfusion.js" type="text/javascript"></script>
+    <script src="/libs/syncfusion/mro_config.js" type="text/javascript"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <style>
+        body, html { margin: 0; padding: 0; height: 100vh; font-family: 'Segoe UI', sans-serif; background-color: #f4f6f9; color: #333; }
+        .mro-container { display: flex; flex-direction: column; height: 100vh; padding: 20px; box-sizing: border-box; gap: 20px; }
+        .mro-header { background: #212529; color: #fff; padding: 15px 20px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; }
+        .mro-header h2 { margin: 0; font-size: 18px; letter-spacing: 0.5px; }
+        
+        .workspace { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; flex: 1; min-height: 0; }
+        .panel-card { background: #fff; border-radius: 6px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); display: flex; flex-direction: column; }
+        .panel-title { font-size: 15px; font-weight: bold; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 2px solid #f4f6f9; color: #495057; display: flex; align-items: center; gap: 8px; }
+        
+        .mode-selector { display: flex; gap: 10px; margin-bottom: 20px; }
+        .btn-mode { flex: 1; padding: 12px; font-size: 14px; font-weight: bold; border: 2px solid #dee2e6; border-radius: 4px; background: #fff; cursor: pointer; transition: all 0.2s; }
+        .btn-checkout.active { background: #20c997; color: #fff; border-color: #20c997; }
+        .btn-checkin.active { background: #0d6efd; color: #fff; border-color: #0d6efd; }
+        
+        .input-group { margin-bottom: 15px; text-align: left; position: relative; }
+        .input-group label { display: block; font-size: 12px; font-weight: bold; margin-bottom: 5px; color: #6c757d; text-transform: uppercase; }
+        .mro-field { width: 100%; padding: 12px 40px 12px 12px; font-size: 15px; border: 2px solid #ced4da; border-radius: 4px; box-sizing: border-box; background: #fff; }
+        .mro-field:focus { outline: none; border-color: #86b7fe; }
+        
+        .lock-btn { position: absolute; right: 10px; top: 28px; background: none; border: none; font-size: 16px; color: #ced4da; cursor: pointer; transition: color 0.2s; }
+        .lock-btn.locked { color: #ffc107; }
+        
+        .log-list { flex: 1; border: 1px solid #dee2e6; border-radius: 4px; background: #fafafa; padding: 10px; overflow-y: auto; list-style: none; margin: 0; font-size: 13px; }
+        .log-item { padding: 8px; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 8px; border-radius: 3px; margin-bottom: 5px; font-family: monospace; }
+        .log-success { background-color: #d1e7dd; color: #0f5132; border-left: 4px solid #198754; }
+        .log-error { background-color: #f8d7da; color: #842029; border-left: 4px solid #dc3545; }
+        #statusArea { margin-top: 10px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="mro-container">
+    <div class="mro-header">
+        <h2>MRO SYSTEM — FLOOR TOOL CONTROL</h2>
+        <span class="e-badge e-badge-success" style="padding:6px 12px; font-size:12px;"><i class="fa-solid fa-circle-check"></i> Terminal de Bipagem Crib</span>
+    </div>
+
+    <div class="workspace">
+        <div class="panel-card">
+            <div class="panel-title"><i class="fa-solid fa-barcode"></i> Entrada de Dados Estação</div>
+            
+            <div class="mode-selector">
+                <button type="button" class="btn-mode btn-checkout active" onclick="mudarModo('CHECKOUT')"><i class="fa-solid fa-right-from-bracket"></i> SAÍDA (CHECK-OUT)</button>
+                <button type="button" class="btn-mode btn-checkin" onclick="mudarModo('CHECKIN')"><i class="fa-solid fa-right-to-bracket"></i> RETORNO (CHECK-IN)</button>
+            </div>
+
+            <div class="input-group">
+                <label style="color:#ffc107; font-weight:bold;">0. Projeto / Check de Manutenção</label>
+                <select id="field_project_id" class="mro-field" style="border-color:#ffc107; font-weight:bold;" onchange="projetoAlterado()">
+                    <?php echo $options_html; ?>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label>1. Ordem de Serviço / JIC / NRC</label>
+                <input type="text" id="field_jic" class="mro-field" placeholder="Bipe o código de barras da Job Card..." autocomplete="off">
+                <button type="button" id="lock_jic" class="lock-btn" onclick="toggleLock('jic')" title="Fixar JIC"><i class="fa-solid fa-lock-open"></i></button>
+            </div>
+
+            <div class="input-group">
+                <label>2. Identificação do Mecânico</label>
+                <input type="text" id="field_matricula" class="mro-field" placeholder="Bipe o crachá ou digite a matrícula..." autocomplete="off">
+                <button type="button" id="lock_matricula" class="lock-btn" onclick="toggleLock('matricula')" title="Fixar Mecânico"><i class="fa-solid fa-lock-open"></i></button>
+            </div>
+
+            <div class="input-group" style="display: flex; gap: 10px; align-items: flex-end;">
+                <div style="flex: 1; position: relative;">
+                    <label style="color:#0d6efd;">3. Código da Ferramenta / Part Number</label>
+                    <input type="text" id="field_ferramenta" class="mro-field" style="border-color:#0d6efd;" placeholder="Bipe a etiqueta ou digite e clique na seta..." autocomplete="off">
+                </div>
+                <button type="button" onclick="processarFerramenta()" title="Processar Manualmente" style="height: 44px; width: 50px; background: #0d6efd; color: white; border: none; border-radius: 4px; font-size: 18px; cursor: pointer; transition: 0.2s;">
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+
+            <div id="statusArea"></div>
+        </div>
+
+        <div class="panel-card">
+            <div class="panel-title"><i class="fa-solid fa-clock-history"></i> Atividades Recentes da Estação</div>
+            <ul id="logMonitor" class="log-list">
+                <li id="log_vazio" style="color:#6c757d; text-align:center; padding-top:20px;">Aguardando bipagem de ferramentas...</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div id="dialog_inspecao"></div>
+<div id="dialog_relatorio"></div>
+
+<script>
+    var modoAtivo = 'CHECKOUT';
+    var locks = { jic: false, matricula: false };
+    var toastObj;
+    var inspecaoDialog;
+    var formDialog;
+    var ferramentaBipada = '';
+
+    document.addEventListener('DOMContentLoaded', function() {
+        toastObj = new ej.notifications.Toast({ position: { X: 'Right', Y: 'Top' } });
+        toastObj.appendTo(document.body);
+
+        // Modal 1: Perguntar Condição de Retorno
+        inspecaoDialog = new ej.popups.Dialog({
+            header: 'Inspeção de Retorno Aeronáutico',
+            content: 'Confirme o estado físico do ferramental recebido:',
+            showCloseIcon: true,
+            isModal: true,
+            visible: false,
+            width: '420px',
+            buttons: [
+                { click: function() { executarTransacao('OK'); }, buttonModel: { content: 'OK - Sem Danos', isPrimary: true } },
+                { click: function() { executarTransacao('DANO'); }, buttonModel: { content: 'Avariada / Danificada' } },
+                { click: function() { executarTransacao('PERDA'); }, buttonModel: { content: 'Extraviada (Perda)', cssClass: 'e-danger' } }
+            ]
+        });
+        inspecaoDialog.appendTo('#dialog_inspecao');
+
+        // Modal 2: Formulário da Qualidade (SGSO)
+        // Deixamos a string content nula no início, ela será injetada com o src do Iframe no momento do clique
+        formDialog = new ej.popups.Dialog({
+            header: 'Relatório de Ocorrência (Qualidade SGSO)',
+            showCloseIcon: true,
+            isModal: true,
+            visible: false,
+            width: '80%',
+            height: '90vh', // 'vh' garante que ocupe 90% da altura da janela em qualquer navegador
+            content: ''
+        });
+        formDialog.appendTo('#dialog_relatorio');
+
+        configurarFoco();
+    });
+
+    // Foco Inteligente com clique fora
+    document.addEventListener('click', function(e) {
+        if (!$(e.target).is('input, select, button, i') && !formDialog.visible) {
+            configurarFoco();
+        }
+    });
+
+    function mudarModo(modo) {
+        modoAtivo = modo;
+        $('.btn-mode').removeClass('active');
+        if(modo === 'CHECKOUT') $('.btn-checkout').addClass('active');
+        if(modo === 'CHECKIN') $('.btn-checkin').addClass('active');
+        configurarFoco();
+    }
+
+    function projetoAlterado() {
+        if(!locks.jic) $('#field_jic').val('');
+        if(!locks.matricula) $('#field_matricula').val('');
+        $('#field_ferramenta').val('');
+        configurarFoco();
+    }
+
+    function toggleLock(campo) {
+        locks[campo] = !locks[campo];
+        var btn = $('#lock_' + campo);
+        var input = $('#field_' + campo);
+        
+        if(locks[campo]) {
+            btn.addClass('locked').html('<i class="fa-solid fa-lock"></i>');
+            input.attr('readonly', true).css('background', '#e9ecef');
+        } else {
+            btn.removeClass('locked').html('<i class="fa-solid fa-lock-open"></i>');
+            input.attr('readonly', false).css('background', '#fff');
+        }
+        configurarFoco();
+    }
+
+    function configurarFoco() {
+        if ($('#field_project_id').val() === '') { $('#field_project_id').focus(); }
+        else if (!locks.jic) { $('#field_jic').focus(); }
+        else if (!locks.matricula) { $('#field_matricula').focus(); }
+        else { $('#field_ferramenta').focus(); }
+    }
+
+    $('.mro-field').on('keypress', function(e) {
+        if (e.which == 13 || e.which == 9) {
+            e.preventDefault();
+            var id = $(this).attr('id');
+            
+            if(id === 'field_jic' && $(this).val().trim() !== '') {
+                if(!locks.matricula) $('#field_matricula').focus(); else $('#field_ferramenta').focus();
+            }
+            else if(id === 'field_matricula' && $(this).val().trim() !== '') {
+                $('#field_ferramenta').focus();
+            }
+            else if(id === 'field_ferramenta' && $(this).val().trim() !== '') {
+                processarFerramenta();
+            }
+        }
+    });
+
+    function processarFerramenta() {
+        var inputFerr = $('#field_ferramenta').val().trim();
+        
+        if(inputFerr === '') {
+            toastObj.show({ title: 'Aviso', content: 'Informe a ferramenta primeiro.', cssClass: 'e-toast-warning' });
+            $('#field_ferramenta').focus();
+            return;
+        }
+
+        ferramentaBipada = inputFerr;
+        
+        if(modoAtivo === 'CHECKIN') {
+            inspecaoDialog.show();
+        } else {
+            executarTransacao('OK');
+        }
+    }
+
+    function executarTransacao(condicaoRetorno) {
+        inspecaoDialog.hide();
+        
+        var v_proj = $('#field_project_id').val();
+        var v_jic  = $('#field_jic').val().trim();
+        var v_mat  = $('#field_matricula').val().trim();
+
+        if(!v_proj) {
+            toastObj.show({ title: 'Aviso', content: 'Selecione um projeto primeiro.', cssClass: 'e-toast-warning' });
+            return;
+        }
+
+        $.ajax({
+            type: "POST",
+            url: "", 
+            data: {
+                action_mro: modoAtivo,
+                project_id: v_proj,
+                jic: v_jic,
+                matricula: v_mat,
+                ferramenta: ferramentaBipada,
+                condicao: condicaoRetorno
+            },
+            dataType: "json",
+            success: function(response) {
+                var areaStatus = document.getElementById('statusArea');
+                
+                if(response.status == 'success') {
+                    toastObj.show({ title: 'Sucesso', content: response.msg, cssClass: 'e-toast-success' });
+                    adicionarLogLinha(response.msg, 'log-success');
+                    areaStatus.innerHTML = '<span style="color:#198754;"><i class="fa-solid fa-circle-check"></i> Transação Concluída.</span>';
+                    
+                    // A SOLUÇÃO BLINDADA DO MODAL AQUI:
+                    if(response.redirect_form) {
+                        var url_form = '../form_mro_reports/form_mro_reports.php?v_tipo=' + response.redirect_form + 
+                                       '&v_tool=' + response.tool_id + 
+                                       '&v_emp=' + response.emp_id + 
+                                       '&v_task=' + response.task_id + 
+                                       '&v_proj=' + response.project_id;
+                        
+                        // Injeta o Iframe COMPLETO diretamente no Syncfusion!
+                        formDialog.content = '<iframe src="' + url_form + '" style="width:100%; height:100%; border:none; border-radius:4px;"></iframe>';
+                        formDialog.show();
+                    }
+
+                } else {
+                    toastObj.show({ title: 'Impedimento Operacional', content: response.msg, cssClass: 'e-toast-danger' });
+                    adicionarLogLinha(response.msg, 'log-error');
+                    areaStatus.innerHTML = '<span style="color:#dc3545;"><i class="fa-solid fa-ban"></i> ' + response.msg + '</span>';
+                }
+                
+                $('#field_ferramenta').val('');
+                ferramentaBipada = '';
+                
+                if(!response.redirect_form) {
+                    configurarFoco();
+                }
+            },
+            error: function() {
+                toastObj.show({ title: 'Erro de Servidor', content: 'Falha na comunicação AJAX.', cssClass: 'e-toast-danger' });
+            }
+        });
+    }
+
+    function adicionarLogLinha(msg, cssClasse) {
+        $('#log_vazio').remove();
+        var dataHora = new Date().toLocaleTimeString('pt-BR');
+        var item = '<li class="log-item ' + cssClasse + '">[' + dataHora + '] ' + msg + '</li>';
+        $('#logMonitor').prepend(item);
+    }
+</script>
+</body>
+</html>
+<?php
+exit;

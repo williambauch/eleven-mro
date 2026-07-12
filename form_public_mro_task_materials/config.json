@@ -1,0 +1,49 @@
+{
+  "nome": "form_public_mro_task_materials",
+  "tipo": "Form",
+  "nome_tabela": "\"public\".mro_task_materials",
+  "campos": [
+    {
+      "nome": "applied_qty",
+      "tipo": "numeric",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "batch_sn",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "is_applied",
+      "tipo": "bool",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "material_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "planned_qty",
+      "tipo": "numeric",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "task_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "task_material_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": true
+    }
+  ]
+}

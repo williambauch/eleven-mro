@@ -1,0 +1,61 @@
+{
+  "nome": "form_public_mro_timesheet",
+  "tipo": "Form",
+  "nome_tabela": "\"public\".mro_timesheet",
+  "campos": [
+    {
+      "nome": "check_in",
+      "tipo": "datetime",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "check_out",
+      "tipo": "datetime",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "comments",
+      "tipo": "text",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "duration_minutes",
+      "tipo": "int4",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "instructor_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "is_ojt_session",
+      "tipo": "bool",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "resource_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "task_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "timesheet_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": true
+    }
+  ]
+}

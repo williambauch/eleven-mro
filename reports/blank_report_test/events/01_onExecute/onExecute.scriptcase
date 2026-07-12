@@ -1,0 +1,236 @@
+<?php
+
+sc_include_lib("tcpdf");
+
+class WorkOrderPDF extends TCPDF {
+    // Cabeçalho personalizado (opcional, mas aqui faremos manual no corpo para variar os títulos)
+    public function Header() {
+        // Deixei vazio para ter controle total no body de cada página
+    }
+
+    // Rodapé simples com numeração
+    public function Footer() {
+        $this->SetY(-15);
+        $this->SetFont('helvetica', 'I', 8);
+        $this->Cell(0, 10, 'Page ' . $this->getAliasNumPage() . '/' . $this->getAliasNbPages(), 0, 0, 'C');
+    }
+}
+
+// 1. Inicialização
+$pdf = new WorkOrderPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
+
+// Configurações do Documento
+$pdf->SetCreator(PDF_CREATOR);
+$pdf->SetAuthor('Digex MRO');
+$pdf->SetTitle('Non Routine Job Card');
+$pdf->SetMargins(10, 10, 10);
+$pdf->SetAutoPageBreak(TRUE, 10);
+$pdf->setPrintHeader(false); // Vamos desenhar o cabeçalho manualmente em cada página
+$pdf->setImageScale(PDF_IMAGE_SCALE_RATIO);
+
+// --- ESTILOS CSS (Compatível com TCPDF) ---
+// TCPDF tem suporte limitado a CSS. Bordas e larguras devem ser inline ou em style simples.
+$style = '
+<style>
+    table { border-collapse: collapse; width: 100%; }
+    td { border: 1px solid #333; padding: 4px; font-family: helvetica; font-size: 9pt; }
+    th { border: 1px solid #333; background-color: #f0f0f0; font-weight: bold; font-size: 9pt; }
+    .label { font-size: 7pt; color: #555; text-transform: uppercase; }
+    .value { font-size: 10pt; font-weight: bold; }
+    .header-box { background-color: #f0f0f0; font-weight: bold; font-size: 14pt; text-align: center; }
+    .no-border { border: none; }
+    .text-area { height: 100px; } /* Altura simulada com breaks */
+</style>
+';
+
+// =========================================================
+// PÁGINA 1: NON ROUTINE JOB INSTRUCTION CARD
+// =========================================================
+$pdf->AddPage();
+
+// Dados Dinâmicos (Simulando o PDF original) [cite: 4, 7, 18, 27]
+$data = [
+    'wo' => '38.25',
+    'doc_num' => 'N190036001',
+    'ac_reg' => 'PR-MLD',
+    'ac_type' => 'A320-214',
+    'ata' => '23',
+    'discrepancy' => 'LH WING-FLAPTRACK 2 - THE DISCHARGER-STATIC IS DAMAGED.',
+    'action' => 'REPLACE THE DISCHARGER-STATIC IAW AMM 23-61-41-000-001-A AND 23-61-41-400-001-A.'
+];
+
+$html = $style . '
+<table cellpadding="5">
+    <tr>
+        <td width="20%" align="center" style="font-size:16pt; font-weight:bold; background-color:#eee;">DIGEX MRO</td>
+        <td width="55%" align="center">
+            <span style="font-size:14pt; font-weight:bold;">NON ROUTINE JOB INSTRUCTION CARD</span><br/>
+            <span style="font-size:9pt;">COM 199912-01/ANAC</span>
+        </td>
+        <td width="25%">
+            <div class="label">A/C Work Order:</div>
+            <div class="value">'. $data['wo'] .'</div>
+            <div class="label">Document N°:</div>
+            <div class="value">'. $data['doc_num'] .'</div>
+        </td>
+    </tr>
+</table>
+
+<table cellpadding="3">
+    <tr>
+        <td width="25%"><span class="label">Origin Doc N°</span><br/><span class="value">190036</span></td>
+        <td width="25%"><span class="label">ATA</span><br/><span class="value">'. $data['ata'] .'</span></td>
+        <td width="25%"><span class="label">Project</span><br/><span class="value">AVO03/25</span></td>
+        <td width="25%"><span class="label">A/C Registration</span><br/><span class="value">'. $data['ac_reg'] .'</span></td>
+    </tr>
+    <tr>
+        <td><span class="label">A/C Type</span><br/><span class="value">'. $data['ac_type'] .'</span></td>
+        <td><span class="label">A/C SN</span><br/><span class="value">3601</span></td>
+        <td><span class="label">Skill</span><br/><span class="value">A4-2 h</span></td>
+        <td><span class="label">Est. Hours</span><br/><span class="value">2 Hh</span></td>
+    </tr>
+</table>
+
+<table cellpadding="5">
+    <tr>
+        <td style="height: 80px;">
+            <span class="label">Discrepancy (Discrepância):</span><br/>
+            <span style="font-family:courier;">'. $data['discrepancy'] .'</span>
+            <br/><br/><br/>
+            <span class="label">Originated By:</span> PALOMA GODOY DA SILVA SANT
+        </td>
+    </tr>
+</table>
+
+<table cellpadding="5">
+    <tr>
+        <td style="height: 120px;">
+            <span class="label">Corrective Action (Ação Corretiva):</span><br/>
+            <span style="font-family:courier;">'. $data['action'] .'</span>
+            <br/><br/>
+            <table border="0" cellpadding="0">
+                <tr>
+                    <td class="no-border" width="50%">
+                        <span class="label">In Accordance With:</span> <b>AMM 23-61-41</b>
+                    </td>
+                    <td class="no-border" width="50%">
+                        <span class="label">Ref Revision:</span> <b>Rev. 07 25/OCT/2024</b>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+<table cellpadding="4">
+    <tr style="background-color:#f9f9f9;">
+        <td width="50%">
+            <span class="label">Were Calibrating Tools Used?</span><br/>
+            <b>[X] Yes (S)</b> &nbsp;&nbsp; [ ] No (N)
+        </td>
+        <td width="50%">
+            <span class="label">New NR Open?</span><br/>
+            [ ] Yes (S) &nbsp;&nbsp; <b>[ ] No (N)</b>
+        </td>
+    </tr>
+</table>
+
+<table cellpadding="4">
+    <tr>
+        <td width="25%"><span class="label">P/N Out</span><br/>-</td>
+        <td width="25%"><span class="label">S/N Out</span><br/>-</td>
+        <td width="25%"><span class="label">P/N In</span><br/>E0399-01</td>
+        <td width="25%"><span class="label">S/N In</span><br/>BATCH...</td>
+    </tr>
+</table>
+
+<br/>
+
+<table cellpadding="5">
+    <tr>
+        <td width="40%" height="50">
+            <span class="label">Performed By:</span><br/><br/>
+        </td>
+        <td width="20%">
+            <span class="label">Date:</span><br/><br/>
+            ___/___/___
+        </td>
+        <td width="40%">
+            <span class="label">Approval / Deferment Record:</span><br/>
+            [ ] Approval <br/>
+            [X] Deferment (ID: TF-60-004)
+        </td>
+    </tr>
+</table>
+<div style="text-align:right; font-size:7pt;">TF-60-004 - Rev. 07 25/OCT/2024</div>
+';
+
+$pdf->writeHTML($html, true, false, true, false, '');
+
+
+// =========================================================
+// PÁGINA 2: JOB EQUIPMENT [cite: 105, 110]
+// =========================================================
+$pdf->AddPage();
+
+$html_p2 = $style . '
+<table cellpadding="5">
+    <tr>
+        <td width="20%" align="center" style="font-size:16pt; font-weight:bold; background-color:#eee;">DIGEX MRO</td>
+        <td width="55%" align="center">
+            <span style="font-size:14pt; font-weight:bold;">JOB EQUIPMENT AND TOOL CARD</span><br/>
+            <span style="font-size:9pt;">COM 199912-01/ANAC</span>
+        </td>
+        <td width="25%">
+            <div class="label">JIC Work Order:</div>
+            <div class="value">'. $data['wo'] .'</div>
+            <div class="label">Card Code:</div>
+            <div class="value">'. $data['doc_num'] .'</div>
+        </td>
+    </tr>
+</table>
+
+<br/>
+<table cellpadding="3">
+    <tr style="background-color:#ddd;">
+        <th>Origin Doc</th>
+        <th>ATA</th>
+        <th>A/C Type</th>
+        <th>A/C Reg</th>
+        <th>Company</th>
+    </tr>
+    <tr>
+        <td>190036</td>
+        <td>'. $data['ata'] .'</td>
+        <td>'. $data['ac_type'] .'</td>
+        <td>'. $data['ac_reg'] .'</td>
+        <td>A320</td>
+    </tr>
+</table>
+
+<br/>
+<h3>Equipments & Tools [cite: 110]</h3>
+<table cellpadding="5">
+    <thead>
+        <tr style="background-color:#ccc;">
+            <th width="20%">Tool Code</th>
+            <th width="60%">Description</th>
+            <th width="20%">Qty</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr><td height="30">&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+        <tr><td height="30">&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+        <tr><td height="30">&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+        <tr><td height="30">&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+    </tbody>
+</table>
+
+<br/><br/>
+<div style="text-align:right; font-size:8pt;">TF-53-003 - Rev. 00</div>
+';
+
+$pdf->writeHTML($html_p2, true, false, true, false, '');
+
+// Saída do PDF
+$pdf->Output('NonRoutine_Card.pdf', 'I');

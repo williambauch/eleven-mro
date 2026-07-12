@@ -1,0 +1,17 @@
+<?php
+
+[menu_description] = "";
+
+if(!is_numeric([usr_login])){
+	[menu_description] .= [usr_login];
+}
+
+if(!empty([usr_email])){
+	[menu_description] .= !empty([menu_description]) ? ' / ' : '';
+	[menu_description] .= [usr_email];
+}
+
+if(!empty([usr_phone])){
+	[menu_description] .= !empty([menu_description]) ? ' / ' : '';
+	[menu_description] .= [usr_phone];
+}

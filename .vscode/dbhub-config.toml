@@ -1,0 +1,20 @@
+# DBHub Configuration - Read-Only Mode
+# Apenas SELECT, SHOW, DESCRIBE, EXPLAIN são permitidos
+
+[[sources]]
+id = "mro-postgres"
+dsn = "postgresql://postgres:12345678@localhost:5432/elevenmy_mro"
+
+[[sources]]
+id = "vetweb-readonly"
+dsn = "mysql://root:12345678@localhost:3306/elevenmy_gestor_xml"
+
+[[tools]]
+name = "execute_sql"
+source = "mro-postgres"
+max_rows = 100
+readonly = true
+
+[[tools]]
+name = "search_objects"
+source = "mro-postgres"

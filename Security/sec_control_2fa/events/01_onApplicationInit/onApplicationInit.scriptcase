@@ -1,0 +1,26 @@
+<?php
+
+sc_lookup(rs, "SELECT mfa FROM public.sec_users WHERE login = ". sc_sql_injection([usr_login]));
+$d = explode('@@', $rs[0][0]);
+[type_2fa] = ('ga' == $d[0]) ? 'auth' : $d[0];
+
+if( [sett_enable_2fa_api_type] != [type_2fa] ){
+    
+    sc_exec_sql("UPDATE public.sec_users SET mfa = null WHERE login = ". sc_sql_injection([usr_login]));
+    sc_commit_trans();
+    
+    sc_apl_status('sec_add_2fa', 'on');
+	sc_redir('sec_add_2fa',redir_menu=1);
+}
+
+switch([sett_enable_2fa_api_type]){
+
+    case 'email':
+        sc_2fa_send_email();
+        break;
+   
+    case 'sms':
+        $phone = $d[1];
+        sc_2fa_send_sms($phone);
+        break;
+}

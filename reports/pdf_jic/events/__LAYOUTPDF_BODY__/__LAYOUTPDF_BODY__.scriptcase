@@ -1,0 +1,19 @@
+<?php
+
+/*------------------ Page 1 -----------------*/
+            sc_pdf_image('../_lib/img/grp__NM__bg__NM__modelo_jobcard_1.png', 3, 8, 215, 302, 'png');
+            sc_pdf_print($cell_task_code);
+            sc_pdf_print_mult($cell_task_name, 2.8222222222222);
+            sc_pdf_print_mult($cell_instruction, 2.8222222222222);
+            sc_pdf_print($cell_skill);
+            sc_pdf_print($cell_mh);
+            sc_pdf_print($cell_zone);
+            sc_pdf_print($cell_amm);
+            sc_pdf_print($cell_project_name);
+            sc_pdf_print($cell_reg);
+            sc_pdf_print($cell_model);
+            sc_pdf_print($cell_company);
+            sc_pdf_print_mult($cell_work_order, 2.8222222222222);
+            sc_pdf_print_mult($cell_ata_chapter, 2.8222222222222);
+            sc_pdf_print($cell_origin_doc);
+          /*-------------------------------------------*/

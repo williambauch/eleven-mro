@@ -1,0 +1,3 @@
+<?php
+
+sc_exec_sql("DELETE FROM public.sec_users_social WHERE public.sec_users_social.login = ". sc_sql_injection({login}));

@@ -1,0 +1,453 @@
+<?php
+
+/*
+ * NR PACK FINAL - LAYOUT FIDEDIGNO E TOTALMENTE DINÂMICO
+ * Integração com mro_tasks, mro_tool_movements e mro_task_materials
+ */
+
+sc_include_lib("tcpdf");
+
+// 1. RECEBE ID DA TAREFA
+$task_id_filter = [task_id]; 
+
+if (empty($task_id_filter)) { 
+    $sql_busca = "SELECT task_id FROM mro_tasks LIMIT 1";
+    sc_lookup(rs_id, $sql_busca);
+    if(isset({rs_id}[0][0])) $task_id_filter = {rs_id}[0][0];
+    else die("ID Obrigatório."); 
+}
+
+// 2. BUSCA DADOS PRINCIPAIS DA TAREFA E PROJETO
+$sql = "
+SELECT 
+    t.task_code,
+    t.task_name,
+    COALESCE(t.instruction_text, '') as instruction,
+    COALESCE(t.skill_code, 'GEN') as skill,
+    COALESCE(t.estimated_hours, 0) as mh,
+    COALESCE(t.zone, 'N/A') as zone,
+    COALESCE(t.amm_reference, 'N/A') as amm,
+    p.project_name,
+    a.registration as reg,      
+    a.model as model,  
+    a.customer_name as company, 
+    '38.25' as work_order, -- Pode ser substituído por um campo real futuramente
+    '23' as ata_chapter,   -- Pode ser substituído por um campo real futuramente
+    COALESCE((SELECT t2.task_code FROM mro_tasks t2 WHERE t2.task_id = t.parent_task_id), 'N/A') as origin_doc,
+    COALESCE(t.is_nrc, FALSE) as is_nrc 
+FROM mro_tasks t
+LEFT JOIN mro_wbs w ON t.wbs_id = w.wbs_id
+LEFT JOIN mro_projects p ON w.project_id = p.project_id
+LEFT JOIN mro_aircraft a ON p.aircraft_id = a.aircraft_id
+WHERE t.task_id = $task_id_filter
+";
+
+sc_lookup(rs, $sql);
+if (!isset({rs}[0][0])) die("Tarefa não encontrada na base de dados.");
+
+$d = [
+    'code'   => {rs}[0][0],
+    'title'  => {rs}[0][1],
+    'desc'   => nl2br({rs}[0][2]),
+    'skill'  => {rs}[0][3],
+    'mh'     => {rs}[0][4],
+    'zone'   => {rs}[0][5],
+    'amm'    => {rs}[0][6],
+    'proj'   => {rs}[0][7],
+    'reg'    => {rs}[0][8],
+    'model'  => {rs}[0][9],
+    'comp'   => {rs}[0][10],
+    'wo'     => {rs}[0][11],
+    'ata'    => {rs}[0][12],
+    'origin' => {rs}[0][13],
+    'is_nrc' => ({rs}[0][14] === 't' || {rs}[0][14] === true || {rs}[0][14] == 1)
+];
+
+// Lógica de Título (Rotina vs Não Rotina)
+if ($d['is_nrc']) {
+    $main_title = "NON ROUTINE JOB INSTRUCTION CARD";
+    $label_desc = "DISCREPANCY (DISCREPÂNCIA)";
+} else {
+    $main_title = "JOB INSTRUCTION CARD";
+    $label_desc = "TASK DESCRIPTION (DESCRIÇÃO DA TAREFA)";
+}
+
+ob_clean();
+
+// Configuração PDF
+$pdf = new TCPDF('P', 'mm', 'A4', true, 'UTF-8', false);
+$pdf->SetPrintHeader(false);
+$pdf->SetPrintFooter(false);
+$pdf->SetMargins(10, 10, 10);
+$pdf->SetAutoPageBreak(TRUE, 5);
+$pdf->SetFont('helvetica', '', 8);
+
+// ESTILOS CSS
+$style = '
+<style>
+    table { border-collapse: collapse; width: 100%; }
+    td, th { border: 1px solid #000; padding: 3px; vertical-align: top; }
+    .bg-head { background-color: #E6E6E6; font-weight: bold; text-align: center; font-size: 10pt; }
+    .label { font-size: 6pt; color: #444; margin-bottom: 2px; display: block; font-family: helvetica; }
+    .value { font-size: 9pt; font-weight: bold; color: #000; }
+    .small-note { font-size: 6pt; color: #333; }
+    .box-title { font-weight: bold; font-size: 8pt; background-color: #E6E6E6; }
+</style>
+';
+
+// =============================================================================
+// PÁGINA 1: JIC / NON ROUTINE (Cabeçalho e Execução)
+// =============================================================================
+$pdf->AddPage();
+
+$html1 = $style . '
+<table cellpadding="3">
+    <tr>
+        <td width="25%">
+            <span class="label">A/C WORK ORDER:</span>
+            <span class="value">'.$d['wo'].'</span>
+        </td>
+        <td width="50%" align="center" valign="middle">
+            <b style="font-size: 12pt;">'.$main_title.'</b><br>
+            <span style="font-size: 8pt;">DIGEX MRO</span>
+        </td>
+        <td width="25%">
+            <span class="label">DOCUMENT N°:</span>
+            <span class="value">'.$d['code'].'</span>
+        </td>
+    </tr>
+</table>
+<table cellpadding="3">
+    <tr class="box-title" align="center">
+        <td width="15%">ORIGIN DOC</td>
+        <td width="10%">ATA</td>
+        <td width="20%">A/C TYPE</td>
+        <td width="15%">A/C REG</td>
+        <td width="20%">COMPANY</td>
+        <td width="20%">PROJECT</td>
+    </tr>
+    <tr align="center">
+        <td>'.$d['origin'].'</td>
+        <td>'.$d['ata'].'</td>
+        <td>'.$d['model'].'</td>
+        <td>'.$d['reg'].'</td>
+        <td>'.$d['comp'].'</td>
+        <td>'.$d['proj'].'</td>
+    </tr>
+</table>
+<table cellpadding="4">
+    <tr>
+        <td width="100%" height="70">
+            <span class="label">'.$label_desc.':</span>
+            <b>'.$d['title'].'</b><br>
+            '.$d['desc'].'
+        </td>
+    </tr>
+</table>
+<table cellpadding="3">
+    <tr>
+        <td width="20%"><span class="label">SKILL (Especialidade):</span><span class="value">'.$d['skill'].'</span></td>
+        <td width="20%"><span class="label">AREA/ZONE:</span><span class="value">'.$d['zone'].'</span></td>
+        <td width="40%"><span class="label">ORIGINATED BY:</span><span class="value">MRO SYSTEM</span></td>
+        <td width="20%"><span class="label">EST. HOURS:</span><span class="value">'.$d['mh'].'</span></td>
+    </tr>
+</table>
+<table cellpadding="4">
+    <tr><td width="100%" height="80"><span class="label">CORRECTIVE ACTION (Ação Corretiva):</span></td></tr>
+</table>
+<table cellpadding="4">
+    <tr><td width="100%" height="50"><span class="label">ENGINEERING INSTRUCTION (Instrução de Engenharia):</span></td></tr>
+</table>
+<table cellpadding="3">
+    <tr>
+        <td width="30%">
+            <span class="label">NEW NR OPEN? / APPLICABLE:</span><br>&nbsp; Y [ ] &nbsp;&nbsp;&nbsp; N [ ]<br><span class="label">List if applicable:</span>
+        </td>
+        <td width="70%">
+            <span class="label">IN ACCORDANCE WITH (Reference):</span><br><span class="value">'.$d['amm'].'</span><br><span class="label">Reference Revision:</span>
+        </td>
+    </tr>
+</table>
+<table cellpadding="4">
+    <tr><td width="100%" height="50"><span class="label">ACTION TAKEN (Ação Executada):</span></td></tr>
+</table>
+<table cellpadding="3">
+    <tr>
+        <td width="30%"><span class="label">Were Calibrating Tools Used?</span><br>&nbsp; Y [ ] &nbsp;&nbsp; N [ ]</td>
+        <td width="35%"><span class="label">P/N Out (Removido):</span><br>&nbsp;</td>
+        <td width="35%"><span class="label">P/N In (Instalado):</span><br>&nbsp;</td>
+    </tr>
+    <tr>
+        <td rowspan="2" valign="middle"><span class="small-note">Note: If YES Record on the back (Stamp).</span></td>
+        <td><span class="label">S/N Out (Removido):</span><br>&nbsp;</td>
+        <td><span class="label">S/N In (Instalado):</span><br>&nbsp;</td>
+    </tr>
+    <tr><td height="15">&nbsp;</td><td>&nbsp;</td></tr>
+</table>
+<table cellpadding="3">
+    <tr>
+        <td width="75%" height="30"><span class="label">Performed By (Executado por):</span></td>
+        <td width="25%"><span class="label">Date (Data):</span></td>
+    </tr>
+</table>
+<table cellpadding="3">
+    <tr class="box-title"><td colspan="4" align="center">APPROVAL / DEFERMENT RECORD</td></tr>
+    <tr>
+        <td width="20%"><span class="label">Planned RII Item:</span><br>&nbsp; [ ] Y &nbsp; [ ] N</td>
+        <td width="30%"><span class="label">Customer Full Name:</span></td>
+        <td width="20%"><span class="label">Customer Signoff:</span></td>
+        <td width="30%"><span class="label">Reason for DEFERMENT:</span></td>
+    </tr>
+    <tr>
+        <td><span class="label">Status:</span><br>[ ] APPROVAL<br>[ ] DEFERMENT</td>
+        <td colspan="2"><span class="label">RII Signoff if required:</span><br>&nbsp;</td>
+        <td><span class="label">Date:</span></td>
+    </tr>
+</table>
+';
+$pdf->writeHTML($html1, true, false, true, false, '');
+
+// =============================================================================
+// PÁGINA 2: JEC - FERRAMENTAS (Dados da Base de Dados)
+// =============================================================================
+$pdf->AddPage();
+
+$sql_tools = "
+SELECT 
+    t.part_number, 
+    t.description, 
+    1 as qty 
+FROM mro_tool_movements tt
+JOIN mro_tools t ON tt.tool_id = t.tool_id
+WHERE tt.task_id = $task_id_filter
+";
+sc_lookup(rs_tools, $sql_tools);
+
+$linhas_ferramentas = '';
+if (isset({rs_tools[0][0]})) {
+    foreach ({rs_tools} as $tool) {
+        $linhas_ferramentas .= '
+        <tr>
+            <td height="20">'.$tool[0].'</td>
+            <td>'.$tool[1].'</td>
+            <td align="center">'.$tool[2].'</td>
+        </tr>';
+    }
+} else {
+    for($i=0; $i<4; $i++) {
+        $linhas_ferramentas .= '<tr><td height="20">&nbsp;</td><td></td><td></td></tr>';
+    }
+}
+
+$html2 = $style . '
+<table cellpadding="3">
+    <tr>
+        <td width="25%"><span class="label">JIC WORK ORDER:</span><span class="value">'.$d['wo'].'</span></td>
+        <td width="50%" align="center" valign="middle">
+            <b style="font-size: 12pt;">JEC - JOB EQUIPMENT CARD</b><br>
+            <span style="font-size: 8pt;">DIGEX MRO</span>
+        </td>
+        <td width="25%"><span class="label">CARD CODE:</span><span class="value">'.$d['code'].'</span></td>
+    </tr>
+</table>
+<br>
+<table cellpadding="3">
+    <tr class="box-title" align="center">
+        <td>ORIGIN</td><td>ATA</td><td>A/C TYPE</td><td>A/C REG</td><td>COMPANY</td><td>WO</td>
+    </tr>
+    <tr align="center">
+        <td>'.$d['origin'].'</td><td>'.$d['ata'].'</td><td>'.$d['model'].'</td>
+        <td>'.$d['reg'].'</td><td>'.$d['comp'].'</td><td>'.$d['wo'].'</td>
+    </tr>
+</table>
+<br>
+<div style="font-weight:bold; font-size:10pt; border-bottom:1px solid black; margin-bottom:5px;">Equipments & Tools</div>
+<table cellpadding="4">
+    <tr class="box-title">
+        <th width="20%">Tool P/N</th>
+        <th width="60%">Description</th>
+        <th width="20%">Qty</th>
+    </tr>
+    ' . $linhas_ferramentas . '
+</table>
+';
+$pdf->writeHTML($html2, true, false, true, false, '');
+
+// =============================================================================
+// PÁGINA 3: JMC - MATERIAIS (Dados da Base de Dados)
+// =============================================================================
+$pdf->AddPage();
+
+$sql_materials = "
+SELECT 
+    m.part_number,
+    m.unit_measure,
+    tm.planned_qty,
+    tm.batch_sn,
+    m.description,
+    tm.is_applied
+FROM mro_task_materials tm
+JOIN mro_materials m ON tm.material_id = m.material_id
+WHERE tm.task_id = $task_id_filter
+";
+sc_lookup(rs_mats, $sql_materials);
+
+$linhas_materiais = '';
+if (isset({rs_mats[0][0]})) {
+    foreach ({rs_mats} as $mat) {
+        $pn = $mat[0];
+        $unit = $mat[1];
+        $qty = $mat[2];
+        $batch = !empty($mat[3]) ? $mat[3] : '___________';
+        $desc = $mat[4];
+        $applied = ($mat[5] == 't' || $mat[5] == 1) ? 'Yes (X) No ( )' : 'Yes ( ) No ( )';
+        
+        $linhas_materiais .= '
+        <tr>
+            <td height="25">'.$pn.'</td>
+            <td align="center">'.$unit.'</td>
+            <td align="center">'.$qty.'</td>
+            <td></td>
+            <td>'.$batch.'</td>
+            <td>'.$desc.'</td>
+            <td align="center">'.$applied.'</td>
+        </tr>';
+    }
+} else {
+    for($i=0; $i<4; $i++) {
+        $linhas_materiais .= '<tr><td height="25">&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td>Yes [ ] No [ ]</td></tr>';
+    }
+}
+
+$html3 = $style . '
+<table cellpadding="3">
+    <tr>
+        <td width="25%"><span class="label">JIC WORK ORDER:</span><span class="value">'.$d['wo'].'</span></td>
+        <td width="50%" align="center" valign="middle">
+            <b style="font-size: 12pt;">JMC - JOB MATERIAL CARD</b><br>
+            <span style="font-size: 8pt;">DIGEX MRO</span>
+        </td>
+        <td width="25%"><span class="label">CARD CODE:</span><span class="value">'.$d['code'].'</span></td>
+    </tr>
+</table>
+<br>
+<table cellpadding="3">
+    <tr class="box-title" align="center">
+        <td>ORIGIN</td><td>ATA</td><td>A/C TYPE</td><td>A/C REG</td><td>COMPANY</td><td>WO</td>
+    </tr>
+    <tr align="center">
+        <td>'.$d['origin'].'</td><td>'.$d['ata'].'</td><td>'.$d['model'].'</td>
+        <td>'.$d['reg'].'</td><td>'.$d['comp'].'</td><td>'.$d['wo'].'</td>
+    </tr>
+</table>
+<br>
+<div style="font-weight:bold; font-size:10pt; border-bottom:1px solid black; margin-bottom:5px;">Materials</div>
+<table cellpadding="4">
+    <tr class="box-title">
+        <th width="15%">P/N</th>
+        <th width="5%">Unit</th>
+        <th width="10%">Qty</th>
+        <th width="15%">P/N IW</th>
+        <th width="15%">Batch / SN</th>
+        <th width="25%">Description</th>
+        <th width="15%">Mat. Applied?</th>
+    </tr>
+    ' . $linhas_materiais . '
+</table>
+<br><br>
+<table cellpadding="5" border="0">
+    <tr>
+        <td width="50%" style="border-bottom:1px solid black;">&nbsp;</td>
+        <td width="10%">&nbsp;</td>
+        <td width="40%" style="border-bottom:1px solid black;">&nbsp;</td>
+    </tr>
+    <tr>
+        <td align="center">Provider (Sign & Stamp)</td>
+        <td></td>
+        <td align="center">Requester (Sign & Stamp)</td>
+    </tr>
+</table>
+';
+$pdf->writeHTML($html3, true, false, true, false, '');
+
+// =============================================================================
+// PÁGINA 4: SHIFT TURNOVER
+// =============================================================================
+$pdf->AddPage();
+
+$html4 = $style . '
+<div style="text-align:center; font-weight:bold; font-size:12pt; background-color:#E6E6E6; border:1px solid black; padding:5px;">
+    SHIFT TURNOVER (PASSAGEM DE SERVIÇO)
+</div>
+<br>
+<table cellpadding="3">
+    <tr>
+        <td><b>A/C Type:</b> '.$d['model'].'</td>
+        <td><b>A/C Reg:</b> '.$d['reg'].'</td>
+        <td><b>Card Code:</b> '.$d['code'].'</td>
+    </tr>
+</table>
+<br>
+<table cellpadding="5">
+    <tr class="box-title">
+        <th width="65%">ACTION (Ação)</th>
+        <th width="15%">DATE (Data)</th>
+        <th width="20%">STAMP (Carimbo)</th>
+    </tr>
+    <tr><td height="60" valign="top">MTR:</td><td valign="top">SHIFT:</td><td>&nbsp;</td></tr>
+    <tr><td height="60" valign="top">MTR:</td><td valign="top">SHIFT:</td><td>&nbsp;</td></tr>
+    <tr><td height="60" valign="top">MTR:</td><td valign="top">SHIFT:</td><td>&nbsp;</td></tr>
+    <tr><td height="60" valign="top">MTR:</td><td valign="top">SHIFT:</td><td>&nbsp;</td></tr>
+</table>
+';
+$pdf->writeHTML($html4, true, false, true, false, '');
+
+// =============================================================================
+// PÁGINA 5: FERRAMENTAS CALIBRÁVEIS
+// =============================================================================
+$pdf->AddPage();
+
+$html5 = $style . '
+<div style="text-align:center; font-weight:bold; font-size:12pt; background-color:#E6E6E6; border:1px solid black; padding:5px;">
+    CALIBRATED TOOL STAMP CONTROL SHEET
+</div>
+<div style="text-align:center; font-size:8pt;">(FOLHA DE CONTROLE DE CARIMBOS PARA FERRAMENTAS CALIBRÁVEIS)</div>
+<br>
+<table cellpadding="3">
+    <tr>
+        <td><b>Card Code:</b> '.$d['code'].'</td>
+        <td><b>A/C Reg:</b> '.$d['reg'].'</td>
+    </tr>
+</table>
+<br>
+<table cellpadding="3">
+    <tr class="box-title">
+        <td width="20%">Data/Date:</td><td width="30%">&nbsp;</td>
+        <td width="20%">Task Sub-item:</td><td width="30%">&nbsp;</td>
+    </tr>
+    <tr><td colspan="4">Carimbo do Inspetor / Inspector Stamp:</td></tr>
+    <tr>
+        <td colspan="2">Medida Realizada / Measure: _________________</td>
+        <td colspan="2">Incerteza / Deviation: _________________</td>
+    </tr>
+    <tr><td><b>PN Tool:</b></td><td>&nbsp;</td><td><b>SN Tool:</b></td><td>&nbsp;</td></tr>
+    <tr><td>Calibration Due:</td><td>&nbsp;</td><td>Equip Pass?</td><td>[ ] Yes [ ] No</td></tr>
+</table>
+<br>
+<table cellpadding="3">
+    <tr class="box-title">
+        <td width="20%">Data/Date:</td><td width="30%">&nbsp;</td>
+        <td width="20%">Task Sub-item:</td><td width="30%">&nbsp;</td>
+    </tr>
+    <tr><td colspan="4">Carimbo do Inspetor / Inspector Stamp:</td></tr>
+    <tr>
+        <td colspan="2">Medida Realizada / Measure: _________________</td>
+        <td colspan="2">Incerteza / Deviation: _________________</td>
+    </tr>
+    <tr><td><b>PN Tool:</b></td><td>&nbsp;</td><td><b>SN Tool:</b></td><td>&nbsp;</td></tr>
+    <tr><td>Calibration Due:</td><td>&nbsp;</td><td>Equip Pass?</td><td>[ ] Yes [ ] No</td></tr>
+</table>
+';
+$pdf->writeHTML($html5, true, false, true, false, '');
+
+$pdf->Output('NR_PACK_'.$d['code'].'.pdf', 'I');

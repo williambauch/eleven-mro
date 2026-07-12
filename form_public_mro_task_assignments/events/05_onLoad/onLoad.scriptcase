@@ -1,0 +1,47 @@
+<?php
+
+// Reset inicial dos botões
+sc_btn_display('btn_pause', 'off');
+sc_btn_display('btn_stop', 'off');
+sc_btn_display('btn_play', 'on');
+
+// Se a tarefa estiver em progresso, inverte a visibilidade
+if ({status_code} == 'IN_PROGRESS') {
+    sc_btn_display('btn_play', 'off'); // Esconde o Play
+    sc_btn_display('btn_pause', 'on'); // Mostra o Pause
+    sc_btn_display('btn_stop', 'on');  // Mostra o Stop
+}
+
+if ({status_code} == 'IN_PROGRESS') {
+    
+    // Busca os segundos do banco
+    $sql = "SELECT ROUND(EXTRACT(EPOCH FROM (NOW() - start_time))) 
+            FROM mro_timesheet 
+            WHERE assignment_id = {assignment_id} 
+            AND employee_id = [usr_employee_id] 
+            AND status = 'IN_PROGRESS' 
+            ORDER BY timesheet_id DESC LIMIT 1";
+            
+    sc_lookup(rs_tempo, $sql);
+    $segundos_iniciais = 0;
+    
+    if (!empty({rs_tempo[0][0]})) {
+        $segundos_iniciais = (int){rs_tempo[0][0]}; 
+    }
+    
+    // O TRUQUE: O 'data-sec' guarda o tempo, e a imagem <img> chama a função e se autodestrói.
+    {display_tempo} = "
+        <div id='mro_timer' data-sec='$segundos_iniciais' style='font-size: 38px; font-weight: 800; color: #188038; font-family: monospace; text-align: center; padding: 15px; background: #e6f4ea; border-radius: 8px; border: 2px solid #188038; width: 250px; margin: 0 auto;'>
+            <i class='fas fa-stopwatch'></i> Carregando...
+        </div>
+        <img src='x' onerror='iniciar_relogio_mro(); this.remove();' style='display:none;'>
+    ";
+    
+} else {
+    // Tela Cinza
+    {display_tempo} = "
+        <div style='font-size: 38px; font-weight: 800; color: #57606a; font-family: monospace; text-align: center; padding: 15px; background: #f4f6f8; border-radius: 8px; border: 2px dashed #d0d7de; width: 250px; margin: 0 auto;'>
+            <i class='fas fa-pause-circle'></i> 00:00:00
+        </div>
+    ";
+}

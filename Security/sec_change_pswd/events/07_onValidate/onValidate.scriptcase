@@ -1,0 +1,59 @@
+<?php
+
+if( (!isset({old_pswd}) || empty({old_pswd}) ) && (!isset([act_code]) || empty([act_code]) ) )
+{
+	sc_error_message({lang_error_old_pswd});
+	sc_error_exit();	
+}
+
+//=================== CHECK PSWD ===============
+$arr_check = explode(';',[sett_password_strength]);
+
+$arr_errors = [];
+if(in_array('uppercase_letter',$arr_check) && !preg_match('@[A-Z]@', {pswd})){
+	$arr_errors[] = {lang_sec_pswd_rules_opt_uppercase_letter};
+}
+
+if(in_array('lowercase_letter',$arr_check) && !preg_match('@[a-z]@', {pswd})){
+	$arr_errors[] = {lang_sec_pswd_rules_opt_lowercase_letter};
+}
+
+if(in_array('numbers',$arr_check) && !preg_match('@[0-9]@', {pswd})){
+	$arr_errors[] = {lang_sec_pswd_rules_opt_numbers};
+}
+
+if(in_array('special_chars',$arr_check) && !preg_match('@[^\w]@', {pswd})){
+	$arr_errors[] = {lang_sec_pswd_rules_opt_special_chars};
+}
+
+if({pswd} != {confirm_pswd})
+{
+    $arr_errors[] = {lang_sec_pswd_rules_opt_equal_pswd};
+}
+
+if(strlen({pswd}) < [sett_password_min])
+{
+	$arr_errors[] = sprintf({lang_sec_pswd_rules_opt_min_chars}, [sett_password_min]);
+}
+
+if(count($arr_errors) > 0){
+	$msg = implode("<br/>", $arr_errors);
+	sc_error_message( $msg );
+    sc_error_exit();
+}
+
+//=================== END CHECK PSWD ===============
+
+$spswd = sc_sql_injection(hash("md5",{pswd}));
+$sold_pswd = ( isset([act_code]) && !empty([act_code]) ) ? "activation_code= ". sc_sql_injection([act_code]) : " pswd = ". sc_sql_injection(hash("md5",{old_pswd}));
+unset([act_code]);
+
+
+$sql = "SELECT count(*) FROM public.sec_users WHERE ". $sold_pswd ." AND login = '". [usr_login] . "'";
+sc_lookup(rs, $sql);
+
+if({rs} === FALSE || {rs}[0][0] == 0)
+{
+	sc_error_message({lang_error_old_pswd});
+	sc_error_exit();	
+}

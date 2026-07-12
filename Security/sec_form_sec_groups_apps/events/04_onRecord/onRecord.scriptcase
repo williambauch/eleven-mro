@@ -1,0 +1,24 @@
+<?php
+
+if( isset( [arr_apps][ {app_name} ] ) )
+{
+	switch(trim([arr_apps][ {app_name} ]))
+	{
+		case 'form':
+		break;
+		case 'calendar':
+			sc_field_disabled_record("priv_export; priv_print");
+		break;
+		case 'cons':
+			sc_field_disabled_record("priv_insert; priv_delete; priv_update");
+		break;
+		default:
+			sc_field_disabled_record("priv_insert; priv_delete; priv_update; priv_export; priv_print");
+		break;
+	}
+}
+
+
+if(isset( [arr_apps_desc][ {app_name} ] )){
+	{description} = [arr_apps_desc][ {app_name} ];
+}

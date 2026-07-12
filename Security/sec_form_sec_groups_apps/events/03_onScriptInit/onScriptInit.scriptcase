@@ -1,0 +1,21 @@
+<?php
+
+$check_sql = "SELECT app_name, app_type, description"
+	   . " FROM public.sec_apps";
+
+sc_select(rs, $check_sql);
+[arr_apps] = array();
+[arr_apps_desc] = array();
+
+
+if ($rs !== FALSE)     // Row found
+{
+    while(!$rs->EOF)
+    {
+		[arr_apps][ $rs->fields[0] ] = $rs->fields[1];
+		[arr_apps_desc][ $rs->fields[0] ] = $rs->fields[2];
+
+		$rs->MoveNext();
+    }
+    $rs->Close();
+}

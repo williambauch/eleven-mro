@@ -1,0 +1,16 @@
+<?php
+
+$arr_apis = nm_list_apis({enable_2fa_api_type});
+$options = '';
+foreach($arr_apis as $api => $data){
+	$options  .= "<option value='".$data['mod'] . '__NM__'.$api."'>";
+	$options  .= $data['name'] . " - " . $data['gateway'];
+	$options  .= "</option>";
+}
+
+$api_2fa =  "<select name='enable_2fa_api' class='sc-js-input css_smtp_api_obj sc-ui-100perc-input scFormObjectOdd' style='width:100%'>";
+
+$api_2fa .=$options;
+$api_2fa .= "</select>";
+
+{enable_2fa_api} = $api_2fa;

@@ -1,0 +1,13 @@
+{
+  "nome": "control_import_empenhos",
+  "tipo": "Control",
+  "nome_tabela": "control_import_empenhos",
+  "campos": [
+    {
+      "nome": "arquivo_excel",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    }
+  ]
+}

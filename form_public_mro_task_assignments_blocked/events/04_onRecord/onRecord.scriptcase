@@ -1,0 +1,13 @@
+<?php
+
+// 1. Constrói a URL manualmente usando a estrutura de diretórios do Scriptcase
+// O padrão é: ../nome_da_aplicacao/nome_da_aplicacao.php?variavel=valor
+$url_timeline = "../blank_mro_timeline/blank_mro_timeline.php?glo_assignment_id=" . {assignment_id};
+
+// 2. Monta o JavaScript para abrir a janela Pop-up
+$js_popup = "window.open('$url_timeline', 'Timeline', 'width=800,height=600,scrollbars=yes,resizable=yes,left=300,top=100');";
+
+// 3. Injeta o HTML no seu campo {ver_historico}
+{ver_historico} = "<a href='javascript:void(0)' onclick=\"$js_popup\" title='Ver Histórico de Atribuições'>
+    <i class='fas fa-history' style='color: #1a73e8; cursor: pointer; font-size: 18px;'></i>
+</a>";

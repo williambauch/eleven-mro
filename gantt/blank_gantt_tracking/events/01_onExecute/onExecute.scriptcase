@@ -1,0 +1,238 @@
+<?php
+
+$project_filter = 2; 
+
+$sql = "SELECT 
+            id_unico, 
+            id_pai, 
+            nome_tarefa, 
+            
+            -- CORREÇÃO: Enviar DATA + HORA para o Gantt calcular a duração correta
+            to_char(data_inicio, 'YYYY-MM-DD HH24:MI:SS') as data_inicio, 
+            to_char(data_fim, 'YYYY-MM-DD HH24:MI:SS') as data_fim, 
+            to_char(baseline_inicio, 'YYYY-MM-DD HH24:MI:SS') as base_inicio, 
+            to_char(baseline_fim, 'YYYY-MM-DD HH24:MI:SS') as base_fim, 
+            
+            progresso, 
+            tipo, 
+            critico
+        FROM view_gantt_tracking 
+        WHERE project_id = $project_filter 
+        ORDER BY id_pai NULLS FIRST, id_unico";
+
+sc_select(rs, $sql);
+
+$data = array();
+
+if (isset($rs->fields)) {
+    while (!$rs->EOF) {
+        // Tratamento de datas nulas
+        $bStart = $rs->fields['base_inicio'];
+        $bEnd   = $rs->fields['base_fim'];
+        if (empty($bStart)) $bStart = null;
+        if (empty($bEnd))   $bEnd   = null;
+
+        $data[] = array(
+            'TaskId'      => $rs->fields['id_unico'],
+            'TaskName'    => $rs->fields['nome_tarefa'],
+            'StartDate'   => $rs->fields['data_inicio'],
+            'EndDate'     => $rs->fields['data_fim'],
+            'BaseStart'   => $bStart,
+            'BaseEnd'     => $bEnd,
+            'Progress'    => $rs->fields['progresso'],
+            'ParentId'    => $rs->fields['id_pai'],
+            'Type'        => $rs->fields['tipo'],
+            'IsCritical'  => ($rs->fields['critico'] === 't' || $rs->fields['critico'] === true)
+        );
+        $rs->MoveNext();
+    }
+    $rs->Close();
+}
+
+$json_datasource = json_encode($data);
+?>
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <link href="/libs/syncfusion/styles/material3.css" rel="stylesheet">
+    <script src="/libs/syncfusion/scripts/ej2-syncfusion.js" type="text/javascript"></script>
+    <script src="/libs/syncfusion/mro_config.js" type="text/javascript"></script>
+    
+    <style>
+        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: 'Segoe UI', sans-serif; background: #f8f9fa; }
+        
+        /* Layout Principal: Legenda + Gráfico */
+        .main-layout { display: flex; flex-direction: column; height: 100%; }
+        
+        /* === ESTILO DA LEGENDA === */
+        .gantt-legend {
+            background-color: #ffffff;
+            padding: 8px 15px;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            z-index: 10;
+        }
+        
+        .legend-title {
+            font-weight: bold;
+            font-size: 12px;
+            color: #6c757d;
+            text-transform: uppercase;
+            margin-right: 10px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: #495057;
+            font-weight: 500;
+        }
+
+        /* Caixinhas de Cor */
+        .color-box {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+        }
+        
+        .bg-normal   { background-color: #198754; } /* Verde */
+        .bg-critical { background-color: #dc3545; } /* Vermelho */
+        .bg-baseline { background-color: #ffc107; height: 8px !important; margin-top: 4px; } /* Amarelo (Fina) */
+        .bg-group    { background-color: #343a40; } /* Preto */
+
+        /* Container do Gráfico */
+        #GanttTrackingContainer { flex: 1; width: 100%; }
+    </style>
+</head>
+<body>
+
+    <div class="main-layout">
+        
+        <div class="gantt-legend">
+            <span class="legend-title"><i class="e-icons e-chart"></i> Legenda:</span>
+            
+            <div class="legend-item">
+                <div class="color-box bg-normal"></div>
+                <span>Tarefa Normal</span>
+            </div>
+
+            <div class="legend-item">
+                <div class="color-box bg-critical"></div>
+                <span>Caminho Crítico</span>
+            </div>
+
+            <div class="legend-item">
+                <div class="color-box bg-baseline" style="width: 20px;"></div>
+                <span>Planejado (Baseline)</span>
+            </div>
+
+            <div class="legend-item">
+                <div class="color-box bg-group"></div>
+                <span>Fases / Agrupadores</span>
+            </div>
+        </div>
+
+        <div id="GanttTrackingContainer"></div>
+    </div>
+<script>
+        var ganttData = <?php echo $json_datasource; ?>;
+
+        var ganttChart = new ej.gantt.Gantt({
+            dataSource: ganttData,
+            locale: 'pt-BR', 
+            height: '100%',
+            width: '100%',
+            
+            // === A CORREÇÃO MÁGICA ===
+            // Ensina o Gantt a ler Data + Hora
+            dateFormat: 'yyyy-MM-dd HH:mm:ss', 
+            
+            // Define que o trabalho é 24h (Importante para MRO, senão ele esconde barras noturnas)
+            dayWorkingTime: [{ from: 0, to: 24 }], 
+            
+            // Ativa Baseline
+            renderBaseline: true, 
+            baselineColor: '#ffc107', 
+
+            taskFields: {
+                id: 'TaskId',
+                name: 'TaskName',
+                startDate: 'StartDate',
+                endDate: 'EndDate',
+                baselineStartDate: 'BaseStart',
+                baselineEndDate: 'BaseEnd',
+                progress: 'Progress',
+                parentID: 'ParentId'
+            },
+            
+            columns: [
+                { field: 'TaskId', isPrimaryKey: true, visible: false }, 
+                { field: 'TaskName', headerText: 'Atividade', width: '250', clipMode: 'EllipsisWithTooltip' },
+                
+                // Ajustei o formato da coluna para você ver a hora na tela também
+                { field: 'StartDate', headerText: 'Início', width: '130', format: 'dd/MM/yyyy HH:mm' },
+                { field: 'EndDate', headerText: 'Fim', width: '130', format: 'dd/MM/yyyy HH:mm' },
+                
+                { field: 'Progress', headerText: '%', width: '60', textAlign: 'Center' }
+            ],
+
+            // ... (restante das configurações de editSettings e timelineSettings iguais) ...
+            editSettings: {
+                allowAdding: true,
+                allowEditing: true,
+                allowDeleting: true,
+                allowTaskbarEditing: true,
+                mode: 'Auto'
+            },
+            
+            timelineSettings: {
+                topTier: { unit: 'Day', format: 'dd/MM/yyyy' }, // Mudei para Day para ver melhor as horas
+                bottomTier: { unit: 'Hour', format: 'HH:mm' }    // Escala em Horas
+            },
+
+            queryTaskbarInfo: function(args) {
+                // O Pulo do Gato: Os dados originais do PHP ficam dentro de 'taskData'
+                var originalData = args.data.taskData;
+                
+                // Se por acaso não achar, tenta direto (fallback)
+                if (!originalData) originalData = args.data;
+
+                // 1. Agrupadores (Fases/Projetos) -> Preto
+                // Nota: O campo 'Type' também está dentro de taskData
+                if (originalData.Type === 'PROJECT' || originalData.Type === 'PHASE') {
+                    args.taskbarBgColor = '#343a40'; 
+                    args.progressBarBgColor = '#212529';
+                    return;
+                }
+
+                // 2. Caminho Crítico -> VERMELHO
+                // Agora vai funcionar porque estamos lendo do lugar certo
+                if (originalData.IsCritical === true) {
+                    console.log('Tarefa Crítica Detectada:', originalData.TaskName); // Debug no F12
+                    
+                    args.taskbarBgColor = '#dc3545'; // Vermelho Vivo
+                    args.progressBarBgColor = '#a71d2a'; // Vermelho Escuro
+                    args.taskbarBorderColor = '#000000'; // Borda Preta para destaque
+                } 
+                // 3. Tarefa Normal -> VERDE
+                else {
+                    args.taskbarBgColor = '#198754'; 
+                    args.progressBarBgColor = '#0f5132';
+                }
+            },			
+			
+            treeColumnIndex: 1 
+        });
+        
+        ganttChart.appendTo('#GanttTrackingContainer');
+    </script>
+</body>
+</html>
+<?php

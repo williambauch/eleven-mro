@@ -1,0 +1,18 @@
+<?php
+
+if([sett_smtp_api] == 'custom'){
+	[sett_smtp] = array(
+		'settings' => array(
+			'gateway'       => 'smtp',
+			'smtp_server'   => [sett_smtp_server],
+			'smtp_protocol' => [sett_smtp_security],
+			'smtp_port'     => [sett_smtp_port],
+			'smtp_user'     => [sett_smtp_user],
+			'smtp_password' => [sett_smtp_pass],
+			'from_email'    => [sett_smtp_from_email],
+			'from_name'     => [sett_smtp_from_name],
+		)
+	);
+}else{
+	[sett_smtp] = array('profile' => $_SESSION['sett_smtp_api']);
+}

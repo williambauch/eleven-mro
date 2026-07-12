@@ -1,0 +1,61 @@
+{
+  "nome": "app_grid_log",
+  "tipo": "Form",
+  "nome_tabela": "sc_log",
+  "campos": [
+    {
+      "nome": "action",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "application",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "creator",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "description",
+      "tipo": "text",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "id",
+      "tipo": "integer",
+      "required": false,
+      "pk": true
+    },
+    {
+      "nome": "inserted_date",
+      "tipo": "datetime",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "ip_user",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "log_ok",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "username",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    }
+  ]
+}

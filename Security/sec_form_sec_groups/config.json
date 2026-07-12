@@ -1,0 +1,19 @@
+{
+  "nome": "sec_form_sec_groups",
+  "tipo": "Form",
+  "nome_tabela": "public.sec_groups",
+  "campos": [
+    {
+      "nome": "description",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "group_id",
+      "tipo": "int",
+      "required": false,
+      "pk": true
+    }
+  ]
+}

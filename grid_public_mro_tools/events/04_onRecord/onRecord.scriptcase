@@ -1,0 +1,15 @@
+<?php
+
+$hoje = date('Y-m-d');
+$data_vencimento = {calibration_due_date};
+
+if (!empty($data_vencimento)) {
+    if ($data_vencimento < $hoje) {
+        // Vencida: Fundo vermelho claro, texto escuro
+        sc_field_style({calibration_due_date}, '#FFCCCC', '15px', '#000000', 'Arial', 'bold');
+        sc_field_style({tool_id}, '#FFCCCC', '15px', '#000000', 'Arial', 'bold');
+    } elseif ($data_vencimento <= date('Y-m-d', strtotime('+15 days'))) {
+        // Vence em 15 dias: Amarelo alerta
+        sc_field_style({calibration_due_date}, '#FFFFCC', '15px', '#000000', 'Arial', 'bold');
+    }
+}

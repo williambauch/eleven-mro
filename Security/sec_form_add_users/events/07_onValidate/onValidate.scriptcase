@@ -1,0 +1,39 @@
+<?php
+
+//=================== CHECK PSWD ===============
+$arr_check = explode(';',[sett_password_strength]);
+
+$arr_errors = [];
+if(in_array('uppercase_letter',$arr_check) && !preg_match('@[A-Z]@', {pswd})){
+	$arr_errors[] = {lang_sec_pswd_rules_opt_uppercase_letter};
+}
+
+if(in_array('lowercase_letter',$arr_check) && !preg_match('@[a-z]@', {pswd})){
+	$arr_errors[] = {lang_sec_pswd_rules_opt_lowercase_letter};
+}
+
+if(in_array('numbers',$arr_check) && !preg_match('@[0-9]@', {pswd})){
+	$arr_errors[] = {lang_sec_pswd_rules_opt_numbers};
+}
+
+if(in_array('special_chars',$arr_check) && !preg_match('@[^\w]@', {pswd})){
+	$arr_errors[] = {lang_sec_pswd_rules_opt_special_chars};
+}
+
+if({pswd} != {confirm_pswd})
+{
+    $arr_errors[] = {lang_sec_pswd_rules_opt_equal_pswd};
+}
+
+if(strlen({pswd}) < [sett_password_min])
+{
+	$arr_errors[] = sprintf({lang_sec_pswd_rules_opt_min_chars}, [sett_password_min]);
+}
+
+if(count($arr_errors) > 0){
+	$msg = implode("<br/>", $arr_errors);
+	sc_error_message( $msg );
+    sc_error_exit();
+}
+
+//=================== END CHECK PSWD ===============

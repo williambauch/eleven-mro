@@ -1,0 +1,1 @@
+SELECT * FROM public.sec_users WHERE [str_where]

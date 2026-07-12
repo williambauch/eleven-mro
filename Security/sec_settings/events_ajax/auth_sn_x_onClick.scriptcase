@@ -1,0 +1,9 @@
+<?php
+
+if( {auth_sn_x} == 'Y' ){
+	sc_field_display({auth_sn_x_key}, on);
+	sc_field_display({auth_sn_x_secret}, on);
+}else{
+	sc_field_display({auth_sn_x_key}, off);
+	sc_field_display({auth_sn_x_secret}, off);
+}

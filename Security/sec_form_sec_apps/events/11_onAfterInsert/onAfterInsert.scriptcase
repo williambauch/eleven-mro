@@ -1,0 +1,11 @@
+<?php
+
+sc_select(rs, "SELECT group_id FROM public.sec_groups");
+while(!$rs->EOF)
+{
+	$sql = "INSERT INTO public.sec_groups_apps(app_name, group_id) VALUES ('". {app_name} ."', '". $rs->fields[0] ."')";
+    sc_exec_sql( $sql );
+
+    $rs->MoveNext();
+}
+$rs->Close();

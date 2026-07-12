@@ -1,0 +1,166 @@
+<?php
+
+$slogin = sc_sql_injection({login});
+$spswd = sc_sql_injection(hash("md5",{pswd}));
+
+switch( [sett_login_mode] ){
+	default:
+	case 'username':
+		$str_login_validate = "login =". $slogin;
+		break;
+	case 'email':
+		$str_login_validate = "email =". $slogin;
+		break;
+	case 'both':
+		$str_login_validate = "(login =". $slogin . " OR email =".$slogin . ")";
+		break;
+}
+
+
+$sql = "SELECT 
+			priv_admin,
+			active, 
+			\"name\", 
+			email, 
+			mfa, 
+			pswd_last_updated,
+			login,
+			phone,
+			picture,
+            mfa_last_updated
+	    FROM public.sec_users 
+	    WHERE
+			".$str_login_validate."
+			AND pswd = ".$spswd."";
+	
+sc_lookup(rs, $sql);
+	
+if ( ({rs} === false) || (!is_array({rs}) ) || (empty({rs})) )
+{
+	sc_log_add('login Fail', {lang_login_fail} . {login});
+	;
+	sc_error_message({lang_error_login});
+}
+else if({rs[0][1]} == 'Y')
+{
+	[usr_login]		= {rs[0][6]};
+	[usr_priv_admin] 	= ({rs[0][0]} == 'Y') ? TRUE : FALSE;
+	[usr_name]		= {rs[0][2]};
+	[usr_email]		= {rs[0][3]};
+	[usr_phone]		= {rs[0][7]};
+    [remember_me] = {remember_me};
+    [usr_picture] = '';
+    
+	/**************************************************************
+	* INÍCIO
+	* CUSTOMIZAÇÃO PARA O SISTEMA ENTENDER A FUNÇÃO DO USUÁRIO LOGADO
+	***************************************************************/
+	
+	$login_usuario = sc_sql_injection([usr_login]);
+	$sql = "SELECT employee_id, skill_id, is_supervisor, is_inspector 
+			FROM mro_employees 
+			WHERE login = $login_usuario AND is_active = TRUE";
+
+	sc_lookup(rs, $sql);
+
+	if (isset({rs[0][0]})) {
+		// Grava as variáveis globais na memória da sessão
+		[usr_employee_id]   = {rs[0][0]};
+		[usr_skill_id]      = {rs[0][1]};
+		[usr_is_supervisor] = ({rs[0][2]} == 't'); // Retorna true ou false
+		[usr_is_inspector]  = ({rs[0][3]} == 't');
+	} else {
+		// Se for um usuário do administrativo/comercial que não é mecânico
+		[usr_employee_id]   = 0;
+		[usr_skill_id]      = 0;
+		[usr_is_supervisor] = false;
+		[usr_is_inspector]  = false;
+	}
+	
+	/**************************************************************
+	* FIM
+	* CUSTOMIZAÇÃO PARA O SISTEMA ENTENDER A FUNÇÃO DO USUÁRIO LOGADO
+	***************************************************************/
+	
+	$usr_grp = array();
+    
+	sc_lookup(rs_groups, "SELECT group_id FROM public.sec_users_groups WHERE login =". sc_sql_injection([usr_login]) );
+	
+	if(isset({rs_groups[0][0]})){
+		foreach({rs_groups} as $r){
+			$usr_grp[] = $r[0];
+		}
+	}
+	
+	[usr_groups] = $usr_grp;
+	
+	if(in_array([sett_group_administrator], [usr_groups])){
+		[usr_priv_admin] = TRUE;
+	}
+	
+	
+	
+    /* Write image*/
+    if(!empty({rs[0][8]})){
+        
+        $path_img = $_SESSION['scriptcase']['sec_Login']['glo_nm_path_imag_temp'] .'/sc_img_'. [usr_login] . hash("md5",date('YmdHis')) . '.png';
+        file_put_contents($this->Ini->root . $path_img, {rs[0][8]});
+        [usr_picture] = $path_img;
+    }
+	
+	if( [sett_pswd_last_updated] != 0 ){
+		$diff = sc_date_dif(date("Y-m-d", strtotime({rs[0][5]} . " +".[sett_pswd_last_updated]. "days") ), "aaaa-mm-dd", date("Y-m-d"), "aaaa-mm-dd");
+		if($diff <= 0){
+			$code = hash("md5",date("YmdHis"));
+			sc_exec_sql("UPDATE public.sec_users SET activation_code=".sc_sql_injection($code) . " WHERE login=". sc_sql_injection([usr_login]));
+			sc_commit_trans();
+			sc_redir("sec_change_pswd", act_code=$code; pswd_expired=1);
+		}
+		
+	}
+	
+	
+//mfa
+    if( isset([sett_enable_2fa]) && [sett_enable_2fa] == 'Y' ){
+        if(!empty({rs[0][4]})){
+            
+            
+        $mfa_key = ($_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? '').($_SERVER['REMOTE_ADDR'] ?? '' ). ($_SERVER['HTTP_HOST'] ?? '') . ($_SERVER['SERVER_NAME'] ?? '') . ($_SERVER['HTTP_USER_AGENT'] ?? '');
+        $mfa_key = '_'.hash("md5",$mfa_key);
+        
+            
+            $diff = 0;
+            if( [sett_mfa_last_updated] != 0 && !empty({rs[0][9]}) ){
+                $diff = sc_date_dif(
+                    date("Y-m-d", strtotime({rs[0][9]} . " +".[sett_mfa_last_updated]. "days") ),
+                    "aaaa-mm-dd",
+                    date("Y-m-d"),
+                    "aaaa-mm-dd");
+            }
+            $diff_cookie = 0;
+            if(isset($_COOKIE[ $mfa_key ]) && !empty($_COOKIE[ $mfa_key ])){
+                $diff_cookie = sc_date_dif(
+                    date("Y-m-d", strtotime(sc_decode($_COOKIE[ $mfa_key ]) . " +".[sett_mfa_last_updated]. "days") ),
+                    "aaaa-mm-dd",
+                    date("Y-m-d"),
+                    "aaaa-mm-dd");
+            }
+            if($diff <= 0 || $diff_cookie <= 0){
+                sc_redir('sec_control_2fa');
+            }
+        }
+        else if([sett_enable_2fa_mode] == 'all'){
+            sc_apl_status('sec_add_2fa', 'on');
+            sc_redir('sec_add_2fa',redir_menu=1);
+        }
+
+    }
+// END mfa    
+    remember_me_validate();
+    
+}
+else
+{
+	sc_error_message({lang_error_not_active});
+	sc_error_exit();
+}

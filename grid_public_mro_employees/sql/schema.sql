@@ -1,0 +1,16 @@
+SELECT
+    employee_id,
+    login,
+    full_name,
+    employee_registration,
+    email,
+    canac_code,
+    resource_id,
+    is_supervisor,
+    is_inspector,
+    is_active,
+    created_at,
+    updated_at,
+    skill_id
+FROM
+    "public".mro_employees

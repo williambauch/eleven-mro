@@ -1,0 +1,25 @@
+{
+  "nome": "sec_form_sec_apps",
+  "tipo": "Form",
+  "nome_tabela": "public.sec_apps",
+  "campos": [
+    {
+      "nome": "app_name",
+      "tipo": "varchar",
+      "required": false,
+      "pk": true
+    },
+    {
+      "nome": "app_type",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "description",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    }
+  ]
+}

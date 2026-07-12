@@ -1,0 +1,115 @@
+<?php
+
+$check_sql = "SELECT set_name, set_value  FROM public.sec_settings";
+   
+sc_lookup(rs, $check_sql);
+
+if (isset({rs[0][0]}))     // Row found
+{
+    foreach({rs} as $f ){
+        eval("\$this->".$f[0]." = '".$f[1]."';");
+    }
+}
+
+if({brute_force} != 'Y'){
+    sc_field_display({brute_force_time_block}, "off");
+    sc_field_display({brute_force_attempts}, "off");
+}
+
+if({enable_2fa} == 'Y'){
+    sc_field_display({enable_2fa_expiration_time}, "on");
+    sc_field_display({enable_2fa_mode}, "on");
+    sc_field_display({enable_2fa_api}, "on");
+    sc_field_display({enable_2fa_api_type}, "on");
+    sc_field_display({mfa_last_updated}, "on");
+}else{   
+    sc_field_display({enable_2fa_expiration_time}, "off");
+	sc_field_display({enable_2fa_mode}, "off");
+	sc_field_display({enable_2fa_api}, "off");
+	sc_field_display({enable_2fa_api_type}, "off");
+	sc_field_display({mfa_last_updated}, "off");
+}
+
+if({remember_me} != 'Y'){
+    sc_field_display({cookie_expiration_time}, "off");
+}
+
+if(!isset({theme})){
+	{theme} = sc_get_theme();
+}
+
+// if(!isset({language})){
+// 	{language} = sc_get_language();
+// }
+
+if({retrieve_password} == 'Y'){
+	sc_field_display({recover_pswd}, "on");
+}
+else{
+	sc_field_display({recover_pswd}, "off");
+}
+
+if({smtp_api} == 'custom'){
+	sc_field_display({smtp_server}, on);
+	sc_field_display({smtp_port}, on);
+	sc_field_display({smtp_security}, on);
+	sc_field_display({smtp_user}, on);
+	sc_field_display({smtp_pass}, on);
+	sc_field_display({smtp_from_email}, on);
+	sc_field_display({smtp_from_name}, on);
+}else{
+	sc_field_display({smtp_server}, off);
+	sc_field_display({smtp_port}, off);
+	sc_field_display({smtp_security}, off);
+	sc_field_display({smtp_user}, off);
+	sc_field_display({smtp_pass}, off);
+	sc_field_display({smtp_from_email}, off);
+	sc_field_display({smtp_from_name}, off);
+}
+
+$arr_apis = nm_list_apis('email');
+
+
+$api_smtp_field = "<select name='smtp_api' class='sc-js-input css_smtp_api_obj css_api_obj_fld sc-ui-100perc-input scFormObjectOdd' style='width:100%' onchange='$(\"input[name=smtp_api]\").val(this.value);do_ajax_sec_settings_event_smtp_api_onchange();'>";
+$api_smtp_field .= "<option value='custom' ".({smtp_api} == 'custom' ? "selected" : '').">" . {lang_sec_set_custom} . "</option>";
+
+foreach($arr_apis as $api => $data){
+	$api_smtp_field  .= "<option value='".$data['mod'] . '__NM__'.$api."' ".
+		({smtp_api} == $data['mod'] . '__NM__'.$api ? "selected" : '')
+		." >";
+	$api_smtp_field  .= $data['name'] . " - " . $data['gateway'];
+	$api_smtp_field  .= "</option>";
+}
+$api_smtp_field .= "</select>";
+
+{smtp_api} = $api_smtp_field;
+
+
+
+$arr_apis = nm_list_apis({enable_2fa_api_type});
+
+$api_2fa = "<select name='enable_2fa_api' class='sc-js-input css_smtp_api_obj css_api_obj_fld sc-ui-100perc-input scFormObjectOdd' style='width:100%' onchange='$(\"input[name=enable_2fa_api]\").val(this.value);'>";
+
+foreach($arr_apis as $api => $data){
+	$api_2fa  .= "<option value='".$data['mod'] . '__NM__'.$api."' ".
+		({enable_2fa_api} == $data['mod'] . '__NM__'.$api ? "selected" : '')
+		." >";
+	$api_2fa  .= $data['name'] . " - " . $data['gateway'];
+	$api_2fa  .= "</option>";
+}
+$api_2fa .= "</select>";
+
+{enable_2fa_api} = $api_2fa;
+
+if( {auth_sn_x} != 'Y' ){
+	sc_field_display({auth_sn_x_key}, off);
+	sc_field_display({auth_sn_x_secret}, off);
+}
+if( {auth_sn_fb} != 'Y' ){
+	sc_field_display({auth_sn_fb_app_id}, off);
+	sc_field_display({auth_sn_fb_secret}, off);
+}
+if( {auth_sn_google} != 'Y' ){
+	sc_field_display({auth_sn_google_client_id}, off);
+	sc_field_display({auth_sn_google_secret}, off);
+}

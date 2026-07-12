@@ -1,0 +1,82 @@
+<?php
+
+$arr_apps  = array();
+$arr_app_desc = array();
+$_arr_apps = array_diff(scandir($this->Ini->path_aplicacao . "../_lib/_app_data/"), array('.','..', 'index.php', 'index.html'));
+foreach($_arr_apps as $k => $v)
+{
+	if(substr($v, -12) != "_mob_ini.php")
+	{
+		$arr_apps[] = substr($v, 0, -8);
+	}
+}
+
+sc_select(rs, "SELECT app_name FROM public.sec_apps");
+
+$arr_apps_deleted = array();
+$arr_apps_db = array();
+
+while(!$rs->EOF)
+{
+    $arr_apps_db[] = $rs->fields[0];
+    $rs->MoveNext();
+}
+$rs->Close();
+
+if({check_deleted} == 'Y')
+{
+	$arr_apps_deleted_dir = array_diff($arr_apps_db, $arr_apps);
+	foreach($arr_apps_deleted_dir as $k => $app){
+		if(substr($app, 0, 8) == 'https://' || substr($app, 0, 7) == 'http://'){
+			continue;
+		}
+		$arr_apps_deleted[] = $app;
+		sc_exec_sql("DELETE FROM public.sec_groups_apps WHERE app_name = " . sc_sql_injection($app));
+		sc_exec_sql("DELETE FROM public.sec_apps WHERE app_name = " . sc_sql_injection($app));
+	}
+    foreach($arr_apps as $k => $app)
+    {
+		require($this->Ini->path_aplicacao . "../_lib/_app_data/". $app . '_ini.php');
+		
+		$app = (isset($arr_data['friendly_url']) && !empty($arr_data['friendly_url']))?$arr_data['friendly_url']:$app;
+		
+    	if( !is_dir($this->Ini->path_aplicacao . "../" . $app) )
+        {
+            unset($arr_apps[$k]);
+        }
+    }
+}
+
+
+$arr_apps = array_diff($arr_apps, $arr_apps_db);
+
+//========= Groups =========
+$arr_grp = array();
+sc_select(rs, "SELECT group_id FROM public.sec_groups");
+while(!$rs->EOF)
+{
+    $arr_grp[] = $rs->fields[0];
+    $rs->MoveNext();
+}
+$rs->Close();
+
+foreach($arr_apps as $k => $app)
+{
+	require($this->Ini->path_aplicacao . "../_lib/_app_data/". $app . '_ini.php');
+	$app_type = isset($arr_data['type'])? $arr_data['type'] : '';
+	$app_desc = isset($arr_data['description']) ? $arr_data['description'] : '';
+    $arr_app_desc[ $app ] = $app_desc;
+	
+	$sql = "SELECT count(*) FROM public.sec_apps WHERE app_name = '". $app ."' ";
+	sc_lookup(rs, $sql);
+	if({rs[0][0]} == 0)
+	{
+		$sql = "INSERT INTO public.sec_apps(app_name, app_type, description) VALUES ('". $app ."', '".$app_type."', '".$app_desc."')";
+		sc_exec_sql( $sql );
+		foreach($arr_grp as $grp)
+		{
+			$sql = "INSERT INTO public.sec_groups_apps(app_name, group_id) VALUES ('". $app ."', '". $grp ."')";
+			sc_exec_sql( $sql );
+		}
+	}
+}

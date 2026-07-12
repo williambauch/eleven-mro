@@ -1,0 +1,20 @@
+<?php
+
+list($usr_email, $usr_login) = search_email({login});
+sc_set_global($usr_login);
+sc_set_global($usr_email);
+
+sc_log_add('Retrieve Password', {lang_log_retrieve_pswd});
+switch([sett_recover_pswd]){
+	case 'send_pswd':
+		send_pswd_mail();
+		break;
+	case 'reset_send':
+		send_new_pswd();
+		break;
+	default:
+	case 'send_link':
+		send_act();
+		break;
+}
+sc_reset_global([usr_login], [usr_email]);

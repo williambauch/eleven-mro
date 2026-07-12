@@ -1,0 +1,9 @@
+<?php
+
+$sql = "UPDATE public.sec_users SET pswd = ".($spswd).", activation_code = '', pswd_last_updated=". sc_sql_injection(date("Y-m-d H:i:s")) ." WHERE login = '". [usr_login] . "'";
+
+	sc_exec_sql($sql);
+	sc_log_add('Change Password', [usr_login] ." ". {lang_change_pswd});
+	[act_code] = '';
+    [pswd_expired] = 0;
+	sc_redir('sec_Login', "", "_parent");

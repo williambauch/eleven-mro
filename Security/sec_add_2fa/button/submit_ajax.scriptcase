@@ -1,0 +1,95 @@
+<?php
+
+$result = false;
+
+
+if([sett_enable_2fa_api_type] != 'auth' && [sett_enable_2fa_expiration_time] != 0){
+    $diff = sc_time_diff(date("YmdHis"), "yyyymmddhhiiss", [code_created_at], "yyyymmddhhiiss"); 
+
+    $diff_seconds = $diff[0]*60*60 + $diff[1]*60 + $diff[2];
+
+    if($diff_seconds > [sett_enable_2fa_expiration_time]){
+        sc_alert({lang_sec_2fa_error_msg_expired}, array(
+                    'title' => {lang_sec_2fa_error_title},
+                    'type' => 'error',
+                    'timer' => '10000',
+                    'showConfirmButton' => false,
+                    'position' => 'center',
+                    'toast' => true
+                    )
+              );
+        return;
+    }
+}
+
+switch([sett_enable_2fa_api_type]){
+
+    case 'auth':
+        $result = sc_2fa_check_ga({code});
+        break;
+
+    case 'email':
+        $result = [code_check] == {code};
+        if($result){
+            sc_exec_sql("UPDATE public.sec_users SET mfa =". sc_sql_injection('email@@'.[code_check]) ." WHERE login = ". sc_sql_injection([usr_login]) );
+
+        }
+
+        break;
+    case 'sms':
+        $result = [code_check] == {code};
+        if($result){
+            sc_exec_sql("UPDATE public.sec_users SET mfa =". sc_sql_injection('sms@@'.{phone}.'@@'.[code_check]) ." WHERE login = ". sc_sql_injection([usr_login]) );
+        }
+
+    break;
+}
+
+if ($result) {
+  if(!isset([redir_menu]) || [redir_menu] != 1){
+
+      sc_alert({lang_sec_2fa_success_msg}, array(
+                'title' => {lang_sec_2fa_success_title},
+                'type' => 'success',
+                'timer' => '5000',
+                'showConfirmButton' => false,
+                'position' => 'center',
+                'toast' => true
+                )
+          );
+    }
+    
+    sc_field_display({phone}, "off");
+    sc_field_display({google_auth_img}, "off");
+    sc_field_display({code}, "off");
+    sc_field_display({counter}, "off");
+
+    {help_description} = {lang_sec_2fa_reset_desc};
+    sc_btn_display("send_sms","off");
+    sc_btn_display("send_email","off");
+
+    sc_btn_display("reset","on");
+    sc_btn_disabled("submit_ajax","on");
+
+    if(isset($_COOKIE['usr_data'])){
+        unset($_COOKIE['usr_data']);
+        setcookie("usr_data", '',time()+60*60*24*30,'/');
+    }
+
+	if(isset([redir_menu]) && [redir_menu] == 1){
+        [redir_menu] = 0;
+		remember_me_validate();
+		sc_validate_success();
+	}
+
+} else {
+    sc_alert({lang_sec_2fa_error_msg}, array(
+                'title' => {lang_sec_2fa_error_title},
+                'type' => 'error',
+                'timer' => '5000',
+                'showConfirmButton' => false,
+                'position' => 'center',
+                'toast' => true
+                )
+          );
+}
