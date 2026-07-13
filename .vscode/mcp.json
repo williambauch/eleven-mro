@@ -1,6 +1,6 @@
 {
 	"servers": {
-		"MCP-mysql-vetweb": {
+		"MCP-mro-postgres": {
 			"type": "stdio",
 			"command": "dbhub",
 			"args": [
