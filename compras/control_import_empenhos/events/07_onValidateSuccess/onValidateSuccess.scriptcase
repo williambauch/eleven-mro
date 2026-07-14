@@ -3,7 +3,7 @@
 // ====================================================================
 // CONFIGURAÇÃO DO DEBUG
 // ====================================================================
-$MODO_DEBUG = true; // Mude para false quando for para produção
+[MODO_DEBUG] = true; // Mude para false quando for para produção
 
 // Força o PHP a exibir erros na tela caso algo grave aconteça (evita tela branca)
 ini_set('display_errors', 1);
@@ -24,8 +24,8 @@ echo "<script>
         if(document.getElementById('box_importacao')) { document.getElementById('box_importacao').style.display = 'block'; }
       </script>";
 
-if ($MODO_DEBUG) {
-    echo "<div id='console_debug' style='width: 100%; max-width: 600px; margin: 20px auto; background: #2b2b2b; color: #00ff00; padding: 10px; font-family: monospace; font-size: 12px; height: 150px; overflow-y: scroll; border-radius: 5px;'>[SISTEMA] Iniciando Debug...<br></div>";
+if ([MODO_DEBUG]) {
+    echo "<div id='console_debug' style='width: 100%; max-width: 600px; margin: 20px auto; background: #2b2b2b; color: #00ff00; padding: 10px; font-family: monospace; font-size: 12px; height: 150px; overflow-y: scroll; border-radius: 5px;'> SISTEMA:  Iniciando Debug...<br></div>";
 }
 // O str_pad envia 4KB de espaços invisíveis para forçar o Chrome/Edge a desenhar o ecrã na hora!
 echo str_pad('', 4096); 
@@ -33,8 +33,7 @@ flush();
 
 // Função auxiliar para imprimir no Console de Debug (Usando json_encode para não quebrar o JS com aspas)
 function printDebug($msg) {
-    global $MODO_DEBUG;
-    if ($MODO_DEBUG) {
+    if ([MODO_DEBUG]) {
         $hora = date('H:i:s');
         $msg_js = json_encode("[$hora] " . $msg); // json_encode blinda contra aspas duplas, simples e quebras de linha!
         echo "<script>
@@ -112,6 +111,7 @@ if ( $xlsx = \Shuchkin\SimpleXLSX::parse($caminho_arquivo) ) {
         $committed_qty   = isset($linha[16]) ? (float)str_replace(',', '.', $linha[16]) : 0.00;
         $stock_location  = isset($linha[18]) ? trim($linha[18]) : '';
         $unit_cost       = isset($linha[33]) ? (float)str_replace(',', '.', $linha[33]) : 0.00;
+        $material_status = isset($linha[19]) ? strtoupper(trim($linha[19])) : '';
 
         if (empty($task_code) || empty($product_code)) { 
             printDebug("Linha $i ignorada: Task Code ou Product Code vazios.");
@@ -135,7 +135,7 @@ if ( $xlsx = \Shuchkin\SimpleXLSX::parse($caminho_arquivo) ) {
         $total_cost           = $planned_qty * $unit_cost;
         $committed_total_cost = $committed_qty * $unit_cost;
 
-        // PASSO A: RESOLVE O 'TASK_CODE'
+        // PASSO A: RESOLVE O 'TASK_CODE' E DEFINE SE É NRC OU NÃO
         $sql_get_task = "SELECT task_id, is_nrc, task_type FROM mro_tasks WHERE task_code = '$task_segura' AND project_id = $projeto_atual";
         sc_lookup(rs_task, $sql_get_task);
 
@@ -146,10 +146,17 @@ if ( $xlsx = \Shuchkin\SimpleXLSX::parse($caminho_arquivo) ) {
         
         $task_id = {rs_task[0][0]};
         $eh_nrc  = ({rs_task[0][1]} == 't' || {rs_task[0][1]} == 'true' || {rs_task[0][1]} == 1 || {rs_task[0][2]} == 'NR') ? true : false;
-        $tarefas_alteradas[$task_id] = $eh_nrc;
+
+        // Inicializa o registro da tarefa no array de controle (MRO-115)
+        // Por padrão, assume que não há bloqueio de material até que seja detectado algum item crítico sem Status
+        if (!isset($tarefas_alteradas[$task_id])) {
+            $tarefas_alteradas[$task_id] = array('eh_nrc' => $eh_nrc, 'tem_bloqueio' => false);
+        }
 
         // PASSO B: UPSERT DO MATERIAL MASTER
-        $sql_check_mat = "SELECT material_id FROM mro_materials WHERE product_code = '$prod_seguro' AND stock_location = '$loc_seguro'";
+        // Busca pela chave unica do banco: (product_code, part_number, stock_location)
+        // Permite o mesmo material em armazens diferentes com custos/saldos distintos
+        $sql_check_mat = "SELECT material_id, is_blocking_task FROM mro_materials WHERE product_code = '$prod_seguro' AND part_number = '$pn_seguro' AND stock_location = '$loc_seguro'";
         sc_lookup(rs_mat, $sql_check_mat);
 
         if (empty({rs_mat})) {
@@ -159,12 +166,54 @@ if ( $xlsx = \Shuchkin\SimpleXLSX::parse($caminho_arquivo) ) {
             
             sc_lookup(rs_new, $sql_check_mat);
             $material_id = {rs_new[0][0]};
+            // Por padrao, assume que o material recem-criado bloqueia a tarefa ate que seja definido o contrario
+            $is_blocking_task = true; // Default do banco: true → bloqueia
         } else {
             $material_id = {rs_mat[0][0]};
+
+            // is_blocking_task vem exclusivamente do form_public_mro_materials (fonte de verdade) 
+            $is_blocking_task = ({rs_mat[0][1]} == 't' || {rs_mat[0][1]} == '1');
+            
+            // Atualiza o material master (description e unit_cost podem variar entre importacoes)
             $sql_upd_mat = "UPDATE mro_materials 
                             SET part_number = '$pn_seguro', description = '$desc_segura', unit_cost = $unit_cost
                             WHERE material_id = $material_id";
             sc_exec_sql($sql_upd_mat);
+        }
+
+        // ====================================================================
+        // REGRA DE BLOQUEIO OPERACIONAL E SALDO EMPENHADO (MRO-115)
+        //
+        // 1. SALDO EMPENHADO (committed_qty)
+        //    O campo committed_qty em mro_task_materials so recebe o valor
+        //    da coluna "Saldo Empenho" (planilha, coluna 16) QUANDO:
+        //      a) O material NAO bloqueia (is_blocking_task = false), OU
+        //      b) O material tem Status preenchido na planilha (disponivel, ex: "OK")
+        //    Se nenhuma das condicoes for atendida, committed_qty = 0.
+        //
+        // 2. BLOQUEIO DA TAREFA (is_blocked_material)
+        //    A tarefa so e bloqueada QUANDO as DUAS condicoes sao true:
+        //      a) is_blocking_task = true (material BLOQUEIA a tarefa)
+        //      b) Status vazio ou "-" (material indisponivel)
+        // ====================================================================
+        $material_status_ok = ($material_status !== '' && $material_status !== '-');
+
+        // Saldo empenhado: contabiliza se o material NAO bloqueia (is_blocking_task = false) OU se ja tem Status OK
+        $pode_contabilizar = (!$is_blocking_task || $material_status_ok);
+        $committed_qty_final = $pode_contabilizar ? $committed_qty : 0.00;
+        $committed_total_cost_final = $committed_qty_final * $unit_cost;
+
+        // Bloqueio: so ocorre quando o material e critico E esta indisponivel
+        if ($is_blocking_task && !$material_status_ok) {
+            $tarefas_alteradas[$task_id]['tem_bloqueio'] = true;
+            printDebug("Linha $i: Material $product_code BLOQUEIA tarefa $task_code (Status=$material_status)");
+        } else {
+            // Log dos materiais que NAO bloqueiam (Status OK ou is_blocking_task=false)
+            if (!$is_blocking_task) {
+                printDebug("Linha $i: Material $product_code OK (is_blocking_task=false) tarefa $task_code");
+            } else {
+                printDebug("Linha $i: Material $product_code OK (Status=$material_status) tarefa $task_code");
+            }
         }
 
         // PASSO C: UPSERT DO EMPENHO
@@ -175,7 +224,7 @@ if ( $xlsx = \Shuchkin\SimpleXLSX::parse($caminho_arquivo) ) {
             $sql_ins_empenho = "INSERT INTO mro_task_materials 
                                 (task_id, material_id, planned_qty, committed_qty, unit_cost, total_cost, committed_unit_cost, committed_total_cost, material_source, is_applied, applied_qty) 
                                 VALUES 
-                                ($task_id, $material_id, $planned_qty, $committed_qty, $unit_cost, $total_cost, $unit_cost, $committed_total_cost, '$material_source', false, 0.00)";
+                                ($task_id, $material_id, $planned_qty, $committed_qty_final, $unit_cost, $total_cost, $unit_cost, $committed_total_cost_final, '$material_source', false, 0.00)";
             sc_exec_sql($sql_ins_empenho);
             
             sc_lookup(rs_vinc_new, $sql_check_vinc);
@@ -184,11 +233,11 @@ if ( $xlsx = \Shuchkin\SimpleXLSX::parse($caminho_arquivo) ) {
             $task_material_id = {rs_vinc[0][0]};
             $sql_upd_empenho = "UPDATE mro_task_materials 
                                 SET planned_qty = $planned_qty, 
-                                    committed_qty = $committed_qty, 
+                                    committed_qty = $committed_qty_final, 
                                     unit_cost = $unit_cost, 
                                     total_cost = $total_cost, 
                                     committed_unit_cost = $unit_cost, 
-                                    committed_total_cost = $committed_total_cost,
+                                    committed_total_cost = $committed_total_cost_final,
                                     material_source = '$material_source'
                                 WHERE task_material_id = $task_material_id";
             sc_exec_sql($sql_upd_empenho);
@@ -223,13 +272,24 @@ if ( $xlsx = \Shuchkin\SimpleXLSX::parse($caminho_arquivo) ) {
         sc_exec_sql($sql_clean_residues);
     }
 
-    // PASSO E: ATUALIZAR CUSTOS GERAIS
+    // PASSO E: ATUALIZAR CUSTOS GERAIS E FLAG DE BLOQUEIO
+    // Para cada tarefa que teve material vinculado durante a importacao:
+    // 1. Aplica is_blocked_material  (true se algum item critico estiver sem Status)
+    // 2. Recalcula estimated_material_cost (soma dos total_cost)
+    // 3. Dispara o motor de O&A se for NRC
     printDebug("Atualizando custos gerais e executando Motor de O&A...");
     if (!empty($tarefas_alteradas)) {
         echo "<script> document.getElementById('status_texto').innerHTML = 'Atualizando custos e avaliando quebras de O&A...'; </script>";
         echo str_pad('', 4096); flush();
         
-        foreach ($tarefas_alteradas as $id_da_tarefa => $eh_nrc) {
+        foreach ($tarefas_alteradas as $id_da_tarefa => $info) {
+            $eh_nrc       = $info['eh_nrc'];
+            $tem_bloqueio = $info['tem_bloqueio'];
+
+            // MRO-115: Atualiza flag de bloqueio operacional na tarefa
+            $flag_block = $tem_bloqueio ? 'true' : 'false';
+            sc_exec_sql("UPDATE mro_tasks SET is_blocked_material = $flag_block WHERE task_id = $id_da_tarefa");
+
             $sql_sum_mat = "SELECT COALESCE(SUM(total_cost), 0) FROM mro_task_materials 
                             WHERE task_id = $id_da_tarefa AND material_source != 'CLIENTE'";
             sc_lookup(rs_sum, $sql_sum_mat);
@@ -237,7 +297,7 @@ if ( $xlsx = \Shuchkin\SimpleXLSX::parse($caminho_arquivo) ) {
             sc_exec_sql("UPDATE mro_tasks SET estimated_material_cost = $novo_custo_mat WHERE task_id = $id_da_tarefa");
 
             if ($eh_nrc) {
-                $this->fn_calcular_oa_nrc($id_da_tarefa, $projeto_atual, false);
+                fn_calcular_oa_nrc($id_da_tarefa, $projeto_atual, false);
             }
         }
     }
@@ -251,7 +311,7 @@ if ( $xlsx = \Shuchkin\SimpleXLSX::parse($caminho_arquivo) ) {
           </script>";
           
     // Se o debug estiver ativo, não recarrega a página automaticamente para dar tempo de ler os logs
-    if (!$MODO_DEBUG) {
+    if (![MODO_DEBUG]) {
         echo "<script>
                 setTimeout(function(){ 
                     window.parent.tb_remove(); 

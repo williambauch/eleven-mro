@@ -1,0 +1,10 @@
+.css_wbs_id_label, .css_wbs_id_label:hover {text-align:right;vertical-align:middle;justify-content:right;font-weight:bold;}
+.css_wbs_id_grid_line, .css_wbs_id_grid_line:hover {vertical-align: top;text-align: right;}
+.css_wbs_code_label, .css_wbs_code_label:hover {text-align:left;vertical-align:middle;justify-content:left;font-weight:bold;}
+.css_wbs_code_grid_line, .css_wbs_code_grid_line:hover {vertical-align: top;text-align: left;}
+.css_wbs_name_label, .css_wbs_name_label:hover {text-align:left;vertical-align:middle;justify-content:left;font-weight:bold;}
+.css_wbs_name_grid_line, .css_wbs_name_grid_line:hover {vertical-align: top;text-align: left;}
+.css_phase_type_label, .css_phase_type_label:hover {text-align:left;vertical-align:middle;justify-content:left;font-weight:bold;}
+.css_phase_type_grid_line, .css_phase_type_grid_line:hover {vertical-align: top;text-align: left;}
+.css_project_id_label, .css_project_id_label:hover {text-align:right;vertical-align:middle;justify-content:right;font-weight:bold;}
+.css_project_id_grid_line, .css_project_id_grid_line:hover {vertical-align: top;text-align: right;}

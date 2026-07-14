@@ -18,12 +18,18 @@ if (!empty({ds_ativa})) {
     sc_redir('control_pause_task', glo_timesheet_id=$id_ts;glo_assignment_id=$tarefa_aberta_id;glo_assignment_id_sel={assignment_id}, 'modal','', '600', '500');
 
 } else {
+    // MRO-115: Verifica se a tarefa esta bloqueada por falta de material
+    sc_lookup(ds_block, "SELECT t.is_blocked_material
+                        FROM mro_tasks t
+                        JOIN mro_task_assignments ta ON ta.task_id = t.task_id
+                        WHERE ta.assignment_id = {assignment_id}");
+    if (!empty({ds_block}) && ({ds_block[0][0]} == 't' || {ds_block[0][0]} == 'true' || {ds_block[0][0]} == 1)) {
+        sc_error_message("Tarefa bloqueada por falta de material. Resolva o bloqueio antes de iniciar.");
+        sc_error_exit();
+    }
+
     // Cria a sessão de trabalho
-    /*
-	sc_exec_sql("INSERT INTO mro_timesheet (assignment_id, employee_id, appointment_date, start_time, status) 
-                 VALUES ({assignment_id}, [usr_employee_id], CURRENT_DATE, NOW(), 'IN_PROGRESS')");
-	*/
-	$sql_ts = "INSERT INTO mro_timesheet (assignment_id, employee_id, appointment_date, start_time, status) 
+    $sql_ts = "INSERT INTO mro_timesheet (assignment_id, employee_id, appointment_date, start_time, status) 
                  VALUES ({assignment_id}, [usr_employee_id], CURRENT_DATE, NOW(), 'IN_PROGRESS')
 				 RETURNING timesheet_id";
 	

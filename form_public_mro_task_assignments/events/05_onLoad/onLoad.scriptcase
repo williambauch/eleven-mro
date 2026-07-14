@@ -1,15 +1,15 @@
 <?php
 
 // Reset inicial dos botões
-sc_btn_display('btn_pause', 'off');
-sc_btn_display('btn_stop', 'off');
-sc_btn_display('btn_play', 'on');
+sc_btn_display('Pause', 'off');
+//sc_btn_display('Stop', 'off');
+sc_btn_display('Play', 'on');
 
 // Se a tarefa estiver em progresso, inverte a visibilidade
 if ({status_code} == 'IN_PROGRESS') {
-    sc_btn_display('btn_play', 'off'); // Esconde o Play
-    sc_btn_display('btn_pause', 'on'); // Mostra o Pause
-    sc_btn_display('btn_stop', 'on');  // Mostra o Stop
+    sc_btn_display('Play', 'off'); // Esconde o Play
+    sc_btn_display('Pause', 'on'); // Mostra o Pause
+    //sc_btn_display('Stop', 'on');  // Mostra o Stop
 }
 
 if ({status_code} == 'IN_PROGRESS') {
@@ -44,4 +44,26 @@ if ({status_code} == 'IN_PROGRESS') {
             <i class='fas fa-pause-circle'></i> 00:00:00
         </div>
     ";
+}
+
+// MRO-115: Verifica bloqueio por material ao carregar a tela
+// Se a task estiver bloqueada e ainda em status de trabalho, desabilita o Play
+if ({status_code} != 'COMPLETED' && {status_code} != 'CANCELLED') {
+    sc_lookup(ds_block_load, "SELECT t.is_blocked_material
+                              FROM mro_tasks t
+                              JOIN mro_task_assignments ta ON ta.task_id = t.task_id
+                              WHERE ta.assignment_id = {assignment_id}");
+
+    if (!empty({ds_block_load}) && ({ds_block_load[0][0]} == 't' || {ds_block_load[0][0]} == 'true')) {
+        // Esconde o botão Play e mostra alerta de bloqueio
+        sc_btn_display('Play', 'off');
+        sc_alert("ATENÇÃO: Esta tarefa está bloqueada por falta de material. Resolva o bloqueio no estoque antes de iniciar.");
+
+        {display_tempo} = "
+            <div style='font-size: 28px; font-weight: 800; color: #d93025; font-family: monospace; text-align: center; padding: 20px; background: #fce8e6; border-radius: 8px; border: 2px solid #d93025; width: 280px; margin: 0 auto;'>
+                <i class='fas fa-ban'></i> BLOQUEADA<br>
+                <span style='font-size: 14px; font-weight: 400;'>Falta de material</span>
+            </div>
+        ";
+    }
 }

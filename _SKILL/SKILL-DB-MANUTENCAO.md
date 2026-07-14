@@ -22,7 +22,7 @@ garantindo consistência com o schema existente.
 9. Constraints nomeadas seguindo padrão: `{tabela}_pkey`, `{tabela}_{coluna}_key` (UNIQUE), `fk_{tabela}_{coluna}` (FK).
 10. **NUNCA** usar `CHECK` constraints — validações são feitas no backend.
 11. Alertar o usuário para rodar o script no banco PostgreSQL `elevenmy_mro`.
-12. Toda alteração deve ser escrita como script SQL migratório (um arquivo `.sql`), salvo em `_Banco_de_dados/migrations/` com nome `YYYY-MM-DD_descricao.sql`.
+12. Toda alteração deve ser escrita como script SQL migratório (um arquivo `.sql`), salvo em `__Tarefas/<CODIGO_TAREFA>/migrations/` com nome `<CODIGO_TAREFA>_descricao.sql`.
 13. Após criar qualquer script, **perguntar se ele quer que você tente executar diretamente no banco** via a ferramenta de banco disponível (MCP DBHub ou psql).
 
 ---
@@ -197,14 +197,14 @@ ALTER TABLE "public"."mro_TABELA"
 
 ### 9. Migração Completa (arquivo)
 
-Sempre salvar em `_Banco_de_dados/migrations/YYYY-MM-DD_descricao.sql`:
+Sempre salvar em `__Tarefas/<CODIGO_TAREFA>/migrations/<CODIGO_TAREFA>_descricao.sql`:
 
 ```sql
 -- =============================================
--- Migration: YYYY-MM-DD_descricao
+-- Migration: <CODIGO_TAREFA>_descricao
 -- Descrição: O QUE ESTA MIGRACAO FAZ
 -- =============================================
--- Autor: <nome>
+-- Tarefa: <CODIGO_TAREFA>
 -- Data: YYYY-MM-DD
 
 -- ---------------------------------------------

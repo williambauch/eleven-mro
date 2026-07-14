@@ -1,0 +1,90 @@
+.css_project_id_label, .css_project_id_label span{text-align:;}
+.css_project_id_label span  span{line-height:1.5;}
+.css_project_id_line, .css_project_id_line >span{text-align:left;}
+.css_project_id_line span  span{line-height:1.5;}
+.css_project_id_obj, .css_project_id_obj span{text-align:left;}
+.css_project_id_obj span  span{line-height:1.5;}
+.css_p6_proj_id_label, .css_p6_proj_id_label span{ }
+.css_p6_proj_id_label span  span{line-height:1.5;}
+.css_p6_proj_id_line, .css_p6_proj_id_line >span{ }
+.css_p6_proj_id_line span  span{line-height:1.5;}
+.css_p6_proj_id_obj, .css_p6_proj_id_obj span{ }
+.css_p6_proj_id_obj span  span{line-height:1.5;}
+.css_project_name_label, .css_project_name_label span{ }
+.css_project_name_label span  span{line-height:1.5;}
+.css_project_name_line, .css_project_name_line >span{ }
+.css_project_name_line span  span{line-height:1.5;}
+.css_project_name_obj, .css_project_name_obj span{ }
+.css_project_name_obj span  span{line-height:1.5;}
+.css_project_status_label, .css_project_status_label span{ }
+.css_project_status_label span  span{line-height:1.5;}
+.css_project_status_line, .css_project_status_line >span{ }
+.css_project_status_line span  span{line-height:1.5;}
+.css_project_status_obj, .css_project_status_obj span{ }
+.css_project_status_obj span  span{line-height:1.5;}
+.css_start_date_label, .css_start_date_label span{ }
+.css_start_date_label span  span{line-height:1.5;}
+.css_start_date_line, .css_start_date_line >span{ }
+.css_start_date_line span  span{line-height:1.5;}
+.css_start_date_obj, .css_start_date_obj span{ }
+.css_start_date_obj span  span{line-height:1.5;}
+.css_end_date_label, .css_end_date_label span{ }
+.css_end_date_label span  span{line-height:1.5;}
+.css_end_date_line, .css_end_date_line >span{ }
+.css_end_date_line span  span{line-height:1.5;}
+.css_end_date_obj, .css_end_date_obj span{ }
+.css_end_date_obj span  span{line-height:1.5;}
+.css_aircraft_id_label, .css_aircraft_id_label span{ }
+.css_aircraft_id_label span  span{line-height:1.5;}
+.css_aircraft_id_line, .css_aircraft_id_line >span{ }
+.css_aircraft_id_line span  span{line-height:1.5;}
+.css_aircraft_id_obj, .css_aircraft_id_obj span{ }
+.css_aircraft_id_obj span  span{line-height:1.5;}
+.css_is_cap_zero_label, .css_is_cap_zero_label span{ }
+.css_is_cap_zero_label span  span{line-height:1.5;}
+.css_is_cap_zero_line, .css_is_cap_zero_line >span{ }
+.css_is_cap_zero_line span  span{line-height:1.5;}
+.css_is_cap_zero_obj, .css_is_cap_zero_obj span{ }
+.css_is_cap_zero_obj span  span{line-height:1.5;}
+.css_cap_hh_limit_label, .css_cap_hh_limit_label span{ }
+.css_cap_hh_limit_label span  span{line-height:1.5;}
+.css_cap_hh_limit_line, .css_cap_hh_limit_line >span{text-align:left;}
+.css_cap_hh_limit_line span  span{line-height:1.5;}
+.css_cap_hh_limit_obj, .css_cap_hh_limit_obj span{text-align:left;}
+.css_cap_hh_limit_obj span  span{line-height:1.5;}
+.css_cap_material_type_label, .css_cap_material_type_label span{ }
+.css_cap_material_type_label span  span{line-height:1.5;}
+.css_cap_material_type_line, .css_cap_material_type_line >span{ }
+.css_cap_material_type_line span  span{line-height:1.5;}
+.css_cap_material_type_obj, .css_cap_material_type_obj span{ }
+.css_cap_material_type_obj span  span{line-height:1.5;}
+.css_cap_material_limit_label, .css_cap_material_limit_label span{ }
+.css_cap_material_limit_label span  span{line-height:1.5;}
+.css_cap_material_limit_line, .css_cap_material_limit_line >span{text-align:left;}
+.css_cap_material_limit_line span  span{line-height:1.5;}
+.css_cap_material_limit_obj, .css_cap_material_limit_obj span{text-align:left;}
+.css_cap_material_limit_obj span  span{line-height:1.5;}
+.css_work_order_label, .css_work_order_label span{ }
+.css_work_order_label span  span{line-height:1.5;}
+.css_work_order_line, .css_work_order_line >span{ }
+.css_work_order_line span  span{line-height:1.5;}
+.css_work_order_obj, .css_work_order_obj span{ }
+.css_work_order_obj span  span{line-height:1.5;}
+.css_tsn_records_label, .css_tsn_records_label span{ }
+.css_tsn_records_label span  span{line-height:1.5;}
+.css_tsn_records_line, .css_tsn_records_line >span{text-align:left;}
+.css_tsn_records_line span  span{line-height:1.5;}
+.css_tsn_records_obj, .css_tsn_records_obj span{text-align:left;}
+.css_tsn_records_obj span  span{line-height:1.5;}
+.css_csn_records_label, .css_csn_records_label span{ }
+.css_csn_records_label span  span{line-height:1.5;}
+.css_csn_records_line, .css_csn_records_line >span{text-align:left;}
+.css_csn_records_line span  span{line-height:1.5;}
+.css_csn_records_obj, .css_csn_records_obj span{text-align:left;}
+.css_csn_records_obj span  span{line-height:1.5;}
+.css_wbs_label, .css_wbs_label span{ }
+.css_wbs_label span  span{line-height:1.5;}
+.css_wbs_line, .css_wbs_line >span{ }
+.css_wbs_line span  span{line-height:1.5;}
+.css_wbs_obj, .css_wbs_obj span{ }
+.css_wbs_obj span  span{line-height:1.5;}
