@@ -29,3 +29,23 @@ if ({is_nrc} == 't' || {is_nrc} == 1 || {is_nrc} === true) {
     // Rotina: Ícone de Tarefa/Checklist no Azul Digex (Identidade visual da empresa)
     {nr} = "<i class='fa-solid fa-list-check' style='color:#004080; font-size:16px;' title='Rotina'></i>";
 }
+
+// Lê o status atual do banco
+$status = {status_code};
+
+// Busca os dados do status na tabela de configuracao (cor, icone, label)
+if (!empty($status)) {
+    $var_sql = "SELECT label_ptbr, kanban_color, icon FROM mro_sys_status WHERE status_code = '" . addslashes($status) . "' AND module = 'TASKS'";
+    sc_lookup(rs_status, $var_sql);
+}
+
+if (!empty({rs_status})) {
+    $var_label = strtoupper({rs_status[0][0]});
+    $var_color = {rs_status[0][1]};
+    $var_icon  = {rs_status[0][2]};
+    // Define cor do texto conforme brilho do fundo (cores claras usam texto escuro)
+    $var_text_color = (in_array($var_color, ['#ffc107', '#fd7e14', '#e9ecef', '#adb5bd'])) ? '#000000' : '#ffffff';
+    {status_badge} = "<span style='background-color: $var_color; color: $var_text_color; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 11px; white-space: nowrap;'><i class='$var_icon'></i> $var_label</span>";
+} else {
+    {status_badge} = "<span style='background-color: #e9ecef; color: #495057; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 11px; white-space: nowrap;'>".{status_code}."</span>";
+}

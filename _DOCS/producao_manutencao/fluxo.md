@@ -4,7 +4,7 @@ Módulo responsável pela execução das tarefas no chão de fábrica. Abrange d
 
 ## Aplicações do módulo
 
-- [Gestão de Não Rotinas — NRC (grid_public_mro_nrc)](grid_public_mro_nrc.md) — acompanhamento das não-rotinas abertas pelos mecânicos, com status e indicadores de bloqueio.
+- ~~[Gestão de Não Rotinas — NRC (grid_public_mro_nrc)](grid_public_mro_nrc.md)~~ — **⚠️ DESATIVADA** — NRC agora é gerenciada pelo [Fluxo de Aprovação NRC (fluxo_nrc_workflow)](fluxo_nrc_workflow.md) via `grid_public_mro_tasks`
 - [Painel do Supervisor (tabs_supervisor)](tabs_supervisor.md) — visão gerencial com abas para distribuir, acompanhar e gerenciar as tarefas da equipe.
 - [Painel do Mecânico (grid_my_tasks)](grid_my_tasks.md) — lista de tarefas ativas do mecânico para clock-in/out no tablet.
 - [Alocações (form_public_mro_task_assignments)](form_public_mro_task_assignments.md) — formulário de alocação de mecânicos a tarefas.
@@ -19,6 +19,7 @@ Módulo responsável pela execução das tarefas no chão de fábrica. Abrange d
 - [Grid de Timesheet (grid_public_mro_timesheet)](grid_public_mro_timesheet.md) — consulta de apontamentos de horas.
 - [Controle de Pausa (control_pause_task)](control_pause_task.md) — registro de pausas em tarefas em execução.
 - [Abertura de NRC (ctrl_abertura_nrc)](ctrl_abertura_nrc.md) — formulário rápido de abertura de não-rotina pelo mecânico.
+- [Fluxo de Aprovação NRC (fluxo_nrc_workflow)](fluxo_nrc_workflow.md) — diagrama do workflow de aprovação de Não-Rotinas (DRAFT → RELEASED → CANCELLED).
 - [Dispatch (grid_mro_dispatch)](grid_mro_dispatch.md) — visão de despacho das tarefas alocadas aos mecânicos.
 - [Kanban (blank_kanban_board)](blank_kanban_board.md) — quadro Kanban de tarefas para acompanhamento visual.
 - [Kanban Crítico (blank_kanban_critical)](blank_kanban_critical.md) — quadro Kanban com tarefas críticas ou bloqueadas.

@@ -1,0 +1,177 @@
+<?php
+// Exibe o tipo de rotina no topo da tela
+{routine_type} = empty({is_nrc}) ? "Rotina Padrão" : "Não Rotina (RN)";
+
+// ====================================================================
+// GRUPOS DE ACESSO DO USUÁRIO
+// ====================================================================
+$ids_brutos = is_array([usr_groups]) ? implode(',', [usr_groups]) : [usr_groups];
+$ids_brutos = str_replace(' ', '', $ids_brutos);
+
+$meus_grupos = [];
+
+if (!empty($ids_brutos)) {
+    $sql_grupos = "SELECT description FROM sec_groups WHERE group_id IN ($ids_brutos)";
+
+    sc_lookup(rs_grupos, $sql_grupos);
+
+    if (!empty({rs_grupos})) {
+        foreach ({rs_grupos} as $grupo) {
+            $meus_grupos[] = strtoupper(trim($grupo[0]));
+        }
+    }
+}
+
+// Exibe o card informativo de status e grupo responsavel (apenas NRC)
+mExibirCardStatus();
+
+// ====================================================================
+// CONTROLE VISUAL DE BLOCOS E CAMPOS
+// ====================================================================
+
+// Campos específicos de NRC ficam ocultos para rotinas comuns
+sc_field_display({parent_task_id}, 'off');
+sc_field_display({origin_document}, 'off');
+
+// Os campos de deferment só aparecem se a tarefa for Não Rotina (NRC)
+sc_field_display({deferment_status}, 'off');
+sc_field_display({deferment_reason}, 'off');
+if (!empty({is_nrc})) {
+    sc_field_display({parent_task_id}, 'on');
+    sc_field_display({origin_document}, 'on');
+    sc_field_display({deferment_status}, 'on');
+    if ({deferment_status} == 't' || {deferment_status} == 1) {
+        sc_field_display({deferment_reason}, 'on');
+    }
+}
+
+// Bloco financeiro só deve aparecer para NRC; para tasks comuns fica oculto
+sc_block_display('bloco_financeiro', 'off');
+
+// Esconde TODOS os botões por padrão (Segurança Máxima)
+sc_btn_display('btn_enviar_eng', 'off'); // btn_enviar_eng
+sc_btn_display('btn_aprovar_cliente', 'off'); // btn_aprovar_cliente
+sc_btn_display('btn_reprovar_cliente', 'off'); // btn_reprovar_cliente
+sc_btn_display('btn_enviar_cliente', 'off'); // btn_enviar_cliente
+sc_btn_display('btn_enviar_prog', 'off'); // btn_enviar_prog
+sc_btn_display('btn_enviar_coord', 'off'); // btn_enviar_coord
+sc_btn_display('btn_validar_prog', 'off'); // btn_validar_prog
+sc_btn_display('btn_cancelar', 'off'); // btn_cancelar
+
+// ====================================================================
+// WORKFLOW E BOTÕES DE AÇÃO (exclusivo para Não-Rotinas)
+// ====================================================================
+
+// Só exibe o bloco de workflow se for uma tarefa do tipo Não-Rotina (NRC)
+if (!empty({is_nrc})) {
+
+    // Regras de readonly para NRC
+    sc_field_readonly({project_id}, 'on'); // project_id - readonly se NRC
+    sc_field_readonly({task_code}, 'on'); // task_code - readonly se NRC
+    sc_field_readonly({parent_task_id}, 'on'); // parent_task_id - readonly se NRC
+
+    // Desabilita o botão de Excluir por padrão, liberando somente para o mecânico nos status DRAFT
+    sc_btn_display('delete', 'off');
+
+    // Desabilita o botão de Atualizar por padrão, liberando somente para o perfil autorizado por Status
+    sc_btn_display('update', 'off');
+
+    // Desabilita o botão de Novo por padrão, liberando somente para Rotina Padrão (não NRC)
+    sc_btn_display('new', 'off');
+
+    // Desabilita o bloco financeiro enquanto o O&A não é rodado
+    sc_block_display('bloco_financeiro', 'off');
+
+    // Avaliação de Status
+    if ({status_code} == 'DRAFT') {
+
+        // FASE 1: DRAFT — somente quem criou pode alterar, independentemente do grupo
+        if ([usr_login] == {created_by}) {
+            sc_btn_display('btn_enviar_eng', 'on'); // btn_enviar_eng
+            sc_btn_display('btn_enviar_prog', 'on'); // btn_enviar_prog
+            sc_btn_display('delete', 'on'); // delete
+            sc_btn_display('update', 'on'); // update
+        }
+
+    } elseif ({status_code} == 'PENDING_ENG') {
+
+        // FASE 2: ENGENHARIA
+        sc_field_readonly({instruction_text}, 'on'); // Ninguém muda o relato original
+
+        if (in_array('ENGENHARIA', $meus_grupos)) {
+            sc_btn_display('btn_enviar_prog', 'on'); // btn_enviar_prog
+            sc_btn_display('btn_enviar_coord', 'on'); // btn_enviar_coord
+            sc_btn_display('btn_cancelar', 'on'); // btn_cancelar
+            sc_btn_display('update', 'on'); // update
+        }
+
+    } elseif ({status_code} == 'PENDING_COORD') {
+
+        // FASE 3: COORDENADOR DE PROJETO
+        if (in_array('COORDENADOR', $meus_grupos)) {
+            sc_btn_display('btn_enviar_eng', 'on'); // btn_enviar_eng
+            sc_btn_display('btn_enviar_prog', 'on'); // btn_enviar_prog
+            sc_btn_display('btn_cancelar', 'on'); // btn_cancelar
+            sc_btn_display('update', 'on'); // update
+        }
+
+    } elseif ({status_code} == 'PENDING_PROG') {
+
+        // FASE 4: PROGRAMAÇÃO
+        sc_field_readonly({instruction_text}, 'on');
+        if (in_array('PROGRAMACAO', $meus_grupos)) {
+            sc_btn_display('btn_enviar_coord', 'on'); // btn_enviar_coord
+            sc_btn_display('btn_validar_prog', 'on'); // btn_validar_prog
+            sc_btn_display('btn_cancelar', 'on'); // btn_cancelar
+            sc_btn_display('update', 'on'); // update
+        }
+
+    } elseif ({status_code} == 'PENDING_OA') {
+
+        // FASE 5: AGUARDANDO CLIENTE
+        if (in_array('CLIENTE', $meus_grupos) || in_array('COMERCIAL', $meus_grupos)) {
+            sc_btn_display('btn_aprovar_cliente', 'on'); // btn_aprovar_cliente
+            sc_btn_display('btn_reprovar_cliente', 'on'); // btn_reprovar_cliente
+        }
+
+        if (!in_array('MECANICO', $meus_grupos)) {
+            sc_block_display('bloco_financeiro', 'on');
+        }
+
+    } elseif ({status_code} == 'COMMERCIAL_REVIEW') {
+
+        // FASE 6: NEGOCIAÇÃO COMERCIAL (Cliente Recusou)
+        if (in_array('COMERCIAL', $meus_grupos)) {
+            sc_btn_display('btn_enviar_prog', 'on'); // btn_enviar_prog
+            sc_btn_display('btn_enviar_cliente', 'on'); // btn_enviar_cliente
+            sc_btn_display('btn_cancelar', 'on'); // btn_cancelar
+            sc_btn_display('update', 'on'); // update
+        }
+
+        if (!in_array('MECANICO', $meus_grupos)) {
+            sc_block_display('bloco_financeiro', 'on');
+        }
+
+    } else {
+        // FASE 7: RELEASED (Liberado) ou Outros
+        if (!in_array('MECANICO', $meus_grupos)) {
+            sc_block_display('bloco_financeiro', 'on');
+        }
+    }
+}
+
+// ====================================================================
+// DEBUG — Informacoes para teste (exibe apenas no topo do formulario)
+// ====================================================================
+/*
+echo "<div style='margin: 10px auto; padding: 10px 16px; background: #fff3cd; border: 1px solid #ffc107; border-radius: 6px; font-family: monospace; font-size: 12px; color: #856404; width: 60%;'>";
+echo "<strong style='font-size: 13px;'>DEBUG</strong><br>";
+echo "Usuario: <strong>" . [usr_login] . "</strong><br>";
+echo "Grupos: <strong>" . (empty($meus_grupos) ? 'Nenhum' : implode(', ', $meus_grupos)) . "</strong><br>";
+echo "Status: <strong>" . ({status_code}) . "</strong><br>";
+echo "is_nrc: <strong>" . ({is_nrc} ? 'Sim' : 'Nao') . "</strong><br>";
+echo "Task ID: <strong>" . ({task_id}) . "</strong><br>";
+echo "Project ID: <strong>" . ({project_id}) . "</strong><br>";
+echo "</div>";
+*/
+ 

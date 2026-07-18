@@ -14,7 +14,8 @@ Tela central de gerenciamento das tarefas de manutenção. Reúne tanto as rotin
 
 ## Comportamentos e regras importantes
 
-- **Filtro por projeto**: Ao acessar a tela a partir de um projeto específico, a grid filtra automaticamente as tarefas daquele projeto usando a variável global `var_project_id`.
+- **Filtro por projeto**: Ao acessar a tela a partir de um projeto específico, a grid filtra automaticamente as tarefas daquele projeto usando a variável global `var_project_id` e a macro `sc_select_where(add)`.
+- **Filtro não acumula mais**: A configuração "Salvar o estado da Consulta na sessão" foi desativada para evitar que filtros de projetos anteriores se acumulassem, gerando SQLs inválidos com múltiplas cláusulas `project_id`.
 - **Ao liberar uma tarefa** (botão "Liberar para Execução"):
   - A tarefa precisa estar nos status PLANNING, NOT_STARTED ou PLANNED.
   - O sistema atualiza o status para RELEASED.

@@ -1,0 +1,20 @@
+<?php
+
+// Campos obrigatórios para Não-Rotina (NRC)
+if (!empty({is_nrc})) {
+
+    if (empty({parent_task_id})) {
+        sc_error_message("O campo Task Origem (Parent) é obrigatório para Não-Rotinas.");
+        sc_error_exit();
+    }
+
+    if (empty({instruction_text})) {
+        sc_error_message("O campo Instrução é obrigatório para Não-Rotinas.");
+        sc_error_exit();
+    }
+
+    if (empty({task_name})) {
+        sc_error_message("O campo Nome da Tarefa é obrigatório para Não-Rotinas.");
+        sc_error_exit();
+    }
+}

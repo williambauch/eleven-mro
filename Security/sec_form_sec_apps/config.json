@@ -20,6 +20,12 @@
       "tipo": "varchar",
       "required": false,
       "pk": false
+    },
+    {
+      "nome": "grupos_acesso",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
     }
   ]
 }

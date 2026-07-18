@@ -1,0 +1,29 @@
+<?php
+// btn_enviar_prog
+
+$id = {task_id};
+$user = [usr_login]; // Variável global de login do Scriptcase
+
+// Trava de segurança caso o mecânico tente enviar direto estando em Rascunho
+if ({status_code} == 'DRAFT') {
+	/*
+    if ({requires_engineering} == 'S' || {requires_engineering} == true) {
+        sc_error_message("Esta NRC necessita de Engenharia. Envie para a Engenharia primeiro.");
+        sc_error_exit();
+    }
+	*/
+    if (empty({estimated_hours}) || {estimated_hours} <= 0) {
+        sc_error_message("Obrigatório informar o HH (Horas Estimadas) antes de enviar para a Programação.");
+        sc_error_exit();
+    }
+}
+
+// 1. Atualiza o status
+sc_exec_sql("UPDATE mro_tasks SET status_code = 'PENDING_PROG' WHERE task_id = $id");
+
+// 2. Grava o Audit Log (Assinatura Digital)
+sc_exec_sql("INSERT INTO mro_nrc_approval_log (task_id, action_taken, user_login) VALUES ($id, 'SENT_TO_PROG', '$user')");
+
+// 3. Commit e redireciona
+sc_commit_trans();
+sc_redir(form_public_mro_tasks, task_id=$id);

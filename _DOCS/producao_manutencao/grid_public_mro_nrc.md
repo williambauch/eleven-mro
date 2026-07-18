@@ -1,4 +1,8 @@
-# Gestão de Não Rotinas — NRC (grid_public_mro_nrc)
+# ~~Gestão de Não Rotinas — NRC (grid_public_mro_nrc)~~ ⚠️ DESATIVADA
+
+> **Esta aplicação foi desativada na tarefa MRO-117.**  
+> O gerenciamento de Não-Rotinas (NRCs) agora é feito através de `grid_public_mro_tasks` / `form_public_mro_tasks`.  
+> Consulte o [Fluxo de Aprovação NRC](fluxo_nrc_workflow.md) para mais detalhes.
 
 Módulo Produção e Manutenção — aplicação do tipo Grid.
 
