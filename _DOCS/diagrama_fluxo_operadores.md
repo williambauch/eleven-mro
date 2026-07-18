@@ -14,7 +14,7 @@ flowchart TB
         direction TB
         B1["📥 Importar do P6<br/><i>ctrl_import_excel</i>"]
         B2["🗂️ Estruturar WBS<br/><i>form_public_mro_wbs</i>"]
-        B3["📝 Cadastrar Tarefas<br/><i>form_public_mro_tasks</i>"]
+        B3["📝 Cadastrar Tarefas / NRC<br/><i>form_public_mro_tasks</i>"]
         B4["📦 Alocar Materiais<br/><i>form_public_mro_task_materials</i>"]
         B5["👷 Alocar Mão de Obra<br/><i>form_public_mro_task_resources</i>"]
         B6["🚀 Liberar p/ Execução<br/><i>grid_public_mro_tasks</i>"]

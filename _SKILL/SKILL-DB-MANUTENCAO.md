@@ -23,7 +23,11 @@ garantindo consistência com o schema existente.
 10. **NUNCA** usar `CHECK` constraints — validações são feitas no backend.
 11. Alertar o usuário para rodar o script no banco PostgreSQL `elevenmy_mro`.
 12. Toda alteração deve ser escrita como script SQL migratório (um arquivo `.sql`), salvo em `__Tarefas/<CODIGO_TAREFA>/migrations/` com nome `<CODIGO_TAREFA>_descricao.sql`.
-13. Após criar qualquer script, **perguntar se ele quer que você tente executar diretamente no banco** via a ferramenta de banco disponível (MCP DBHub ou psql).
+13. **Migrations organizadas na ordem correta:** Os arquivos na pasta `migrations/` devem ter **prefixo numérico** (`01_`, `02_`, `03_...`) indicando a ordem de execução. Exemplo:
+    - `01_MRO-117_grant_mecanico_acesso_grid_public_mro_tasks.sql`
+    - `02_MRO-117_unificar_status_task.sql`
+    - `03_MRO-117_grant_acesso_form_public_mro_task_resources.sql`
+14. Após criar qualquer script, **perguntar se ele quer que você tente executar diretamente no banco** via a ferramenta de banco disponível (MCP DBHub ou psql).
 
 ---
 
