@@ -129,7 +129,7 @@ Responsável por liberar ferramentas via terminal de bipagem.
 | 4.3.2 | Verificar bloqueio no supervisor | `tabs_supervisor` (aba "Com Impedimentos") | Tarefa deve migrar para aba de impedimentos | ☐ |
 | 4.3.3 | Supervisor resolver bloqueio | `tabs_supervisor` | Supervisor alterna bloqueio para resolvido | ☐ |
 | 4.3.4 | Abrir Não-Rotina (NRC) | `ctrl_abertura_nrc` | Criar NRC a partir de uma discrepância encontrada, anexar foto | ☐ |
-| 4.3.5 | Verificar NRC na grid | `grid_public_mro_nrc` | NRC deve aparecer com badge DRAFT (cinza) | ☐ |
+| 4.3.5 | Verificar NRC na grid | `grid_public_mro_tasks` (antiga `grid_public_mro_nrc` — **desativada**) | NRC deve aparecer na grid unificada com badge DRAFT (cinza) | ☐ |
 | 4.3.6 | Finalizar tarefa | `grid_my_tasks` | Concluir serviço — clock-out final | ☐ |
 
 ---
