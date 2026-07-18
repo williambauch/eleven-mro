@@ -136,5 +136,23 @@
             "matchCommandLine": true
         },
         "%": true
-    }
+    },
+    "favorites.resources": [
+        {
+            "filePath": "form_public_mro_tasks",
+            "group": "Default"
+        },
+        {
+            "filePath": "form_public_mro_nrc",
+            "group": "Default"
+        },
+        {
+            "filePath": "grid_public_mro_tasks",
+            "group": "Default"
+        },
+        {
+            "filePath": "Timesheet\\ctrl_abertura_nrc",
+            "group": "Default"
+        }
+    ]
 }

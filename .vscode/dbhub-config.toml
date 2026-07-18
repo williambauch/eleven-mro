@@ -9,6 +9,15 @@ dsn = "postgresql://postgres:12345678@localhost:5432/elevenmy_mro"
 id = "gestor-xml-readonly"
 dsn = "mysql://root:12345678@localhost:3306/elevenmy_gestor_xml"
 
+# Source com tunelamento SSH para o PostgreSQL remoto
+[[sources]]
+id = "mro-postgres-ssh"
+dsn = "postgresql://eleven:A8c7efa8%40@localhost:5432/elevenmy_mro"
+ssh_host = "201.33.21.21"
+ssh_port = 223
+ssh_user = "eleven"
+ssh_password = "R@17197929"
+
 [[tools]]
 name = "execute_sql"
 source = "mro-postgres-readonly"
@@ -18,3 +27,13 @@ readonly = true
 [[tools]]
 name = "search_objects"
 source = "mro-postgres-readonly"
+
+[[tools]]
+name = "execute_sql"
+source = "mro-postgres-ssh"
+max_rows = 100
+readonly = true
+
+[[tools]]
+name = "search_objects"
+source = "mro-postgres-ssh"
