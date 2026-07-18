@@ -1,0 +1,25 @@
+<?php
+// Busca os grupos de acesso vinculados a esta aplicacao (apenas quem tem priv_access = 'Y')
+$var_sql = "SELECT s.description
+            FROM sec_groups_apps g
+            INNER JOIN sec_groups s ON g.group_id = s.group_id
+            WHERE g.app_name = '" . addslashes({app_name}) . "'
+              AND g.priv_access = 'Y'
+            ORDER BY s.description";
+sc_lookup(ds_grupos, $var_sql);
+
+if ({ds_grupos} === false) {
+    {grupos_acesso} = "Erro ao consultar grupos";
+} elseif (empty({ds_grupos})) {
+    {grupos_acesso} = "Nenhum grupo vinculado";
+} else {
+    $var_grupos = [];
+    $var_total = count({ds_grupos});
+    for ($var_i = 0; $var_i < $var_total; $var_i++) {
+        $var_grupos[] = {ds_grupos[$var_i][0]};
+    }
+    {grupos_acesso} = implode(", ", $var_grupos);
+}
+
+// Campo apenas para visualizacao, nao editavel
+sc_field_readonly({grupos_acesso}, 'on');
