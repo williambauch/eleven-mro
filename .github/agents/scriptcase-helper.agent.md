@@ -1,7 +1,7 @@
 ---
 description: "Use when: generating ScriptCase PHP code for events, buttons, methods, Ajax events, SQL queries, validations, or any code that uses ScriptCase macros (sc_lookup, sc_exec_sql, sc_redir, etc). Also use when the user asks about ScriptCase conventions, variable naming ({campo}, [glo_var], $var_local), or needs help with MRO System applications."
 name: "ScriptCase Helper"
-tools: [vscode, read, agent, edit, search, web, 'mcp-mro-postgres/*', 'github/*', browser, todo]
+tools: [vscode, execute, read, agent, edit, search, web, browser, 'mcp-mro-postgres/*', 'github/*', todo]
 argument-hint: "Descreva o evento, botão ou validação ScriptCase que precisa gerar"
 user-invocable: true
 ---
