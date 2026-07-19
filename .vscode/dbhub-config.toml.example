@@ -1,0 +1,41 @@
+# DBHub Configuration - Read-Only Mode
+# Apenas SELECT, SHOW, DESCRIBE, EXPLAIN são permitidos
+# MODELO: copie este arquivo para .vscode/dbhub-config.toml e preencha com suas credenciais locais.
+# NUNCA comite o dbhub-config.toml real (esta no .gitignore).
+
+[[sources]]
+id = "mro-postgres-readonly"
+dsn = "postgresql://USUARIO:SENHA@localhost:5432/elevenmy_mro"
+
+[[sources]]
+id = "gestor-xml-readonly"
+dsn = "mysql://USUARIO:SENHA@localhost:3306/elevenmy_gestor_xml"
+
+# Source com tunelamento SSH para o PostgreSQL remoto (opcional)
+# [[sources]]
+# id = "mro-postgres-ssh"
+# dsn = "postgresql://USUARIO:SENHA@localhost:5432/elevenmy_mro"
+# ssh_host = "SEU_HOST"
+# ssh_port = 223
+# ssh_user = "USUARIO"
+# ssh_password = "SENHA"
+
+[[tools]]
+name = "execute_sql"
+source = "mro-postgres-readonly"
+max_rows = 100
+readonly = true
+
+[[tools]]
+name = "search_objects"
+source = "mro-postgres-readonly"
+
+# [[tools]]
+# name = "execute_sql"
+# source = "mro-postgres-ssh"
+# max_rows = 100
+# readonly = true
+
+# [[tools]]
+# name = "search_objects"
+# source = "mro-postgres-ssh"
