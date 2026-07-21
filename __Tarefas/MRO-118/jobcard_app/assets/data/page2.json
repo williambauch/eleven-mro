@@ -1,0 +1,120 @@
+{
+    "page": 2,
+    "savedAt": "2026-07-21 22:36:03",
+    "items": [
+        {
+            "id": "p021",
+            "text": "23",
+            "left": 181,
+            "top": 192,
+            "fontSize": 11,
+            "bold": false,
+            "maxWidth": 0,
+            "multiline": false,
+            "type": "text",
+            "fieldName": "ATA"
+        },
+        {
+            "id": "p022",
+            "text": "A320-214",
+            "left": 230,
+            "top": 192,
+            "fontSize": 11,
+            "bold": false,
+            "maxWidth": 0,
+            "multiline": false,
+            "type": "text",
+            "fieldName": "A\/C Type"
+        },
+        {
+            "id": "p023",
+            "text": "PR-MLD",
+            "left": 310,
+            "top": 192,
+            "fontSize": 11,
+            "bold": false,
+            "maxWidth": 0,
+            "multiline": false,
+            "type": "text",
+            "fieldName": "A\/C Reg"
+        },
+        {
+            "id": "p024",
+            "text": "A320",
+            "left": 382,
+            "top": 192,
+            "fontSize": 11,
+            "bold": false,
+            "maxWidth": 0,
+            "multiline": false,
+            "type": "text",
+            "fieldName": "Company"
+        },
+        {
+            "id": "p025",
+            "text": "38.25",
+            "left": 460,
+            "top": 192,
+            "fontSize": 11,
+            "bold": false,
+            "maxWidth": 0,
+            "multiline": false,
+            "type": "text",
+            "fieldName": "A\/C Work Order"
+        },
+        {
+            "id": "p009",
+            "text": "N190036001",
+            "left": 617,
+            "top": 87,
+            "fontSize": 12,
+            "bold": true,
+            "maxWidth": 0,
+            "multiline": false,
+            "type": "text",
+            "fieldName": "Card Code"
+        },
+        {
+            "id": "p010",
+            "text": "N000000000000001900360002901000000A4E001",
+            "left": 12,
+            "top": 101,
+            "fontSize": 15,
+            "bold": true,
+            "maxWidth": 0,
+            "multiline": false,
+            "type": "barcode",
+            "fieldName": "JIC Work Order"
+        },
+        {
+            "id": "p020",
+            "text": "190036",
+            "left": 12,
+            "top": 192,
+            "fontSize": 11,
+            "bold": false,
+            "maxWidth": 0,
+            "multiline": false,
+            "type": "text",
+            "fieldName": "Origin Document"
+        },
+        {
+            "id": "new-1",
+            "text": "• Tool Code - Description - Qty",
+            "left": 12,
+            "top": 269,
+            "fontSize": 11,
+            "bold": true,
+            "maxWidth": 779,
+            "multiline": true,
+            "type": "text",
+            "fieldName": "ToolCode_Description_Qty"
+        }
+    ],
+    "customItems": [
+        {
+            "id": "new-1",
+            "text": "Tool Code - Description - Qty"
+        }
+    ]
+}

@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Non Routine Job Instruction Card CFEF</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: #e5e5e5;
+    margin: 0;
+    padding: 20px;
+  }
+  .card {
+    width: 1000px;
+    margin: 0 auto;
+    background: #fff;
+    border: 2.5px solid #000;
+  }
+  .row {
+    display: flex;
+    border-bottom: 2px solid #000;
+  }
+  .row:last-child { border-bottom: none; }
+  .cell {
+    border-right: 2px solid #000;
+    padding: 6px 10px;
+    position: relative;
+  }
+  .cell:last-child { border-right: none; }
+
+  .label {
+    font-weight: bold;
+    font-size: 12px;
+  }
+  .sublabel {
+    font-style: italic;
+    font-size: 10.5px;
+    font-weight: normal;
+    margin-left: 4px;
+  }
+  .value {
+    font-size: 14px;
+    margin-top: 2px;
+  }
+  .value-lg { font-size: 16px; font-weight: bold; margin-top: 2px; }
+
+  /* ---- Header ---- */
+  .header-row { align-items: stretch; }
+  .logo-cell { width: 24%; display:flex; flex-direction:column; justify-content:center; align-items:flex-start; }
+  .logo-text { font-weight: 900; font-size: 26px; letter-spacing: -1px; }
+  .logo-text .mro { color:#000; font-weight:900; }
+  .logo-sub { font-size: 10px; margin-top:4px; }
+  .title-cell { width: 51%; display:flex; flex-direction:column; justify-content:flex-start; padding-top:10px; }
+  .title-cell h1 { font-size: 20px; margin:0 0 8px 0; text-align:center; }
+  .barcode { font-family: 'Libre Barcode 39', monospace; font-size: 32px; text-align:center; line-height:1; margin: 2px 0; letter-spacing:1px; }
+  .barcode-num { text-align:center; font-size:12px; letter-spacing:1px; }
+  .wo-cell { width: 25%; }
+
+  /* ---- generic 5-col info row ---- */
+  .info-row .cell { flex: 1; }
+  .w-15 { flex: 0 0 15% !important; }
+  .w-18 { flex: 0 0 18% !important; }
+  .w-10 { flex: 0 0 10% !important; }
+  .w-25 { flex: 0 0 25% !important; }
+
+  .right-col {
+    width: 25%;
+    display: flex;
+    flex-direction: column;
+    border-left: 2px solid #000;
+    margin-left: -2px;
+  }
+  .right-sub-row {
+    border-bottom: 2px solid #000;
+    padding: 6px 10px;
+    flex-grow: 0;
+  }
+  .right-sub-row:last-child { border-bottom: none; }
+  .right-sub-row.grow { flex-grow: 1; }
+
+  .main-left {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  .main-left-row {
+    border-bottom: 2px solid #000;
+    padding: 8px 10px;
+  }
+  .main-left-row.grow { flex-grow: 1; min-height: 90px; }
+  .main-left-row:last-child { border-bottom: none; }
+
+  .two-col-row { display:flex; }
+  .two-col-row .cell { flex:1; }
+
+  .checkbox {
+    display:inline-block;
+    width: 16px;
+    height: 16px;
+    border: 1.5px solid #000;
+    text-align:center;
+    line-height:14px;
+    font-weight:bold;
+    margin-left:6px;
+    vertical-align:middle;
+  }
+
+  .flex-between { display:flex; justify-content:space-between; align-items:center; }
+  .center-text { text-align:center; }
+  .small-note { font-size: 10.5px; margin-top:4px; }
+
+  .footer-row { display:flex; align-items:center; padding: 6px 10px; }
+  .footer-left { font-weight:bold; font-size:14px; width:20%; }
+  .footer-mid { flex:1; }
+  .footer-right { text-align:right; width:20%; font-size:12px; }
+</style>
+</head>
+<body>
+<div class="card">
+
+  <!-- HEADER -->
+  <div class="row header-row">
+    <div class="cell logo-cell">
+      <div class="logo-text">DIGEX<span class="mro">MRO</span></div>
+      <div class="logo-sub">COM 199912-01/ANAC</div>
+    </div>
+    <div class="cell title-cell">
+      <h1>NON ROUTINE JOB INSTRUCTION CARD CFEF</h1>
+      <div class="barcode">|||‖|‖|||‖||||‖|||‖|‖|||||‖|‖|||‖||||‖||‖|||‖|</div>
+      <div class="barcode-num">N000000000000000190036000290100000A4I001</div>
+    </div>
+    <div class="cell wo-cell">
+      <div class="label">A/C Work Order: <span class="sublabel">(N° da Ordem de Serviço)</span></div>
+      <div class="value-lg">38.25</div>
+      <div class="label" style="margin-top:14px;">Document N°: <span class="sublabel">(Documento N°)</span></div>
+      <div class="value-lg">N190036001</div>
+    </div>
+  </div>
+
+  <!-- A/C REGISTRATION ROW -->
+  <div class="row info-row">
+    <div class="cell w-15">
+      <div class="label">A/C Registration:</div>
+      <div class="sublabel" style="margin-left:0;">(Registro da Aeronave)</div>
+      <div class="value-lg">PR-MLD</div>
+    </div>
+    <div class="cell w-15">
+      <div class="label">Company</div>
+      <div class="sublabel" style="margin-left:0;">(Empresa)</div>
+      <div class="value">A320</div>
+    </div>
+    <div class="cell w-25">
+      <div class="label">Origin Document N°</div>
+      <div class="sublabel" style="margin-left:0;">(Documento de Origem N°)</div>
+      <div class="value-lg">190036</div>
+      <div class="value-lg">0672100000189</div>
+    </div>
+    <div class="cell w-10">
+      <div class="label">ATA</div>
+      <div class="sublabel" style="margin-left:0;">(Ata)</div>
+      <div class="value">23</div>
+    </div>
+    <div class="cell w-25">
+      <div class="label">Project: <span class="sublabel">(Projeto)</span></div>
+      <div class="value-lg">AVO03/25</div>
+    </div>
+  </div>
+
+  <!-- MAIN BODY: left column (discrepancy/corrective/engineering) + right column (aircraft info) -->
+  <div class="row" style="align-items: stretch;">
+    <div class="main-left">
+      <div class="main-left-row grow">
+        <div class="label">Discrepancy <span class="sublabel">Discrepância</span></div>
+        <div class="value">LH WING - FLAPTRACK 2 - THE DISCHARGER-STATIC IS DAMAGED.</div>
+      </div>
+      <div class="main-left-row grow">
+        <div class="label">Corrective Action: <span class="sublabel">(Ação corretiva)</span></div>
+        <div class="value">REPLACE THE DISCHARGER-STATIC IAW AMM 23-61-41-000-001-A AND 23-61-41-400-001-A.</div>
+      </div>
+      <div class="main-left-row" style="min-height:140px;">
+        <div class="label">Engineering Instruction: <span class="sublabel">(Instrução de Engenharia)</span></div>
+      </div>
+    </div>
+
+    <div class="right-col">
+      <div class="right-sub-row">
+        <div class="label">A/C Type: <span class="sublabel">(Tipo de Aeronave)</span></div>
+        <div class="value">A320-214</div>
+      </div>
+      <div class="right-sub-row">
+        <div class="label">A/C SN: <span class="sublabel">(Serial Number)</span></div>
+        <div class="value">3601</div>
+      </div>
+      <div class="right-sub-row" style="min-height:70px;">
+        <div class="label">Skill <span class="sublabel">(Especialidade)</span></div>
+        <div class="value">1 A4 -- 2 h</div>
+      </div>
+      <div class="right-sub-row grow" style="min-height:40px;"></div>
+      <div class="right-sub-row">
+        <div class="label">Area/Zone <span class="sublabel">(Area/Zona)</span></div>
+        <div class="value">Wing LH</div>
+      </div>
+      <div class="right-sub-row">
+        <div class="label">Originated By: <span class="sublabel">(Originado por)</span></div>
+        <div class="value">PALOMA GODOY DA SILVA SANT</div>
+      </div>
+      <div class="right-sub-row">
+        <div class="label">Estimated Hours <span class="sublabel">(Horas Estimadas (Homens/Hora))</span></div>
+        <div class="value-lg" style="text-align:center;">2 <span style="font-size:13px; font-weight:normal;">Hh</span></div>
+      </div>
+      <div class="right-sub-row">
+        <div class="label">New NR Open? / Mark as Applicable:</div>
+        <div class="sublabel" style="margin-left:0;">(Nova NR Aberta? Sim/Não)</div>
+        <div class="flex-between" style="margin-top:6px;">
+          <span>Y (S): <span class="checkbox"></span></span>
+          <span>N (N): <span class="checkbox"></span></span>
+        </div>
+        <div class="label" style="margin-top:6px;">List if applicable <span class="sublabel">(Indicar se aplicável):</span></div>
+        <div style="margin-top:10px; border-bottom:1px solid #000;">N°</div>
+        <div style="margin-top:14px; border-bottom:1px solid #000;">N°</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- IN ACCORDANCE / REFERENCE REVISION -->
+  <div class="row two-col-row" style="align-items:stretch;">
+    <div class="cell" style="flex: 0 0 55%; min-height:50px;">
+      <div class="label">In Accordance With: (Reference)</div>
+      <div class="sublabel" style="margin-left:0;">De acordo com: (Referencia)</div>
+    </div>
+    <div class="cell" style="flex: 0 0 20%;">
+      <div class="label">Reference Revision:</div>
+      <div class="sublabel" style="margin-left:0;">(Revisão da Referência:)</div>
+    </div>
+    <div class="cell right-col-merge" style="flex: 0 0 25%;">
+      <div class="label">Were Calibrating Tools Used?</div>
+      <div class="sublabel" style="margin-left:0;">Ferramentas Calibráveis Foram Usadas?</div>
+      <div class="flex-between" style="margin-top:8px; width:70%;">
+        <span>Y (S): <span class="checkbox" style="font-size:14px;">X</span></span>
+        <span>N (N): <span class="checkbox"></span></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACTION TAKEN -->
+  <div class="row two-col-row" style="align-items:stretch;">
+    <div class="cell" style="flex: 0 0 75%; min-height:80px;">
+      <div class="label">Action Taken:</div>
+      <div class="sublabel" style="margin-left:0;">(Ação Executada)</div>
+    </div>
+    <div class="cell" style="flex: 0 0 25%;">
+      <div class="small-note">Note: If YES Record on the back (Stamp).</div>
+      <div class="small-note">Nota: Se SIM Registre no verso (Carimbo).</div>
+    </div>
+  </div>
+
+  <!-- P/N OUT / S/N OUT + PERFORMED BY -->
+  <div class="row" style="align-items:stretch;">
+    <div class="main-left" style="flex: 0 0 75%;">
+      <div class="two-col-row" style="border-bottom:2px solid #000;">
+        <div class="cell" style="border-right:2px solid #000;">
+          <div class="label">P/N Out</div>
+          <div class="sublabel" style="margin-left:0;">P/N Removido</div>
+        </div>
+        <div class="cell">
+          <div class="label">S/N Out</div>
+          <div class="sublabel" style="margin-left:0;">S/N Removido</div>
+        </div>
+      </div>
+      <div class="two-col-row">
+        <div class="cell" style="border-right:2px solid #000;">
+          <div class="label">P/N In</div>
+          <div class="sublabel" style="margin-left:0;">P/N Instalado</div>
+        </div>
+        <div class="cell">
+          <div class="label">S/N In</div>
+          <div class="sublabel" style="margin-left:0;">S/N Instalado</div>
+        </div>
+      </div>
+    </div>
+    <div class="cell" style="flex: 0 0 25%; border-left:2px solid #000; margin-left:-2px;">
+      <div class="label">Performed By:</div>
+      <div class="sublabel" style="margin-left:0;">Executado por:</div>
+      <div class="value" style="margin-top:20px;">Date / <span style="font-style:italic; font-weight:normal;">Data</span> ____ / ____ / ______</div>
+    </div>
+  </div>
+
+  <!-- APPROVAL / DEFERMENT -->
+  <div class="row" style="align-items:stretch;">
+    <div class="cell" style="flex:0 0 75%; font-weight:bold; text-align:center; border-right:2px solid #000;">
+      APPROVAL / DEFERMENT Record ( Registro de Aprovação / Diferimento)
+    </div>
+    <div class="cell" style="flex:0 0 25%;">
+      <div class="label">Planned RII Item:</div>
+      <div class="sublabel" style="margin-left:0;">(Item IIO planejado)</div>
+      <div class="flex-between" style="margin-top:8px; width:70%;">
+        <span>Y (S): <span class="checkbox"></span></span>
+        <span>N (N): <span class="checkbox">X</span></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="row" style="align-items:stretch;">
+    <div class="cell" style="flex:0 0 33%;">
+      <span class="checkbox" style="margin-left:0; margin-right:6px;"></span><strong>APPROVAL</strong>
+      <div style="margin-left:22px;">(Aprovação)</div>
+    </div>
+    <div class="cell" style="flex:0 0 22%;">
+      <span class="checkbox" style="margin-left:0; margin-right:6px;"></span><strong>DEFERMENT</strong>
+      <div style="margin-left:22px;">(Diferimento)</div>
+    </div>
+    <div class="cell" style="flex:0 0 20%;">
+      <div class="label">Customer Full Name :</div>
+      <div class="sublabel" style="margin-left:0;">(Nome Completo do Cliente)</div>
+    </div>
+    <div class="cell" style="flex:0 0 25%;"></div>
+  </div>
+
+  <div class="row" style="align-items:stretch;">
+    <div class="cell" style="flex:0 0 33%; min-height:50px;">
+      <div class="label">ID :</div>
+      <div class="sublabel" style="margin-left:0;">(Identificação)</div>
+    </div>
+    <div class="cell" style="flex:0 0 42%;">
+      <div class="label">Customer Signoff :</div>
+      <div class="sublabel" style="margin-left:0;">(Assinatura do Cliente)</div>
+    </div>
+    <div class="cell" style="flex:0 0 25%;">
+      <div class="label">RII Signoff if required:</div>
+      <div class="sublabel" style="margin-left:0;">Assinatura do IIO se necessário:</div>
+    </div>
+  </div>
+
+  <div class="row" style="align-items:stretch;">
+    <div class="cell" style="flex:0 0 75%; min-height:55px;">
+      <div class="label">Reason for DEFERMENT</div>
+      <div class="sublabel" style="margin-left:0;">Motivo do Diferimento:</div>
+    </div>
+    <div class="cell" style="flex:0 0 25%; display:flex; align-items:flex-end;">
+      <div class="value">Date / <span style="font-style:italic; font-weight:normal;">Data</span> ____ / ____ / ______</div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="row footer-row">
+    <div class="footer-left">TF-60-004</div>
+    <div class="footer-mid"></div>
+    <div class="footer-right">Rev. 07&nbsp;&nbsp;25/OCT/2024</div>
+  </div>
+
+</div>
+</body>
+</html>

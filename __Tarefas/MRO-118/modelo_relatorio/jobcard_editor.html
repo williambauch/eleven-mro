@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Job Card Editor - Drag & Drop</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #e5e5e5;
+    font-family: Arial, Helvetica, sans-serif;
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* ===== SIDEBAR ===== */
+  .sidebar {
+    width: 320px;
+    min-width: 320px;
+    background: #f5f5f5;
+    border-right: 2px solid #ccc;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+  }
+
+  .sidebar-header {
+    padding: 12px 14px;
+    background: #2c3e50;
+    color: #fff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .sidebar-header h2 { font-size: 16px; font-weight: 700; }
+  .sidebar-header .clear-btn {
+    background: #e74c3c;
+    border: none;
+    color: #fff;
+    padding: 4px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .sidebar-header .clear-btn:hover { background: #c0392b; }
+
+  .sidebar-search {
+    padding: 8px 14px;
+    border-bottom: 1px solid #ddd;
+  }
+  .sidebar-search input {
+    width: 100%;
+    padding: 6px 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 13px;
+    outline: none;
+  }
+  .sidebar-search input:focus { border-color: #3498db; }
+
+  .sidebar-items {
+    flex: 1;
+    overflow-y: auto;
+    padding: 6px;
+  }
+
+  .section-group { margin-bottom: 8px; }
+
+  .section-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #7f8c8d;
+    padding: 6px 10px 4px;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .section-title:hover { color: #2c3e50; }
+  .section-title .arrow { font-size: 10px; transition: transform .2s; }
+  .section-title .arrow.collapsed { transform: rotate(-90deg); }
+
+  .section-body { }
+  .section-body.hidden { display: none; }
+
+  .drag-item {
+    padding: 5px 10px;
+    margin: 2px 4px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: grab;
+    user-select: none;
+    transition: box-shadow .15s, border-color .15s;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .drag-item:hover {
+    border-color: #3498db;
+    box-shadow: 0 2px 6px rgba(52,152,219,0.2);
+  }
+  .drag-item:active { cursor: grabbing; }
+  .drag-item.dragging {
+    opacity: 0.4;
+    border-style: dashed;
+  }
+  .drag-item .tag {
+    display: inline-block;
+    background: #3498db;
+    color: #fff;
+    font-size: 9px;
+    padding: 1px 5px;
+    border-radius: 3px;
+    margin-right: 6px;
+    font-weight: 600;
+  }
+
+  /* ===== CANVAS ===== */
+  .canvas {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 30px 20px;
+    overflow: auto;
+    height: 100vh;
+    background: #e5e5e5;
+  }
+
+  /* ===== LETTER (drop zone) ===== */
+  .letter {
+    width: 8.5in;
+    min-height: 11in;
+    background: #fff;
+    box-shadow: 0 0 30px rgba(0,0,0,0.15);
+    position: relative;
+    overflow: hidden;
+    background-image: url('modelo_jobcard_1.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    flex-shrink: 0;
+  }
+
+  .letter.drag-over {
+    outline: 3px solid #2ecc71;
+    outline-offset: -3px;
+  }
+
+  /* ===== DROPPED TEXT ITEMS ===== */
+  .placed-item {
+    position: absolute;
+    cursor: move;
+    user-select: none;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12px;
+    color: #000;
+    padding: 1px 3px;
+    border: 1px solid transparent;
+    white-space: nowrap;
+    transition: border-color .15s, background .15s;
+    z-index: 10;
+  }
+  .placed-item:hover {
+    border-color: rgba(52,152,219,0.5);
+    background: rgba(52,152,219,0.05);
+  }
+  .placed-item.selected {
+    border-color: #e74c3c;
+    background: rgba(231,76,60,0.06);
+    z-index: 11;
+  }
+  .placed-item .coord-label {
+    display: none;
+    position: absolute;
+    bottom: calc(100% + 2px);
+    left: 0;
+    background: #e74c3c;
+    color: #fff;
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 3px;
+    white-space: nowrap;
+    font-family: monospace;
+  }
+  .placed-item.selected .coord-label { display: block; }
+  .placed-item .del-btn {
+    display: none;
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 16px;
+    height: 16px;
+    background: #e74c3c;
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    font-size: 10px;
+    line-height: 16px;
+    text-align: center;
+    cursor: pointer;
+    z-index: 20;
+  }
+  .placed-item.selected .del-btn { display: block; }
+  .placed-item .del-btn:hover { background: #c0392b; }
+
+  /* ===== COORDINATES BAR ===== */
+  .coord-bar {
+    padding: 8px 14px;
+    background: #ecf0f1;
+    border-top: 1px solid #ddd;
+    font-size: 12px;
+    color: #555;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+  }
+  .coord-bar .info { flex: 1; }
+  .coord-bar .export-btn {
+    background: #27ae60;
+    border: none;
+    color: #fff;
+    padding: 5px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .coord-bar .export-btn:hover { background: #219a52; }
+
+  /* ===== TOAST ===== */
+  .toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #2c3e50;
+    color: #fff;
+    padding: 10px 24px;
+    border-radius: 6px;
+    font-size: 13px;
+    z-index: 9999;
+    opacity: 0;
+    transition: opacity .3s;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; }
+
+  /* ===== EXPORT MODAL ===== */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 10000;
+    justify-content: center;
+    align-items: center;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal-box {
+    background: #fff;
+    border-radius: 8px;
+    width: 700px;
+    max-width: 90vw;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+  }
+  .modal-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid #ddd;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .modal-header h3 { font-size: 16px; }
+  .modal-header .close-btn {
+    background: none;
+    border: none;
+    font-size: 22px;
+    cursor: pointer;
+    color: #999;
+  }
+  .modal-header .close-btn:hover { color: #333; }
+  .modal-body {
+    flex: 1;
+    padding: 14px 20px;
+    overflow-y: auto;
+  }
+  .modal-body pre {
+    background: #f8f9fa;
+    border: 1px solid #eee;
+    border-radius: 4px;
+    padding: 12px;
+    font-size: 12px;
+    font-family: 'Courier New', monospace;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+  .modal-footer {
+    padding: 12px 20px;
+    border-top: 1px solid #ddd;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+  .modal-footer button {
+    padding: 6px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+  }
+  .modal-footer .copy-btn { background: #3498db; color: #fff; }
+  .modal-footer .copy-btn:hover { background: #2980b9; }
+  .modal-footer .close-modal-btn { background: #95a5a6; color: #fff; }
+  .modal-footer .close-modal-btn:hover { background: #7f8c8d; }
+
+  /* ===== PROPERTIES PANEL ===== */
+  .props-panel {
+    display: none;
+    padding: 10px 14px;
+    background: #fff;
+    border-top: 2px solid #e74c3c;
+    border-bottom: 1px solid #ddd;
+  }
+  .props-panel.show { display: block; }
+  .props-panel .prop-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #e74c3c;
+    margin-bottom: 8px;
+  }
+  .props-panel .prop-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .props-panel .prop-row label {
+    font-size: 12px;
+    color: #555;
+    min-width: 50px;
+  }
+  .props-panel .prop-row .prop-id {
+    font-size: 12px;
+    font-weight: 600;
+    color: #2c3e50;
+    background: #f0f0f0;
+    padding: 2px 8px;
+    border-radius: 3px;
+  }
+  .props-panel input[type="number"] {
+    width: 60px;
+    padding: 4px 6px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    font-size: 13px;
+    outline: none;
+  }
+  .props-panel input[type="number"]:focus { border-color: #3498db; }
+  .props-panel .btn-bold {
+    background: #ecf0f1;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    padding: 4px 12px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 700;
+    transition: all .15s;
+    line-height: 1;
+  }
+  .props-panel .btn-bold.active {
+    background: #2c3e50;
+    color: #fff;
+    border-color: #2c3e50;
+  }
+  .props-panel .btn-bold:hover { border-color: #3498db; }
+  .props-panel .btn-del-item {
+    background: #e74c3c;
+    color: #fff;
+    border: none;
+    border-radius: 3px;
+    padding: 4px 12px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    flex: 1;
+  }
+  .props-panel .btn-del-item:hover { background: #c0392b; }
+
+  /* ===== HIDDEN ITEMS ===== */
+  .drag-item.hidden-item {
+    opacity: 0.3;
+    background: #fafafa;
+    border-style: dashed;
+  }
+  .drag-item .hide-btn {
+    float: right;
+    background: none;
+    border: none;
+    color: #bbb;
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+    padding: 0 3px;
+    margin-left: 4px;
+  }
+  .drag-item .hide-btn:hover { color: #e74c3c; }
+  .restore-link {
+    text-align: center;
+    font-size: 11px;
+    padding: 6px 4px 4px;
+    color: #3498db;
+    cursor: pointer;
+    display: none;
+    font-weight: 600;
+  }
+  .restore-link:hover { text-decoration: underline; }
+  .restore-link.show { display: block; }
+</style>
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<div class="sidebar">
+  <div class="sidebar-header">
+    <h2>&#9776; Itens</h2>
+    <button class="clear-btn" onclick="removerTodos()">Limpar</button>
+  </div>
+  <div class="sidebar-search">
+    <input type="text" id="filtro" placeholder="Filtrar itens..." oninput="filtrarItens()">
+  </div>
+  <div class="sidebar-items" id="sidebarItems"></div>
+  <div class="props-panel" id="propsPanel">
+    <div class="prop-title">Propriedades</div>
+    <div class="prop-row">
+      <label>Item:</label>
+      <span class="prop-id" id="propId">—</span>
+    </div>
+    <div class="prop-row">
+      <label>Fonte:</label>
+      <input type="number" id="fontSizeInput" value="12" min="6" max="72">
+      <span style="font-size:12px;color:#999;">px</span>
+      <button class="btn-bold" id="boldBtn" onclick="toggleBold()" title="Negrito"><b>B</b></button>
+    </div>
+    <div class="prop-row" style="margin-bottom:0;">
+      <button class="btn-del-item" onclick="deletarItemSelecionado()">✖ Remover item</button>
+    </div>
+  </div>
+  <div class="coord-bar">
+    <div class="info" id="coordInfo">Clique em um item para ver as coordenadas</div>
+    <button class="export-btn" onclick="exportarCSS()">Exportar CSS</button>
+  </div>
+</div>
+
+<!-- ===== CANVAS ===== -->
+<div class="canvas" id="canvas">
+  <div class="letter" id="letter">
+    <!-- Itens soltos aparecem aqui -->
+  </div>
+</div>
+
+<!-- ===== TOAST ===== -->
+<div class="toast" id="toast"></div>
+
+<!-- ===== EXPORT MODAL ===== -->
+<div class="modal-overlay" id="modalExport">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>CSS Gerado</h3>
+      <button class="close-btn" onclick="fecharModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <pre id="cssOutput"></pre>
+    </div>
+    <div class="modal-footer">
+      <button class="copy-btn" onclick="copiarCSS()">Copiar</button>
+      <button class="close-modal-btn" onclick="fecharModal()">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===================================================================
+// DADOS DOS TEXTOS (agrupados por seção)
+// ===================================================================
+const SECTIONS = [
+  {
+    title: "Header",
+    items: [
+      { id: "txt-001", text: "NON ROUTINE JOB INSTRUCTION CARD CFEF" },
+      { id: "txt-002", text: "A/C Work Order:" },
+      { id: "txt-003", text: "(N° da Ordem de Serviço)" },
+      { id: "txt-004", text: "38.25" },
+      { id: "txt-005", text: "COM 199912-01/ANAC" },
+      { id: "txt-006", text: "N000000000000001900360002901000000A4I001" },
+      { id: "txt-007", text: "Document N°:" },
+      { id: "txt-008", text: "(Documento N°)" },
+      { id: "txt-009", text: "N190036001" },
+    ]
+  },
+  {
+    title: "Info Row",
+    items: [
+      { id: "txt-010", text: "A/C Registration:" },
+      { id: "txt-011", text: "(Registro da Aeronave)" },
+      { id: "txt-012", text: "PR-MLD" },
+      { id: "txt-013", text: "Company" },
+      { id: "txt-014", text: "(Empresa)" },
+      { id: "txt-015", text: "A320" },
+      { id: "txt-016", text: "Origin Document N°" },
+      { id: "txt-017", text: "ATA" },
+      { id: "txt-018", text: "(Documento de Origem N°)" },
+      { id: "txt-019", text: "(Ata)" },
+      { id: "txt-020", text: "190036" },
+      { id: "txt-021", text: "23" },
+      { id: "txt-022", text: "0672100000189" },
+      { id: "txt-023", text: "Project:" },
+      { id: "txt-024", text: "(Projeto)" },
+      { id: "txt-025", text: "AVO03/25" },
+    ]
+  },
+  {
+    title: "Discrepancy & Aircraft Info",
+    items: [
+      { id: "txt-026", text: "Discrepancy" },
+      { id: "txt-027", text: "Discrepância" },
+      { id: "txt-028", text: "LH WING - FLAPTRACK 2 - THE DISCHARGER-STATIC IS DAMAGED." },
+      { id: "txt-029", text: "A/C Type:" },
+      { id: "txt-030", text: "(Tipo de Aeronave)" },
+      { id: "txt-031", text: "A320-214" },
+      { id: "txt-032", text: "A/C SN:" },
+      { id: "txt-033", text: "(Serial Number)" },
+      { id: "txt-034", text: "3601" },
+      { id: "txt-035", text: "Skill" },
+      { id: "txt-036", text: "(Especialidade)" },
+      { id: "txt-037", text: "1 A4 -- 2 h" },
+    ]
+  },
+  {
+    title: "Corrective Action & Right Col",
+    items: [
+      { id: "txt-038", text: "Corrective Action:" },
+      { id: "txt-039", text: "(Ação corretiva)" },
+      { id: "txt-040", text: "REPLACE THE DISCHARGER-STATIC IAW AMM 23-61-41-000-001-A AND 23-61-41-400-001-A." },
+      { id: "txt-041", text: "Area/Zone" },
+      { id: "txt-042", text: "(Area/Zona)" },
+      { id: "txt-043", text: "Wing LH" },
+      { id: "txt-044", text: "Originated By:" },
+      { id: "txt-045", text: "(Originado por)" },
+      { id: "txt-046", text: "PALOMA GODOY DA SILVA SANT" },
+    ]
+  },
+  {
+    title: "Engineering / Estimated Hours",
+    items: [
+      { id: "txt-047", text: "Estimated Hours" },
+      { id: "txt-048", text: "Engineering Instruction:" },
+      { id: "txt-049", text: "(Instrução de Engenharia)" },
+      { id: "txt-050", text: "(Horas Estimadas (Homens/Hora))" },
+      { id: "txt-051", text: "2" },
+      { id: "txt-052", text: "Hh" },
+    ]
+  },
+  {
+    title: "New NR Open? / Checkboxes",
+    items: [
+      { id: "txt-053", text: "New NR Open? / Mark as Applicable:" },
+      { id: "txt-054", text: "(Nova NR Aberta? Sim/Não)" },
+      { id: "txt-055", text: "Y (S):" },
+      { id: "txt-056", text: "List if applicable" },
+      { id: "txt-057", text: "N (N):" },
+      { id: "txt-058", text: "(Indicar se aplicável):" },
+      { id: "txt-059", text: "N°___________________________" },
+      { id: "txt-060", text: "N°___________________________" },
+    ]
+  },
+  {
+    title: "Reference / Revision / Tools",
+    items: [
+      { id: "txt-061", text: "In Accordance With: (Reference)" },
+      { id: "txt-062", text: "Reference Revision:" },
+      { id: "txt-063", text: "De acordo com: (Referencia)" },
+      { id: "txt-064", text: "Were Calibrating Tools Used?" },
+      { id: "txt-065", text: "Ferramentas Calibráveis Foram Usadas?" },
+      { id: "txt-066", text: "Y (S):" },
+      { id: "txt-067", text: "X" },
+      { id: "txt-068", text: "N (N):" },
+    ]
+  },
+  {
+    title: "Action Taken",
+    items: [
+      { id: "txt-069", text: "Action Taken:" },
+      { id: "txt-070", text: "(Ação Executada)" },
+      { id: "txt-071", text: "Note: If YES Record on the back (Stamp)." },
+      { id: "txt-072", text: "Nota: Se SIM Registre no verso (Carimbo)." },
+    ]
+  },
+  {
+    title: "P/N - S/N - Performed By",
+    items: [
+      { id: "txt-073", text: "Performed By:" },
+      { id: "txt-074", text: "Executado por:" },
+      { id: "txt-075", text: "P/N Out" },
+      { id: "txt-076", text: "P/N Removido" },
+      { id: "txt-077", text: "P/N In" },
+      { id: "txt-078", text: "P/N Instalado" },
+      { id: "txt-079", text: "S/N Out" },
+      { id: "txt-080", text: "S/N Removido" },
+      { id: "txt-081", text: "S/N In" },
+      { id: "txt-082", text: "S/N Instalado" },
+      { id: "txt-083", text: "Date /" },
+      { id: "txt-084", text: "Data" },
+      { id: "txt-085", text: "//" },
+    ]
+  },
+  {
+    title: "Approval / Deferment",
+    items: [
+      { id: "txt-086", text: "APPROVAL / DEFERMENT Record ( Registro de Aprovação / Diferimento)" },
+      { id: "txt-087", text: "Customer Full Name :" },
+      { id: "txt-088", text: "Planned RII Item:" },
+      { id: "txt-089", text: "(Item IIO planejado)" },
+      { id: "txt-090", text: "APPROVAL" },
+      { id: "txt-091", text: "(Aprovação)" },
+      { id: "txt-092", text: "DEFERMENT" },
+      { id: "txt-093", text: "(Nome Completo do Cliente)" },
+      { id: "txt-094", text: "(Diferimento)" },
+      { id: "txt-095", text: "Y (S):" },
+      { id: "txt-096", text: "N (N):" },
+      { id: "txt-097", text: "X" },
+    ]
+  },
+  {
+    title: "Signoff",
+    items: [
+      { id: "txt-098", text: "ID :" },
+      { id: "txt-099", text: "(Identificação)" },
+      { id: "txt-100", text: "Customer Signoff :" },
+      { id: "txt-101", text: "(Assinatura do Cliente)" },
+      { id: "txt-102", text: "RII Signoff if required:" },
+      { id: "txt-103", text: "Assinatura do IIO se necessário:" },
+    ]
+  },
+  {
+    title: "Reason for Deferment / Dates",
+    items: [
+      { id: "txt-104", text: "Reason for DEFERMENT" },
+      { id: "txt-105", text: "Motivo do Diferimento:" },
+      { id: "txt-106", text: "Date" },
+      { id: "txt-107", text: "Data" },
+      { id: "txt-108", text: "/" },
+      { id: "txt-109", text: "/" },
+      { id: "txt-110", text: "Date /" },
+      { id: "txt-111", text: "Data" },
+      { id: "txt-112", text: "//" },
+    ]
+  },
+  {
+    title: "Footer",
+    items: [
+      { id: "txt-113", text: "TF-60-004" },
+      { id: "txt-114", text: "Rev. 07  25/OCT/2024" },
+    ]
+  }
+];
+
+// ===================================================================
+// ESTADO
+// ===================================================================
+let itemCount = 0;
+let selectedEl = null;
+let dragState = null; // { el, offsetX, offsetY }
+let hiddenItems = new Set(); // IDs ocultos na sidebar
+
+// ===================================================================
+// INICIAR SIDEBAR
+// ===================================================================
+function iniciarSidebar() {
+  const container = document.getElementById('sidebarItems');
+  container.innerHTML = '';
+
+  SECTIONS.forEach((sec, idx) => {
+    const group = document.createElement('div');
+    group.className = 'section-group';
+
+    const title = document.createElement('div');
+    title.className = 'section-title';
+    title.innerHTML = `${sec.title} <span class="arrow">▼</span>`;
+    title.dataset.section = idx;
+
+    const body = document.createElement('div');
+    body.className = 'section-body';
+
+    sec.items.forEach(item => {
+      const el = document.createElement('div');
+      el.className = 'drag-item';
+      el.draggable = true;
+      el.dataset.id = item.id;
+      el.dataset.text = item.text;
+
+      if (hiddenItems.has(item.id)) {
+        el.classList.add('hidden-item');
+      }
+
+      el.innerHTML = `<span class="tag">${item.id}</span>${item.text}<button class="hide-btn" title="Ocultar da lista">✕</button>`;
+
+      // Hide button
+      el.querySelector('.hide-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        esconderItemSidebar(item.id);
+      });
+
+      // HTML5 Drag & Drop
+      el.addEventListener('dragstart', (e) => {
+        if (hiddenItems.has(item.id)) { e.preventDefault(); return; }
+        el.classList.add('dragging');
+        e.dataTransfer.setData('text/plain', JSON.stringify({
+          id: item.id,
+          text: item.text
+        }));
+        e.dataTransfer.effectAllowed = 'copy';
+      });
+      el.addEventListener('dragend', () => {
+        el.classList.remove('dragging');
+      });
+
+      body.appendChild(el);
+    });
+
+    // Collapse toggle
+    title.addEventListener('click', () => {
+      body.classList.toggle('hidden');
+      title.querySelector('.arrow').classList.toggle('collapsed');
+    });
+
+    group.appendChild(title);
+    group.appendChild(body);
+    container.appendChild(group);
+  });
+
+  // Restore link (appended after all section groups)
+  const restoreDiv = document.createElement('div');
+  restoreDiv.className = 'restore-link' + (hiddenItems.size > 0 ? ' show' : '');
+  restoreDiv.id = 'restoreLink';
+  restoreDiv.textContent = hiddenItems.size > 0
+    ? `↩ Restaurar ${hiddenItems.size} item(ns) oculto(s)`
+    : '↩ Restaurar ocultos';
+  restoreDiv.onclick = restaurarOcultos;
+  container.appendChild(restoreDiv);
+}
+
+// ===================================================================
+// FILTRO
+// ===================================================================
+function filtrarItens() {
+  const q = document.getElementById('filtro').value.toLowerCase();
+  document.querySelectorAll('.drag-item').forEach(el => {
+    const match = el.dataset.text.toLowerCase().includes(q) ||
+                  el.dataset.id.toLowerCase().includes(q);
+    el.style.display = match ? '' : 'none';
+  });
+  // Expand all groups when filtering
+  if (q.length > 0) {
+    document.querySelectorAll('.section-body').forEach(b => b.classList.remove('hidden'));
+    document.querySelectorAll('.arrow').forEach(a => a.classList.remove('collapsed'));
+  }
+}
+
+// ===================================================================
+// DROP ZONE (letter)
+// ===================================================================
+const letter = document.getElementById('letter');
+
+letter.addEventListener('dragover', (e) => {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'copy';
+  letter.classList.add('drag-over');
+});
+
+letter.addEventListener('dragleave', () => {
+  letter.classList.remove('drag-over');
+});
+
+letter.addEventListener('drop', (e) => {
+  e.preventDefault();
+  letter.classList.remove('drag-over');
+
+  const raw = e.dataTransfer.getData('text/plain');
+  if (!raw) return;
+
+  try {
+    const data = JSON.parse(raw);
+    const rect = letter.getBoundingClientRect();
+    const scaleX = letter.offsetWidth / rect.width;
+    const scaleY = letter.offsetHeight / rect.height;
+    const left = (e.clientX - rect.left) * scaleX;
+    const top = (e.clientY - rect.top) * scaleY;
+    criarItem(data.id, data.text, left, top);
+    mostrarToast(`"${data.id}" adicionado`);
+  } catch (err) {
+    // ignore
+  }
+});
+
+// ===================================================================
+// CRIAR ITEM DENTRO DO LETTER
+// ===================================================================
+function criarItem(id, text, left, top, fontSize, bold) {
+  const div = document.createElement('div');
+  div.className = 'placed-item';
+  div.dataset.id = id;
+  div.style.left = left + 'px';
+  div.style.top = top + 'px';
+  div.style.fontSize = (fontSize || 12) + 'px';
+  div.dataset.fontSize = fontSize || 12;
+  div.dataset.bold = bold ? '1' : '0';
+  if (bold) div.style.fontWeight = 'bold';
+
+  // Label de coordenadas
+  const coord = document.createElement('span');
+  coord.className = 'coord-label';
+  coord.textContent = `${Math.round(left)}px, ${Math.round(top)}px`;
+  div.appendChild(coord);
+
+  // Botão deletar
+  const del = document.createElement('button');
+  del.className = 'del-btn';
+  del.textContent = '×';
+  del.title = 'Remover';
+  del.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (selectedEl === div) deselectItem();
+    div.remove();
+    atualizarInfo();
+    mostrarToast(`"${id}" removido`);
+  });
+  div.appendChild(del);
+
+  // Texto
+  const span = document.createElement('span');
+  span.textContent = text;
+  div.appendChild(span);
+
+  // Atualizar coords ao mover
+  function atualizarCoords() {
+    coord.textContent = `${Math.round(parseFloat(div.style.left))}px, ${Math.round(parseFloat(div.style.top))}px`;
+  }
+
+  // Mouse drag dentro do letter
+  div.addEventListener('mousedown', (e) => {
+    if (e.target === del) return;
+    e.preventDefault();
+    selecionarItem(div);
+
+    const rect = letter.getBoundingClientRect();
+    const scaleX = letter.offsetWidth / rect.width;
+    const scaleY = letter.offsetHeight / rect.height;
+
+    const offsetX = (e.clientX - rect.left) * scaleX - parseFloat(div.style.left);
+    const offsetY = (e.clientY - rect.top) * scaleY - parseFloat(div.style.top);
+
+    dragState = { el: div, offsetX, offsetY, scaleX, scaleY };
+
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+  });
+
+  // Touch support
+  div.addEventListener('touchstart', (e) => {
+    if (e.target === del) return;
+    const touch = e.touches[0];
+    const me = new MouseEvent('mousedown', {
+      clientX: touch.clientX,
+      clientY: touch.clientY
+    });
+    div.dispatchEvent(me);
+  }, { passive: true });
+
+  letter.appendChild(div);
+  selecionarItem(div);
+  atualizarInfo();
+  itemCount++;
+}
+
+function onMouseMove(e) {
+  if (!dragState) return;
+  const rect = letter.getBoundingClientRect();
+  const newLeft = (e.clientX - rect.left) * dragState.scaleX - dragState.offsetX;
+  const newTop = (e.clientY - rect.top) * dragState.scaleY - dragState.offsetY;
+
+  dragState.el.style.left = Math.max(0, newLeft) + 'px';
+  dragState.el.style.top = Math.max(0, newTop) + 'px';
+
+  // Atualizar label de coordenadas
+  const coord = dragState.el.querySelector('.coord-label');
+  if (coord) {
+    coord.textContent = `${Math.round(newLeft)}px, ${Math.round(newTop)}px`;
+  }
+  atualizarInfo();
+}
+
+function onMouseUp() {
+  dragState = null;
+  document.removeEventListener('mousemove', onMouseMove);
+  document.removeEventListener('mouseup', onMouseUp);
+}
+
+// ===================================================================
+// SELEÇÃO / PROPRIEDADES
+// ===================================================================
+function selecionarItem(el) {
+  if (selectedEl && selectedEl !== el) {
+    selectedEl.classList.remove('selected');
+  }
+  selectedEl = el;
+  if (el) {
+    el.classList.add('selected');
+    el.parentNode.appendChild(el); // traz pra frente
+  }
+  atualizarPropsPanel();
+  atualizarInfo();
+}
+
+function deselectItem() {
+  if (selectedEl) {
+    selectedEl.classList.remove('selected');
+    selectedEl = null;
+  }
+  atualizarPropsPanel();
+  atualizarInfo();
+}
+
+function atualizarPropsPanel() {
+  const panel = document.getElementById('propsPanel');
+  const idEl = document.getElementById('propId');
+  const sizeInput = document.getElementById('fontSizeInput');
+  const boldBtn = document.getElementById('boldBtn');
+
+  if (!selectedEl) {
+    panel.classList.remove('show');
+    return;
+  }
+
+  panel.classList.add('show');
+  idEl.textContent = selectedEl.dataset.id;
+
+  const fs = parseInt(selectedEl.dataset.fontSize) || 12;
+  sizeInput.value = fs;
+
+  const isBold = selectedEl.dataset.bold === '1';
+  boldBtn.classList.toggle('active', isBold);
+}
+
+function toggleBold() {
+  if (!selectedEl) return;
+  const isBold = selectedEl.dataset.bold === '1';
+  const newBold = isBold ? '0' : '1';
+  selectedEl.dataset.bold = newBold;
+  selectedEl.style.fontWeight = newBold === '1' ? 'bold' : 'normal';
+  atualizarPropsPanel();
+}
+
+function deletarItemSelecionado() {
+  if (!selectedEl) return;
+  const id = selectedEl.dataset.id;
+  selectedEl.remove();
+  selectedEl = null;
+  atualizarPropsPanel();
+  atualizarInfo();
+  mostrarToast(`"${id}" removido`);
+}
+
+function esconderItemSidebar(id) {
+  hiddenItems.add(id);
+  document.querySelectorAll('.drag-item').forEach(el => {
+    if (el.dataset.id === id) el.classList.add('hidden-item');
+  });
+  const link = document.getElementById('restoreLink');
+  if (link) {
+    link.textContent = `↩ Restaurar ${hiddenItems.size} item(ns) oculto(s)`;
+    link.classList.add('show');
+  }
+}
+
+function restaurarOcultos() {
+  hiddenItems.clear();
+  document.querySelectorAll('.drag-item').forEach(el => el.classList.remove('hidden-item'));
+  const link = document.getElementById('restoreLink');
+  if (link) {
+    link.textContent = '↩ Restaurar ocultos';
+    link.classList.remove('show');
+  }
+  mostrarToast('Itens restaurados');
+}
+
+// ===================================================================
+// ATUALIZAR INFO BAR
+// ===================================================================
+function atualizarInfo() {
+  const info = document.getElementById('coordInfo');
+  if (selectedEl) {
+    const id = selectedEl.dataset.id;
+    const left = Math.round(parseFloat(selectedEl.style.left));
+    const top = Math.round(parseFloat(selectedEl.style.top));
+    const fs = selectedEl.dataset.fontSize || 12;
+    const bold = selectedEl.dataset.bold === '1' ? 'B' : '';
+    info.textContent = `${id} → (${left}, ${top}) · ${fs}px${bold ? '· Negrito' : ''}`;
+  } else {
+    const total = document.querySelectorAll('.placed-item').length;
+    info.textContent = total > 0 ? `${total} item(ns) posicionado(s)` : 'Clique em um item para ver as coordenadas';
+  }
+}
+
+// ===================================================================
+// LIMPAR TUDO
+// ===================================================================
+function removerTodos() {
+  if (document.querySelectorAll('.placed-item').length === 0) return;
+  if (!confirm('Remover todos os itens posicionados?')) return;
+  document.querySelectorAll('.placed-item').forEach(el => el.remove());
+  selectedEl = null;
+  atualizarInfo();
+  mostrarToast('Todos os itens foram removidos');
+}
+
+// ===================================================================
+// EXPORTAR CSS
+// ===================================================================
+function exportarCSS() {
+  const items = document.querySelectorAll('.placed-item');
+  if (items.length === 0) {
+    mostrarToast('Nenhum item posicionado para exportar');
+    return;
+  }
+
+  let css = '/* CSS gerado pelo Job Card Editor */\n\n';
+
+  items.forEach(el => {
+    const id = el.dataset.id;
+    const left = Math.round(parseFloat(el.style.left));
+    const top = Math.round(parseFloat(el.style.top));
+    const fs = el.dataset.fontSize || 12;
+    const bold = el.dataset.bold === '1';
+    css += `.${id} {\n`;
+    css += `  left: ${left}px;\n`;
+    css += `  top: ${top}px;\n`;
+    css += `  font-size: ${fs}px;\n`;
+    if (bold) css += `  font-weight: bold;\n`;
+    css += `}\n\n`;
+  });
+
+  document.getElementById('cssOutput').textContent = css;
+  document.getElementById('modalExport').classList.add('show');
+}
+
+function fecharModal() {
+  document.getElementById('modalExport').classList.remove('show');
+}
+
+function copiarCSS() {
+  const css = document.getElementById('cssOutput').textContent;
+  navigator.clipboard.writeText(css).then(() => {
+    mostrarToast('CSS copiado!');
+  }).catch(() => {
+    // fallback
+    const ta = document.createElement('textarea');
+    ta.value = css;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    ta.remove();
+    mostrarToast('CSS copiado!');
+  });
+}
+
+// Fechar modal ao clicar fora
+document.getElementById('modalExport').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('modalExport')) fecharModal();
+});
+
+// ===================================================================
+// TOAST
+// ===================================================================
+function mostrarToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(el._timer);
+  el._timer = setTimeout(() => el.classList.remove('show'), 2000);
+}
+
+// ===================================================================
+// DESELECT AO CLICAR FORA
+// ===================================================================
+letter.addEventListener('click', (e) => {
+  if (e.target === letter || e.target.classList.contains('drag-over')) {
+    deselectItem();
+  }
+});
+
+// ===================================================================
+// KEYBOARD
+// ===================================================================
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Delete' || e.key === 'Backspace') {
+    if (selectedEl && document.activeElement?.tagName !== 'INPUT') {
+      const el = selectedEl;
+      deselectItem();
+      el.remove();
+      mostrarToast('Item removido');
+    }
+  }
+  if (e.key === 'Escape') {
+    fecharModal();
+    if (selectedEl) deselectItem();
+  }
+  // Arrow keys para micro-ajuste
+  if (selectedEl && ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) {
+    e.preventDefault();
+    const step = e.shiftKey ? 10 : 1;
+    const left = parseFloat(selectedEl.style.left) || 0;
+    const top = parseFloat(selectedEl.style.top) || 0;
+    if (e.key === 'ArrowLeft') selectedEl.style.left = Math.max(0, left - step) + 'px';
+    if (e.key === 'ArrowRight') selectedEl.style.left = (left + step) + 'px';
+    if (e.key === 'ArrowUp') selectedEl.style.top = Math.max(0, top - step) + 'px';
+    if (e.key === 'ArrowDown') selectedEl.style.top = (top + step) + 'px';
+    const coord = selectedEl.querySelector('.coord-label');
+    if (coord) coord.textContent = `${Math.round(parseFloat(selectedEl.style.left))}px, ${Math.round(parseFloat(selectedEl.style.top))}px`;
+    atualizarInfo();
+    atualizarPropsPanel();
+  }
+});
+
+// ===================================================================
+// FONT SIZE INPUT
+// ===================================================================
+document.getElementById('fontSizeInput').addEventListener('input', function() {
+  if (!selectedEl) return;
+  const val = parseInt(this.value);
+  if (isNaN(val) || val < 1) return;
+  selectedEl.style.fontSize = val + 'px';
+  selectedEl.dataset.fontSize = val;
+  atualizarInfo();
+});
+
+document.getElementById('fontSizeInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' || e.key === 'Tab') {
+    // Sincroniza e foca no canvas
+    document.getElementById('canvas').focus();
+  }
+});
+
+// ===================================================================
+// INICIAR
+// ===================================================================
+iniciarSidebar();
+atualizarInfo();
+</script>
+</body>
+</html>

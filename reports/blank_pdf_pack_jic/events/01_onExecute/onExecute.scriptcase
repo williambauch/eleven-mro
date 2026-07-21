@@ -1,0 +1,30 @@
+<?php
+
+sc_include_lib("tcpdf");
+
+// 1. Inicializacao (padrao documentacao ScriptCase: new TCPDF() sem subclasse)
+// O modelo Pack_JIC.pdf e tamanho LETTER (215,9 x 279,4 mm), nao A4.
+// Usamos array de mm para garantir o formato exato neste TCPDF.
+$pdf = new TCPDF('P', 'mm', array(215.9, 279.4), true, 'UTF-8', false);
+$pdf->SetAutoPageBreak(false);
+$pdf->SetMargins(0, 0, 0);
+$pdf->setPrintHeader(false);
+$pdf->setPrintFooter(false);
+
+// =========================================================
+// PAGINA 01 — JIC (Job Instruction Card)
+// =========================================================
+mGerarPagina1JIC($pdf);
+
+// =========================================================
+// PAGINA 02 — JEC (Job Equipment and Tool Card)
+// =========================================================
+mGerarPagina2JEC($pdf);
+
+// Evita erro "Some data has already been output" quando a app
+// e chamada em outra janela (nmgp_outra_jan). Limpa o buffer
+// e exibe o PDF inline na pagina (modo 'I').
+if (ob_get_length()) {
+    ob_clean();
+}
+$pdf->Output('pack_jic_' . date('Ymd_His') . '.pdf', 'I');
