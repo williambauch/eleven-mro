@@ -1,6 +1,6 @@
 {
     "page": 2,
-    "savedAt": "2026-07-21 22:36:03",
+    "savedAt": "2026-07-22 16:39:46",
     "items": [
         {
             "id": "p021",
@@ -12,7 +12,12 @@
             "maxWidth": 0,
             "multiline": false,
             "type": "text",
-            "fieldName": "ATA"
+            "fieldName": "ATA",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         },
         {
             "id": "p022",
@@ -24,7 +29,12 @@
             "maxWidth": 0,
             "multiline": false,
             "type": "text",
-            "fieldName": "A\/C Type"
+            "fieldName": "A\/C Type",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         },
         {
             "id": "p023",
@@ -36,7 +46,12 @@
             "maxWidth": 0,
             "multiline": false,
             "type": "text",
-            "fieldName": "A\/C Reg"
+            "fieldName": "A\/C Reg",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         },
         {
             "id": "p024",
@@ -48,7 +63,12 @@
             "maxWidth": 0,
             "multiline": false,
             "type": "text",
-            "fieldName": "Company"
+            "fieldName": "Company",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         },
         {
             "id": "p025",
@@ -60,7 +80,12 @@
             "maxWidth": 0,
             "multiline": false,
             "type": "text",
-            "fieldName": "A\/C Work Order"
+            "fieldName": "A\/C Work Order",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         },
         {
             "id": "p009",
@@ -72,7 +97,12 @@
             "maxWidth": 0,
             "multiline": false,
             "type": "text",
-            "fieldName": "Card Code"
+            "fieldName": "Card Code",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         },
         {
             "id": "p010",
@@ -84,7 +114,12 @@
             "maxWidth": 0,
             "multiline": false,
             "type": "barcode",
-            "fieldName": "JIC Work Order"
+            "fieldName": "JIC Work Order",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         },
         {
             "id": "p020",
@@ -96,19 +131,54 @@
             "maxWidth": 0,
             "multiline": false,
             "type": "text",
-            "fieldName": "Origin Document"
+            "fieldName": "Origin Document",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         },
         {
             "id": "new-1",
-            "text": "• Tool Code - Description - Qty",
-            "left": 12,
-            "top": 269,
+            "text": "Tool Code - Description - Qty",
+            "left": 7,
+            "top": 244,
             "fontSize": 11,
             "bold": true,
-            "maxWidth": 779,
-            "multiline": true,
-            "type": "text",
-            "fieldName": "ToolCode_Description_Qty"
+            "maxWidth": 0,
+            "multiline": false,
+            "type": "table",
+            "fieldName": "Tabela Equipments e Tools",
+            "tableColumns": [
+                {
+                    "label": "Tool Code",
+                    "width": 200,
+                    "content": "Tool Code ",
+                    "fieldName": "Tool Code ",
+                    "align": "left",
+                    "colspan": 1
+                },
+                {
+                    "label": "Description",
+                    "width": 540,
+                    "content": "Description",
+                    "fieldName": "Description",
+                    "align": "left",
+                    "colspan": 1
+                },
+                {
+                    "label": "Qty",
+                    "width": 60,
+                    "content": "Qty",
+                    "fieldName": "Qty",
+                    "align": "left",
+                    "colspan": 1
+                }
+            ],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         }
     ],
     "customItems": [

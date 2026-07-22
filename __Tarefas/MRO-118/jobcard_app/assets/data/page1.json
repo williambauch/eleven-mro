@@ -1,6 +1,6 @@
 {
     "page": 1,
-    "savedAt": "2026-07-21 22:18:06",
+    "savedAt": "2026-07-22 13:43:49",
     "items": [
         {
             "id": "p025",
@@ -12,7 +12,12 @@
             "maxWidth": 0,
             "multiline": false,
             "type": "text",
-            "fieldName": "Empresa"
+            "fieldName": "Empresa",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         },
         {
             "id": "p029",
@@ -24,7 +29,12 @@
             "maxWidth": 0,
             "multiline": false,
             "type": "text",
-            "fieldName": "Documento de Origem N° 2"
+            "fieldName": "Documento de Origem N° 2",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         },
         {
             "id": "p023",
@@ -36,7 +46,12 @@
             "maxWidth": 0,
             "multiline": false,
             "type": "text",
-            "fieldName": "Documento de Origem N° 1"
+            "fieldName": "Documento de Origem N° 1",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         },
         {
             "id": "p086",
@@ -48,7 +63,12 @@
             "maxWidth": 0,
             "multiline": false,
             "type": "text",
-            "fieldName": "Nova NR Aberta (S)"
+            "fieldName": "Nova NR Aberta (S)",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         },
         {
             "id": "p024",
@@ -60,7 +80,12 @@
             "maxWidth": 0,
             "multiline": false,
             "type": "text",
-            "fieldName": "Registro da Aeronave"
+            "fieldName": "Registro da Aeronave",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         },
         {
             "id": "p026",
@@ -72,7 +97,12 @@
             "maxWidth": 0,
             "multiline": false,
             "type": "text",
-            "fieldName": "ata"
+            "fieldName": "ata",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         },
         {
             "id": "p028",
@@ -84,7 +114,12 @@
             "maxWidth": 0,
             "multiline": false,
             "type": "text",
-            "fieldName": "projeto"
+            "fieldName": "projeto",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         },
         {
             "id": "p011",
@@ -96,7 +131,12 @@
             "maxWidth": 0,
             "multiline": false,
             "type": "text",
-            "fieldName": "Documento N°"
+            "fieldName": "Documento N°",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         },
         {
             "id": "p005",
@@ -108,7 +148,12 @@
             "maxWidth": 0,
             "multiline": false,
             "type": "text",
-            "fieldName": "N° da Ordem de Serviço"
+            "fieldName": "N° da Ordem de Serviço",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         },
         {
             "id": "p060",
@@ -120,7 +165,12 @@
             "maxWidth": 0,
             "multiline": false,
             "type": "text",
-            "fieldName": "Horas Estimadas (Homens\/Hora"
+            "fieldName": "Horas Estimadas (Homens\/Hora",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         },
         {
             "id": "p034",
@@ -132,7 +182,12 @@
             "maxWidth": 539,
             "multiline": true,
             "type": "text",
-            "fieldName": "Discrepancy"
+            "fieldName": "Discrepancy",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         },
         {
             "id": "new-1",
@@ -144,7 +199,12 @@
             "maxWidth": 0,
             "multiline": false,
             "type": "text",
-            "fieldName": "Indicar se aplicável 01"
+            "fieldName": "Indicar se aplicável 01",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         },
         {
             "id": "new-2",
@@ -156,7 +216,12 @@
             "maxWidth": 0,
             "multiline": false,
             "type": "text",
-            "fieldName": "Indicar se aplicável 02"
+            "fieldName": "Indicar se aplicável 02",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         },
         {
             "id": "p114",
@@ -168,7 +233,12 @@
             "maxWidth": 0,
             "multiline": false,
             "type": "text",
-            "fieldName": "Ferramentas Calibráveis Foram Usadas (N)"
+            "fieldName": "Ferramentas Calibráveis Foram Usadas (N)",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         },
         {
             "id": "p053",
@@ -180,7 +250,12 @@
             "maxWidth": 0,
             "multiline": false,
             "type": "text",
-            "fieldName": "Originado por"
+            "fieldName": "Originado por",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         },
         {
             "id": "p050",
@@ -192,7 +267,12 @@
             "maxWidth": 0,
             "multiline": false,
             "type": "text",
-            "fieldName": "Area\/Zona"
+            "fieldName": "Area\/Zona",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         },
         {
             "id": "p042",
@@ -204,7 +284,12 @@
             "maxWidth": 172,
             "multiline": true,
             "type": "text",
-            "fieldName": "Especialidade"
+            "fieldName": "Especialidade",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         },
         {
             "id": "p039",
@@ -216,7 +301,12 @@
             "maxWidth": 0,
             "multiline": false,
             "type": "text",
-            "fieldName": "Serial Number"
+            "fieldName": "Serial Number",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         },
         {
             "id": "p036",
@@ -228,7 +318,12 @@
             "maxWidth": 0,
             "multiline": false,
             "type": "text",
-            "fieldName": "Tipo de Aeronave"
+            "fieldName": "Tipo de Aeronave",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         },
         {
             "id": "p125",
@@ -240,7 +335,12 @@
             "maxWidth": 0,
             "multiline": false,
             "type": "text",
-            "fieldName": "Motivo do Diferimento"
+            "fieldName": "Motivo do Diferimento",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         },
         {
             "id": "p080",
@@ -252,7 +352,12 @@
             "maxWidth": 558,
             "multiline": true,
             "type": "text",
-            "fieldName": "Ação Executada"
+            "fieldName": "Ação Executada",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         },
         {
             "id": "p077",
@@ -264,7 +369,12 @@
             "maxWidth": 0,
             "multiline": false,
             "type": "text",
-            "fieldName": "Revisão da Referência"
+            "fieldName": "Revisão da Referência",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         },
         {
             "id": "p075",
@@ -276,7 +386,12 @@
             "maxWidth": 0,
             "multiline": false,
             "type": "text",
-            "fieldName": "De acordo com: (Referencia)"
+            "fieldName": "De acordo com: (Referencia)",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         },
         {
             "id": "p004",
@@ -288,7 +403,12 @@
             "maxWidth": 0,
             "multiline": false,
             "type": "text",
-            "fieldName": ""
+            "fieldName": "",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         },
         {
             "id": "p097",
@@ -300,7 +420,12 @@
             "maxWidth": 0,
             "multiline": false,
             "type": "text",
-            "fieldName": ""
+            "fieldName": "",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         },
         {
             "id": "p098",
@@ -312,7 +437,12 @@
             "maxWidth": 0,
             "multiline": false,
             "type": "text",
-            "fieldName": ""
+            "fieldName": "",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         },
         {
             "id": "p093",
@@ -324,7 +454,12 @@
             "maxWidth": 0,
             "multiline": false,
             "type": "text",
-            "fieldName": ""
+            "fieldName": "",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         },
         {
             "id": "p094",
@@ -336,7 +471,12 @@
             "maxWidth": 0,
             "multiline": false,
             "type": "text",
-            "fieldName": ""
+            "fieldName": "",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         },
         {
             "id": "new-7",
@@ -348,7 +488,12 @@
             "maxWidth": 0,
             "multiline": false,
             "type": "text",
-            "fieldName": "Diferimento"
+            "fieldName": "Diferimento",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         },
         {
             "id": "new-6",
@@ -360,7 +505,12 @@
             "maxWidth": 0,
             "multiline": false,
             "type": "text",
-            "fieldName": "Aprovação"
+            "fieldName": "Aprovação",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         },
         {
             "id": "p121",
@@ -372,7 +522,12 @@
             "maxWidth": 0,
             "multiline": false,
             "type": "text",
-            "fieldName": "Assinatura do Cliente"
+            "fieldName": "Assinatura do Cliente",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         },
         {
             "id": "p111",
@@ -384,7 +539,12 @@
             "maxWidth": 0,
             "multiline": false,
             "type": "text",
-            "fieldName": ""
+            "fieldName": "",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         },
         {
             "id": "p122",
@@ -396,7 +556,12 @@
             "maxWidth": 0,
             "multiline": false,
             "type": "text",
-            "fieldName": "Assinatura do IIO se necessário"
+            "fieldName": "Assinatura do IIO se necessário",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         },
         {
             "id": "p090",
@@ -408,7 +573,12 @@
             "maxWidth": 0,
             "multiline": false,
             "type": "text",
-            "fieldName": "Executado por"
+            "fieldName": "Executado por",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         },
         {
             "id": "new-5",
@@ -420,7 +590,12 @@
             "maxWidth": 0,
             "multiline": false,
             "type": "text",
-            "fieldName": "Item IIO planejado (N)"
+            "fieldName": "Item IIO planejado (N)",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         },
         {
             "id": "new-4",
@@ -432,7 +607,12 @@
             "maxWidth": 0,
             "multiline": false,
             "type": "text",
-            "fieldName": "Item IIO planejado (S)"
+            "fieldName": "Item IIO planejado (S)",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         },
         {
             "id": "p082",
@@ -444,7 +624,12 @@
             "maxWidth": 0,
             "multiline": false,
             "type": "text",
-            "fieldName": "Nova NR Aberta (N)"
+            "fieldName": "Nova NR Aberta (N)",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         },
         {
             "id": "p113",
@@ -456,7 +641,12 @@
             "maxWidth": 0,
             "multiline": false,
             "type": "text",
-            "fieldName": "Ferramentas Calibráveis Foram Usadas (S)"
+            "fieldName": "Ferramentas Calibráveis Foram Usadas (S)",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         },
         {
             "id": "p010",
@@ -468,7 +658,12 @@
             "maxWidth": 0,
             "multiline": false,
             "type": "barcode",
-            "fieldName": "NON ROUTINE Código de Barras"
+            "fieldName": "NON ROUTINE Código de Barras",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         },
         {
             "id": "p055",
@@ -480,7 +675,12 @@
             "maxWidth": 537,
             "multiline": true,
             "type": "text",
-            "fieldName": "Engineering Instruction: (Instrução de Engenharia)"
+            "fieldName": "Engineering Instruction: (Instrução de Engenharia)",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         },
         {
             "id": "p043",
@@ -492,7 +692,12 @@
             "maxWidth": 537,
             "multiline": true,
             "type": "text",
-            "fieldName": "Corrective Action: (Ação corretiva)"
+            "fieldName": "Corrective Action: (Ação corretiva)",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         },
         {
             "id": "p120",
@@ -504,7 +709,12 @@
             "maxWidth": 0,
             "multiline": false,
             "type": "text",
-            "fieldName": "ID Identificação"
+            "fieldName": "ID Identificação",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         },
         {
             "id": "p099",
@@ -516,7 +726,12 @@
             "maxWidth": 0,
             "multiline": false,
             "type": "date",
-            "fieldName": "Data Assinatura do IIO"
+            "fieldName": "Data Assinatura do IIO",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         },
         {
             "id": "p102",
@@ -528,7 +743,12 @@
             "maxWidth": 0,
             "multiline": false,
             "type": "date",
-            "fieldName": "Data Motivo do Diferimento"
+            "fieldName": "Data Motivo do Diferimento",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         },
         {
             "id": "new-3",
@@ -540,7 +760,12 @@
             "maxWidth": 0,
             "multiline": false,
             "type": "date",
-            "fieldName": "Data"
+            "fieldName": "Data",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         }
     ],
     "customItems": [

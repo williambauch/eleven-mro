@@ -1,6 +1,6 @@
 {
     "page": 3,
-    "savedAt": "2026-07-21 22:58:57",
+    "savedAt": "2026-07-22 15:59:18",
     "items": [
         {
             "id": "p010",
@@ -12,7 +12,12 @@
             "maxWidth": 0,
             "multiline": false,
             "type": "text",
-            "fieldName": "Card Code"
+            "fieldName": "Card Code",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         },
         {
             "id": "p021",
@@ -24,7 +29,12 @@
             "maxWidth": 0,
             "multiline": false,
             "type": "text",
-            "fieldName": "Origin Document"
+            "fieldName": "Origin Document",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         },
         {
             "id": "p022",
@@ -36,7 +46,12 @@
             "maxWidth": 0,
             "multiline": false,
             "type": "text",
-            "fieldName": "ATA"
+            "fieldName": "ATA",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         },
         {
             "id": "p023",
@@ -48,7 +63,12 @@
             "maxWidth": 0,
             "multiline": false,
             "type": "text",
-            "fieldName": "A\/C Type"
+            "fieldName": "A\/C Type",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         },
         {
             "id": "p024",
@@ -60,7 +80,12 @@
             "maxWidth": 0,
             "multiline": false,
             "type": "text",
-            "fieldName": "A\/C Reg"
+            "fieldName": "A\/C Reg",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         },
         {
             "id": "p025",
@@ -72,7 +97,12 @@
             "maxWidth": 0,
             "multiline": false,
             "type": "text",
-            "fieldName": "Company"
+            "fieldName": "Company",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         },
         {
             "id": "p026",
@@ -84,7 +114,12 @@
             "maxWidth": 0,
             "multiline": false,
             "type": "text",
-            "fieldName": "A\/C Work Order"
+            "fieldName": "A\/C Work Order",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         },
         {
             "id": "p011",
@@ -96,104 +131,136 @@
             "maxWidth": 0,
             "multiline": false,
             "type": "barcode",
-            "fieldName": "JIC Work Order"
+            "fieldName": "JIC Work Order",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         },
         {
-            "id": "p031",
-            "text": "P\/N IW",
-            "left": 226,
-            "top": 274,
+            "id": "new-3",
+            "text": "tabela",
+            "left": 7,
+            "top": 231,
+            "fontSize": 11,
+            "bold": true,
+            "maxWidth": 0,
+            "multiline": false,
+            "type": "table",
+            "fieldName": "tabela Materials",
+            "tableColumns": [
+                {
+                    "label": "P\/N",
+                    "width": 135,
+                    "content": "E0399-01",
+                    "fieldName": "P\/N",
+                    "align": "left"
+                },
+                {
+                    "label": "Unit",
+                    "width": 30,
+                    "content": "UN",
+                    "fieldName": "Unit"
+                },
+                {
+                    "label": "Qty planned",
+                    "width": 52,
+                    "content": "1",
+                    "fieldName": "Qty planned",
+                    "align": "center"
+                },
+                {
+                    "label": " P\/N IW",
+                    "width": 94,
+                    "content": " P\/N IW"
+                },
+                {
+                    "label": "Batch \/ SN",
+                    "width": 92,
+                    "content": "Batch \/ SN",
+                    "fieldName": "Batch \/ SN"
+                },
+                {
+                    "label": "Description",
+                    "width": 206,
+                    "content": " DESCARREGADOR ESTATICO DESCARREGADOR ESTATICODESCARREGADOR ESTATICO",
+                    "fieldName": "Description"
+                },
+                {
+                    "label": "Material Address",
+                    "width": 66,
+                    "content": "",
+                    "fieldName": "Material Address"
+                },
+                {
+                    "label": "Qty applied",
+                    "width": 66,
+                    "content": "",
+                    "fieldName": "Qty applied",
+                    "align": "center"
+                },
+                {
+                    "label": "Mat. applied?",
+                    "width": 60,
+                    "content": "YES \/ NO",
+                    "fieldName": "Mat. applied (Sim)",
+                    "align": "center",
+                    "colspan": "1"
+                }
+            ],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
+        },
+        {
+            "id": "p047",
+            "text": "Provider (Sign & Stamp)",
+            "left": 184,
+            "top": 985,
             "fontSize": 11,
             "bold": false,
             "maxWidth": 0,
             "multiline": false,
             "type": "text",
-            "fieldName": "P\/N IW"
+            "fieldName": "Provider_Sign_Stamp",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         },
         {
-            "id": "p032",
-            "text": "Batch \/ SN",
-            "left": 315,
-            "top": 274,
+            "id": "p048",
+            "text": "Requester (Sign & Stamp)",
+            "left": 515,
+            "top": 988,
             "fontSize": 11,
             "bold": false,
             "maxWidth": 0,
             "multiline": false,
             "type": "text",
-            "fieldName": "Batch \/ SN"
-        },
-        {
-            "id": "p037",
-            "text": "1",
-            "left": 174,
-            "top": 274,
-            "fontSize": 11,
-            "bold": false,
-            "maxWidth": 0,
-            "multiline": false,
-            "type": "text",
-            "fieldName": "Qty planned"
-        },
-        {
-            "id": "p029",
-            "text": "UN",
-            "left": 144,
-            "top": 274,
-            "fontSize": 11,
-            "bold": false,
-            "maxWidth": 0,
-            "multiline": false,
-            "type": "text",
-            "fieldName": "Unit"
-        },
-        {
-            "id": "p028",
-            "text": "E0399-01",
-            "left": 12,
-            "top": 274,
-            "fontSize": 11,
-            "bold": false,
-            "maxWidth": 0,
-            "multiline": false,
-            "type": "text",
-            "fieldName": "P\/N"
-        },
-        {
-            "id": "p033",
-            "text": "DESCARREGADOR ESTATICO",
-            "left": 412,
-            "top": 274,
-            "fontSize": 11,
-            "bold": false,
-            "maxWidth": 0,
-            "multiline": false,
-            "type": "text",
-            "fieldName": "Description"
-        },
-        {
-            "id": "p038",
-            "text": "Address",
-            "left": 618,
-            "top": 274,
-            "fontSize": 11,
-            "bold": false,
-            "maxWidth": 0,
-            "multiline": false,
-            "type": "text",
-            "fieldName": "Material Address"
-        },
-        {
-            "id": "p039",
-            "text": "applied",
-            "left": 686,
-            "top": 274,
-            "fontSize": 11,
-            "bold": false,
-            "maxWidth": 0,
-            "multiline": false,
-            "type": "text",
-            "fieldName": "Qty applied"
+            "fieldName": "Requester_Sign_Stamp",
+            "tableColumns": [],
+            "tableRowHeight": 20,
+            "tableMaxRows": 5,
+            "tableShowHeader": true,
+            "tableBorderWidth": 0.3
         }
     ],
-    "customItems": []
+    "customItems": [
+        {
+            "id": "new-1",
+            "text": "x"
+        },
+        {
+            "id": "new-2",
+            "text": "x"
+        },
+        {
+            "id": "new-3",
+            "text": "tabela"
+        }
+    ]
 }

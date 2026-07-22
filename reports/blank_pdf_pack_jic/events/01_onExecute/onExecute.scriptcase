@@ -21,6 +21,21 @@ mGerarPagina1JIC($pdf);
 // =========================================================
 mGerarPagina2JEC($pdf);
 
+// =========================================================
+// PAGINA 03 — JMC (Job Material Card)
+// =========================================================
+mGerarPagina3JMC($pdf);
+
+// =========================================================
+// PAGINA 04 — Shift Turnover
+// =========================================================
+mGerarPagina4Shift($pdf);
+
+// =========================================================
+// PAGINA 05 — Calibrated Tool
+// =========================================================
+mGerarPagina5Calibrated($pdf);
+
 // Evita erro "Some data has already been output" quando a app
 // e chamada em outra janela (nmgp_outra_jan). Limpa o buffer
 // e exibe o PDF inline na pagina (modo 'I').

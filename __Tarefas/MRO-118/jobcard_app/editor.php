@@ -8,9 +8,30 @@ if (!isset($PAGES[$pageNum])) {
 }
 
 $page = $PAGES[$pageNum];
+// Verifica se há imagem salva no pages_data.json (sobrescreve o config padrao)
+$dataFilePath = __DIR__ . '/pages_data.json';
+if (file_exists($dataFilePath)) {
+    $dataAll = json_decode(file_get_contents($dataFilePath), true);
+    if (is_array($dataAll) && isset($dataAll[$pageNum]['image'])) {
+        $page['image'] = $dataAll[$pageNum]['image'];
+    }
+}
 $itemsJson = json_encode($page['items'], JSON_UNESCAPED_UNICODE);
 $imageUrl = 'assets/images/' . htmlspecialchars($page['image']);
 $pageTitle = htmlspecialchars($page['title']);
+
+// Lista todas as imagens disponiveis
+$imgDir = __DIR__ . '/assets/images';
+$availableImages = [];
+if (is_dir($imgDir)) {
+    $files = scandir($imgDir);
+    foreach ($files as $f) {
+        if (preg_match('/\.(png|jpg|jpeg|gif)$/i', $f)) {
+            $availableImages[] = $f;
+        }
+    }
+}
+$imagesJson = json_encode($availableImages);
 ?><!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -207,6 +228,9 @@ $pageTitle = htmlspecialchars($page['title']);
     padding: 8px 10px;
     background: #fff;
     border-top: 2px solid #e74c3c;
+    max-height: 45vh;
+    overflow-y: auto;
+    flex-shrink: 0;
   }
   .props-panel.show { display: block; }
   .props-panel .prop-title {
@@ -613,6 +637,52 @@ $pageTitle = htmlspecialchars($page['title']);
     margin-right: 3px;
   }
 
+  /* ===== ITEM TIPO TABLE ===== */
+  .placed-item.item--table {
+    border: 1px solid #e67e22;
+    background: rgba(230,126,34,0.04);
+    border-radius: 3px;
+    padding: 0;
+    overflow: visible;
+  }
+  .placed-item.item--table .field-name-label {
+    color: #e67e22;
+  }
+  .placed-item.item--table .tbl-preview {
+    border-collapse: collapse;
+    font-size: 10px;
+    width: auto;
+  }
+  .placed-item.item--table .tbl-preview th,
+  .placed-item.item--table .tbl-preview td {
+    border: 1px solid #ccc;
+    padding: 1px 4px;
+    white-space: normal;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    text-align: left;
+    vertical-align: top;
+  }
+  .placed-item.item--table .tbl-preview th {
+    background: #f0f0f0;
+    font-weight: bold;
+  }
+  .placed-item.item--table .tbl-preview td {
+    color: #555;
+  }
+  .placed-item.item--table .tbl-preview tr:first-child td {
+    color: #333;
+    font-style: normal;
+  }
+  .drag-item.item--table {
+    background: rgba(230,126,34,0.06);
+    border-left: 3px solid #e67e22;
+  }
+  .drag-item.item--table .type-icon {
+    font-size: 11px;
+    margin-right: 3px;
+  }
+
   /* ===== TOAST ===== */
   .toast {
     position: fixed;
@@ -634,10 +704,12 @@ $pageTitle = htmlspecialchars($page['title']);
   <a href="index.php">&larr; Voltar</a>
   <span class="sep">|</span>
   <span class="title"><?= $pageTitle ?> — <?= htmlspecialchars($page['image']) ?></span>
+  <select id="imageSelect" style="font-size:11px;padding:2px 6px;border-radius:3px;border:1px solid #7f8c8d;background:#34495e;color:#fff;" onchange="trocarImagem(this.value)"></select>
   <button class="save-btn" id="saveBtn" onclick="salvar()">💾 Salvar</button>
   <button class="export-btn" id="exportBtn" onclick="exportarCSS()">📋 CSS</button>
   <button class="tcpdf-btn" id="tcpdfBtn" onclick="exportarTCPDF()">🐘 TCPDF</button>
   <button class="clear-btn" id="clearBtn" onclick="limparPagina()">🗑 Limpar</button>
+  <button class="clear-btn" id="copyBtn" onclick="copiarSelecionados()" style="background:#2980b9;" title="Copiar campos selecionados para reposicionar">📋 Copiar</button>
   <span class="zoom-group">
     <button onclick="zoomOut()" title="Reduzir zoom">−</button>
     <span class="zoom-label" id="zoomLabel">100%</span>
@@ -675,6 +747,7 @@ $pageTitle = htmlspecialchars($page['title']);
         <option value="text">Texto</option>
         <option value="date">📅 Data</option>
         <option value="barcode">🏷 Cód. Barras</option>
+        <option value="table">📊 Tabela</option>
       </select>
     </div>
     <div class="prop-row" id="fieldNameRow" style="display:none;">
@@ -697,6 +770,34 @@ $pageTitle = htmlspecialchars($page['title']);
       <label class="cb-label">
         <input type="checkbox" id="multilineCheck"> Multilinha
       </label>
+    </div>
+    <!-- Propriedades da Tabela (visivel apenas para type=table) -->
+    <div id="tableProps" style="display:none;">
+      <div class="prop-row">
+        <label>Alt.Linha:</label>
+        <input type="number" id="tableRowHeight" value="20" min="10" max="60" style="width:55px;" onchange="atualizarTabela()">
+        <span style="font-size:11px;color:#999;">px</span>
+      </div>
+      <div class="prop-row">
+        <label>Max.Linhas:</label>
+        <input type="number" id="tableMaxRows" value="5" min="1" max="30" style="width:55px;" onchange="atualizarTabela()">
+      </div>
+      <div class="prop-row">
+        <label>Borda:</label>
+        <input type="number" id="tableBorderWidth" value="0.3" min="0" max="2" step="0.1" style="width:45px;" onchange="atualizarTabela()">
+        <span style="font-size:11px;color:#999;">mm</span>
+      </div>
+      <div class="prop-row">
+        <label></label>
+        <label class="cb-label">
+          <input type="checkbox" id="tableShowHeader" checked onchange="atualizarTabela()"> Gerar cabecalho
+        </label>
+      </div>
+      <div class="prop-row" style="flex-direction:column;align-items:stretch;">
+        <label style="margin-bottom:4px;">Colunas:</label>
+        <div id="tableColumns" style="display:flex;flex-direction:column;gap:4px;"></div>
+        <button class="btn-add" onclick="addColumn()" style="margin-top:4px;width:auto;">+ Coluna</button>
+      </div>
     </div>
     <div class="prop-row" style="margin-bottom:0;">
       <button class="btn-del-item" onclick="deletarItemSelecionado()">✖ Remover</button>
@@ -735,7 +836,8 @@ $pageTitle = htmlspecialchars($page['title']);
 // CONFIG CARREGADA DO PHP
 // ===================================================================
 const PAGE_NUM = <?= $pageNum ?>;
-const PAGE_IMAGE = '<?= $page['image'] ?>';
+let PAGE_IMAGE = '<?= $page['image'] ?>';
+const AVAIABLE_IMAGES = <?= $imagesJson ?>;
 const BASE_ITEMS = <?= $itemsJson ?>;
 let hiddenItems = new Set();
 let selectedEl = null;
@@ -772,6 +874,137 @@ function zoomOut() {
 function zoomReset() {
   zoomLevel = 1;
   aplicarZoom();
+}
+
+// ===================================================================
+// FUNCOES DE TABELA
+// ===================================================================
+function getTableColumns(el) {
+  try { return JSON.parse(el.dataset.tableColumns || '[]'); }
+  catch(e) { return []; }
+}
+
+function renderTablePreview(div) {
+  div.querySelectorAll('.placed-text, .tbl-preview').forEach(n => n.remove());
+  const cols = getTableColumns(div);
+  const rowH = parseInt(div.dataset.tableRowHeight) || 20;
+  const maxRows = parseInt(div.dataset.tableMaxRows) || 5;
+  const showHeader = div.dataset.tableShowHeader !== '0';
+  if (cols.length === 0) return;
+
+  const tbl = document.createElement('table');
+  tbl.className = 'tbl-preview';
+
+  if (showHeader) {
+    const thead = document.createElement('thead');
+    const htr = document.createElement('tr');
+    let skip = 0;
+    cols.forEach((c, i) => {
+      if (skip > 0) { skip--; return; }
+      const th = document.createElement('th');
+      th.textContent = c.label || '';
+      th.style.width = (c.width || 80) + 'px';
+      th.style.textAlign = c.align || 'left';
+      const cs = parseInt(c.colspan) || 1;
+      if (cs > 1) {
+        th.colSpan = cs;
+        skip = cs - 1;
+      }
+      htr.appendChild(th);
+    });
+    thead.appendChild(htr);
+    tbl.appendChild(thead);
+  }
+
+  const tbody = document.createElement('tbody');
+  for (let i = 0; i < maxRows; i++) {
+    const tr = document.createElement('tr');
+    cols.forEach(c => {
+      const td = document.createElement('td');
+      td.textContent = (i === 0) ? (c.content || '') : '';
+      td.style.height = rowH + 'px';
+      td.style.textAlign = c.align || 'left';
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  }
+  tbl.appendChild(tbody);
+
+  div.appendChild(tbl);
+}
+
+function addColumn() {
+  if (!selectedEl || selectedEl.dataset.type !== 'table') return;
+  const cols = getTableColumns(selectedEl);
+  cols.push({ label: 'Coluna ' + (cols.length + 1), width: 80, content: '', fieldName: '', align: 'left', colspan: 1 });
+  selectedEl.dataset.tableColumns = JSON.stringify(cols);
+  renderTablePreview(selectedEl);
+  renderColumnEditor();
+  marcarAlterado();
+}
+
+function removeColumn(idx) {
+  if (!selectedEl) return;
+  const cols = getTableColumns(selectedEl);
+  cols.splice(idx, 1);
+  selectedEl.dataset.tableColumns = JSON.stringify(cols);
+  renderTablePreview(selectedEl);
+  renderColumnEditor();
+  marcarAlterado();
+}
+
+function updateColumn(idx, field, val) {
+  if (!selectedEl) return;
+  const cols = getTableColumns(selectedEl);
+  if (!cols[idx]) return;
+  if (field === 'width') val = parseInt(val) || 80;
+  cols[idx][field] = val;
+  selectedEl.dataset.tableColumns = JSON.stringify(cols);
+  renderTablePreview(selectedEl);
+  marcarAlterado();
+}
+
+function renderColumnEditor() {
+  const container = document.getElementById('tableColumns');
+  if (!container) return;
+  container.innerHTML = '';
+  if (!selectedEl || selectedEl.dataset.type !== 'table') return;
+  const cols = getTableColumns(selectedEl);
+  cols.forEach((c, i) => {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;flex-direction:column;gap:2px;padding:3px;border:1px solid #eee;border-radius:3px;';
+    row.innerHTML = `
+      <div style="display:flex;gap:3px;align-items:center;">
+        <input type="text" value="${c.label || ''}" placeholder="Titulo" style="flex:1;font-size:11px;padding:2px 4px;" oninput="updateColumn(${i},'label',this.value)">
+        <input type="number" value="${c.width || 80}" min="20" max="400" style="width:45px;font-size:11px;padding:2px;" onchange="updateColumn(${i},'width',this.value)">
+        <input type="number" value="${c.colspan || 1}" min="1" max="20" style="width:30px;font-size:10px;padding:2px;" onchange="updateColumn(${i},'colspan',this.value)" title="Colspan">
+        <button onclick="removeColumn(${i})" style="background:#c0392b;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:10px;padding:2px 6px;">x</button>
+      </div>
+      <div style="display:flex;gap:3px;align-items:center;">
+        <input type="text" value="${c.content || ''}" placeholder="Conteudo" style="flex:1;font-size:10px;padding:2px 4px;color:#555;" oninput="updateColumn(${i},'content',this.value)">
+        <input type="text" value="${c.fieldName || ''}" placeholder="Campo" style="flex:1;font-size:10px;padding:2px 4px;color:#e67e22;" oninput="updateColumn(${i},'fieldName',this.value)">
+        <select style="font-size:10px;padding:2px;" onchange="updateColumn(${i},'align',this.value)">
+          <option value="left" ${c.align === 'left' ? 'selected' : ''}>E</option>
+          <option value="center" ${c.align === 'center' ? 'selected' : ''}>C</option>
+          <option value="right" ${c.align === 'right' ? 'selected' : ''}>D</option>
+        </select>
+      </div>`;
+    container.appendChild(row);
+  });
+}
+
+function atualizarTabela() {
+  if (!selectedEl || selectedEl.dataset.type !== 'table') return;
+  const rh = parseInt(document.getElementById('tableRowHeight').value) || 20;
+  const mr = parseInt(document.getElementById('tableMaxRows').value) || 5;
+  const sh = document.getElementById('tableShowHeader').checked;
+  const bw = parseFloat(document.getElementById('tableBorderWidth').value) || 0.3;
+  selectedEl.dataset.tableRowHeight = rh;
+  selectedEl.dataset.tableMaxRows = mr;
+  selectedEl.dataset.tableShowHeader = sh ? '1' : '0';
+  selectedEl.dataset.tableBorderWidth = bw;
+  renderTablePreview(selectedEl);
+  marcarAlterado();
 }
 
 // ===================================================================
@@ -821,7 +1054,7 @@ function iniciarSidebar() {
 function criarDragItem(id, text, isCustom, type, fieldName) {
   const el = document.createElement('div');
   const hidden = hiddenItems.has(id);
-  el.className = 'drag-item' + (hidden ? ' hidden-item' : '') + (type === 'date' ? ' item--date' : '') + (type === 'barcode' ? ' item--barcode' : '');
+  el.className = 'drag-item' + (hidden ? ' hidden-item' : '') + (type === 'date' ? ' item--date' : '') + (type === 'barcode' ? ' item--barcode' : '') + (type === 'table' ? ' item--table' : '');
   el.draggable = false;
   el.dataset.id = id;
   el.dataset.text = text;
@@ -830,6 +1063,7 @@ function criarDragItem(id, text, isCustom, type, fieldName) {
   let icon = '';
   if (type === 'date') icon = '<span class="type-icon">📅</span>';
   if (type === 'barcode') icon = '<span class="type-icon">🏷</span>';
+  if (type === 'table') icon = '<span class="type-icon">📊</span>';
   let label = fieldName || text;
   el.innerHTML = `<span class="tag${isCustom ? ' custom' : ''}">${id}</span>${icon}${label}<button class="hide-btn" title="Ocultar">✕</button>`;
 
@@ -880,7 +1114,7 @@ letter.addEventListener('drop', (e) => e.preventDefault());
 // ===================================================================
 // CRIAR ITEM
 // ===================================================================
-function criarItem(id, text, left, top, fontSize, bold, maxWidth, multiline, type, fieldName) {
+function criarItem(id, text, left, top, fontSize, bold, maxWidth, multiline, type, fieldName, tblCols, tblRowH, tblMaxRows, tblShowHeader, tblBorderWidth) {
   // Remove se já existe
   const existing = document.querySelector(`.placed-item[data-id="${id}"]`);
   if (existing) existing.remove();
@@ -895,6 +1129,14 @@ function criarItem(id, text, left, top, fontSize, bold, maxWidth, multiline, typ
   if (type === 'barcode') {
     div.classList.add('item--barcode');
     div.style.fontFamily = "'Courier New', Courier, monospace";
+  }
+  if (type === 'table') {
+    div.classList.add('item--table');
+    div.dataset.tableColumns = JSON.stringify(tblCols || []);
+    div.dataset.tableRowHeight = tblRowH || 20;
+    div.dataset.tableMaxRows = tblMaxRows || 5;
+    div.dataset.tableShowHeader = (tblShowHeader !== false && tblShowHeader !== '0') ? '1' : '0';
+    div.dataset.tableBorderWidth = tblBorderWidth || 0.3;
   }
   div.style.left = left + 'px';
   div.style.top = top + 'px';
@@ -944,7 +1186,11 @@ function criarItem(id, text, left, top, fontSize, bold, maxWidth, multiline, typ
   const span = document.createElement('span');
   span.className = 'placed-text';
   span.textContent = text;
-  div.appendChild(span);
+  if ((type || 'text') === 'table') {
+    renderTablePreview(div);
+  } else {
+    div.appendChild(span);
+  }
 
   // Label do nome do campo (abaixo do box em position: absolute)
   if (fieldName) {
@@ -1166,6 +1412,19 @@ function atualizarPropsPanel() {
   const fnRow = document.getElementById('fieldNameRow');
   fnRow.style.display = 'flex';
   document.getElementById('fieldNameInput').value = selectedEl.dataset.fieldName || '';
+
+  // Table props
+  const tblProps = document.getElementById('tableProps');
+  if (itemType === 'table') {
+    tblProps.style.display = 'block';
+    document.getElementById('tableRowHeight').value = parseInt(selectedEl.dataset.tableRowHeight) || 20;
+    document.getElementById('tableMaxRows').value = parseInt(selectedEl.dataset.tableMaxRows) || 5;
+    document.getElementById('tableShowHeader').checked = selectedEl.dataset.tableShowHeader !== '0';
+    document.getElementById('tableBorderWidth').value = parseFloat(selectedEl.dataset.tableBorderWidth) || 0.3;
+    renderColumnEditor();
+  } else {
+    tblProps.style.display = 'none';
+  }
 }
 
 function toggleBold() {
@@ -1183,11 +1442,38 @@ function alterarTipoItem() {
   selectedEl.dataset.type = newType;
   selectedEl.classList.toggle('item--date', newType === 'date');
   selectedEl.classList.toggle('item--barcode', newType === 'barcode');
+  selectedEl.classList.toggle('item--table', newType === 'table');
   // Fonte monospace para barcode
   if (newType === 'barcode') {
     selectedEl.style.fontFamily = "'Courier New', Courier, monospace";
   } else {
     selectedEl.style.fontFamily = '';
+  }
+  // Inicializa tabela com colunas padrao se necessario
+  if (newType === 'table' && !selectedEl.dataset.tableColumns) {
+    selectedEl.dataset.tableColumns = JSON.stringify([
+      { label: 'P/N', width: 100, content: 'P/N Instalado', fieldName: 'p097', align: 'left', colspan: 1 },
+      { label: 'S/N', width: 100, content: 'S/N Instalado', fieldName: 'p098', align: 'left', colspan: 1 },
+      { label: 'Mat. Applied', width: 80, content: '', fieldName: 'p099', align: 'left', colspan: 1 }
+    ]);
+    selectedEl.dataset.tableRowHeight = 20;
+    selectedEl.dataset.tableMaxRows = 5;
+    selectedEl.dataset.tableShowHeader = '1';
+    selectedEl.dataset.tableBorderWidth = 0.3;
+    renderTablePreview(selectedEl);
+  }
+  // Mostra/esconde props da tabela
+  const tblProps = document.getElementById('tableProps');
+  tblProps.style.display = newType === 'table' ? 'block' : 'none';
+  if (newType !== 'table') {
+    selectedEl.querySelectorAll('.tbl-preview').forEach(n => n.remove());
+    const span = selectedEl.querySelector('.placed-text');
+    if (!span) {
+      const s = document.createElement('span');
+      s.className = 'placed-text';
+      s.textContent = selectedEl.dataset.text || '';
+      selectedEl.appendChild(s);
+    }
   }
   // Nome do campo sempre visivel
   document.getElementById('fieldNameRow').style.display = 'flex';
@@ -1328,6 +1614,13 @@ function aplicarEdicaoTexto() {
   const span = selectedEl.querySelector('.placed-text');
   if (span) span.textContent = newText;
 
+  // Also update customItems array if this is a custom item
+  const itemId = selectedEl.dataset.id;
+  if (itemId.startsWith('new-')) {
+    const ci = customItems.find(c => c.id === itemId);
+    if (ci) ci.text = newText;
+  }
+
   // Update sidebar item text too
   const dragEl = document.querySelector(`.drag-item[data-id="${selectedEl.dataset.id}"]`);
   if (dragEl) {
@@ -1443,7 +1736,12 @@ function salvar() {
       maxWidth: parseInt(el.dataset.maxWidth) || 0,
       multiline: el.dataset.multiline === '1',
       type: el.dataset.type || 'text',
-      fieldName: el.dataset.fieldName || ''
+      fieldName: el.dataset.fieldName || '',
+      tableColumns: el.dataset.tableColumns ? JSON.parse(el.dataset.tableColumns) : [],
+      tableRowHeight: parseInt(el.dataset.tableRowHeight) || 20,
+      tableMaxRows: parseInt(el.dataset.tableMaxRows) || 5,
+      tableShowHeader: el.dataset.tableShowHeader !== '0',
+      tableBorderWidth: parseFloat(el.dataset.tableBorderWidth) || 0.3
     });
   });
 
@@ -1502,11 +1800,14 @@ function carregarSalvo() {
         const itemField = si.fieldName !== undefined ? si.fieldName : (base ? base.fieldName || '' : '');
         if (si.id.startsWith('new-')) {
           const ci = customItems.find(c => c.id === si.id);
+          const customText = ci ? ci.text : '';
+          const txt = si.text || customText || '';
           if (ci) {
-            criarItem(ci.id, ci.text, si.left, si.top, si.fontSize || 11, si.bold || false, si.maxWidth || 0, si.multiline || false, itemType, itemField);
+            criarItem(ci.id, txt, si.left, si.top, si.fontSize || 11, si.bold || false, si.maxWidth || 0, si.multiline || false, itemType, itemField, si.tableColumns || [], si.tableRowHeight || 20, si.tableMaxRows || 5, si.tableShowHeader !== false, si.tableBorderWidth || 0.3);
           }
-        } else if (base) {
-          criarItem(si.id, text, si.left, si.top, si.fontSize || 11, si.bold || false, si.maxWidth || 0, si.multiline || false, itemType, itemField);
+        } else {
+          // Carrega todos os itens salvos (inclusive copias com sufixo como p01402 etc)
+          criarItem(si.id, text, si.left, si.top, si.fontSize || 11, si.bold || false, si.maxWidth || 0, si.multiline || false, itemType, itemField, si.tableColumns || [], si.tableRowHeight || 20, si.tableMaxRows || 5, si.tableShowHeader !== false, si.tableBorderWidth || 0.3);
         }
       });
 
@@ -1551,6 +1852,104 @@ function limparPagina() {
 }
 
 // ===================================================================
+// COPIAR CAMPOS SELECIONADOS
+// ===================================================================
+function copiarSelecionados() {
+  // Reune os elementos: multi-selecionados (Ctrl+click) ou o selecionado atual
+  let els = [];
+  if (multiSelected.size > 0) {
+    els = [...multiSelected];
+  } else if (selectedEl) {
+    els = [selectedEl];
+  }
+
+  if (els.length === 0) {
+    mostrarToast('Selecione campos (Ctrl+click) antes de copiar');
+    return;
+  }
+
+  // Pede sufixo e deslocamento
+  let sufixo = prompt('Sufixo para os nomes dos campos (ex: 02):', '02');
+  if (!sufixo || sufixo.trim() === '') return;
+  sufixo = sufixo.trim();
+
+  let offsetY = parseInt(prompt('Deslocamento vertical em px (positivo = para baixo):', '200'));
+  if (isNaN(offsetY)) offsetY = 200;
+
+  let offsetX = parseInt(prompt('Deslocamento horizontal em px (0 = mesma coluna):', '0'));
+  if (isNaN(offsetX)) offsetX = 0;
+
+  // Determina o maior top original para o deslocamento ser a partir do grupo copiado
+  const origTops = els.map(el => parseFloat(el.style.top));
+  const refTop = Math.min(...origTops);
+
+  const novosIds = [];
+
+  els.forEach(el => {
+    const id = el.dataset.id;
+    const text = el.dataset.text || el.querySelector('.placed-text')?.textContent || '';
+    const left = Math.round(parseFloat(el.style.left));
+    const top = Math.round(parseFloat(el.style.top));
+    const fontSize = parseInt(el.dataset.fontSize) || 11;
+    const bold = el.dataset.bold === '1';
+    const maxWidth = parseInt(el.dataset.maxWidth) || 0;
+    const multiline = el.dataset.multiline === '1';
+    const type = el.dataset.type || 'text';
+    const fieldName = el.dataset.fieldName || '';
+    const tblCols = el.dataset.tableColumns ? JSON.parse(el.dataset.tableColumns) : [];
+    const tblRowH = parseInt(el.dataset.tableRowHeight) || 20;
+    const tblMaxRows = parseInt(el.dataset.tableMaxRows) || 5;
+    const tblShowHeader = el.dataset.tableShowHeader !== '0';
+    const tblBorderWidth = parseFloat(el.dataset.tableBorderWidth) || 0.3;
+
+    // Gera novo ID como custom item (prefixo new-)
+    customItemCounter++;
+    const novoId = 'new-' + customItemCounter;
+
+    // Registra nos customItems para salvar/recarregar corretamente
+    const sufixoLabel = sufixo ? (' (' + sufixo + ')') : '';
+    const customLabel = (fieldName || id) + sufixoLabel;
+    customItems.push({ id: novoId, text: customLabel });
+
+    // Novo texto (preserva o original)
+    let novoText = text;
+
+    // Cria o item no canvas
+    criarItem(
+      novoId, novoText,
+      left + offsetX, top + offsetY,
+      fontSize, bold, maxWidth, multiline, type, customLabel,
+      tblCols, tblRowH, tblMaxRows, tblShowHeader, tblBorderWidth
+    );
+
+    novosIds.push(novoId);
+  });
+
+  // Limpa selecao anterior e seleciona os novos itens
+  clearMultiSelect();
+  if (selectedEl) { selectedEl.classList.remove('selected'); selectedEl = null; }
+
+  // Seleciona os itens copiados para facilitar reposicionamento
+  novosIds.forEach((nid, i) => {
+    const novoEl = document.querySelector(`.placed-item[data-id="${nid}"]`);
+    if (novoEl) {
+      if (i === 0) {
+        selecionarItem(novoEl);
+      } else {
+        multiSelected.add(novoEl);
+        novoEl.classList.add('multi-sel');
+      }
+    }
+  });
+
+  iniciarSidebar();
+  atualizarPropsPanel();
+  atualizarStatus();
+  marcarAlterado();
+  mostrarToast(`${els.length} campo(s) copiado(s) como "${sufixo}" (offset Y: ${offsetY}px)`);
+}
+
+// ===================================================================
 // EXPORTAR CSS
 // ===================================================================
 function exportarCSS() {
@@ -1569,7 +1968,11 @@ function exportarCSS() {
       maxWidth: parseInt(el.dataset.maxWidth) || 0,
       multiline: el.dataset.multiline === '1',
       type: el.dataset.type || 'text',
-      fieldName: el.dataset.fieldName || ''
+      fieldName: el.dataset.fieldName || '',
+      tableColumns: el.dataset.tableColumns ? JSON.parse(el.dataset.tableColumns) : [],
+      tableRowHeight: parseInt(el.dataset.tableRowHeight) || 20,
+      tableMaxRows: parseInt(el.dataset.tableMaxRows) || 5,
+      tableShowHeader: el.dataset.tableShowHeader !== '0'
     });
   });
 
@@ -1668,7 +2071,12 @@ function exportarTCPDF() {
       maxWidth: parseInt(el.dataset.maxWidth) || 0,
       multiline: el.dataset.multiline === '1',
       type: el.dataset.type || 'text',
-      fieldName: el.dataset.fieldName || ''
+      fieldName: el.dataset.fieldName || '',
+      tableColumns: el.dataset.tableColumns ? JSON.parse(el.dataset.tableColumns) : [],
+      tableRowHeight: parseInt(el.dataset.tableRowHeight) || 20,
+      tableMaxRows: parseInt(el.dataset.tableMaxRows) || 5,
+      tableShowHeader: el.dataset.tableShowHeader !== '0',
+      tableBorderWidth: parseFloat(el.dataset.tableBorderWidth) || 0.3
     });
   });
 
@@ -1682,29 +2090,25 @@ function exportarTCPDF() {
   const pxToMm = 215.9 / 816;
   const pxToPt = 0.75;
 
-  // Agrupa por fonte pra minimizar SetFont
-  const groups = {};
-  items.forEach(item => {
-    const key = item.fontSize + '|' + (item.bold ? 'B' : '');
-    if (!groups[key]) groups[key] = [];
-    groups[key].push(item);
-  });
+  // Gera o código na ordem dos itens (não agrupa por fonte)
+  // Troca SetFont apenas quando a fonte muda
+  let php = '<' + '?php\n\nfunction mGerarPagina' + PAGE_NUM + 'XXX($pdf) {\n    // =========================================================\n    // Pagina ' + PAGE_NUM + ' — gerada do editor em ' + new Date().toLocaleString('pt-BR') + '\n    // Dimensoes LETTER: 215,9 x 279,4 mm\n    // =========================================================\n\n    $pdf->AddPage();\n\n    // --- Imagem de fundo ---\n    $imgFundo = \'../_lib/img/grp__NM__bg__NM__' + PAGE_IMAGE + '\';\n    $pdf->Image($imgFundo, 0, 0, 215.9, 279.4, \'PNG\', \'\', \'\', false, 300, \'\', false, false, 0);\n    $pdf->setPageMark();\n\n';
 
-  let php = '<' + '?php\n\nfunction mGerarPagina' + PAGE_NUM + 'XXX($pdf) {\n    // =========================================================\n    // Pagina ' + PAGE_NUM + ' — gerada do editor em ' + new Date().toLocaleString('pt-BR') + '\n    // Dimensoes LETTER: 215,9 x 279,4 mm\n    // =========================================================\n\n    $pdf->AddPage();\n\n    // --- Imagem de fundo ---\n    $imgFundo = \'../_lib/img/grp__NM__bg__NM__' + PAGE_IMAGE + '\';\n    $pdf->Image($imgFundo, 0, 0, 215.9, 279.4, \'PNG\', \'\', \'\', false, 300, \'\', false, false, 0);\n\n';
-
-  Object.keys(groups).sort().forEach(key => {
-    const [fs, b] = key.split('|');
+  let lastFont = '';
+  items.forEach((item) => {
+    const fontKey = item.fontSize + '|' + (item.bold ? 'B' : '');
+    const [fs, b] = fontKey.split('|');
     const pts = Math.round(parseFloat(fs) * pxToPt * 100) / 100;
     const style = b === 'B' ? "'B'" : "''";
+    if (fontKey !== lastFont) {
+      lastFont = fontKey;
+      php += `    // Fonte: ${fs}px ${b ? 'bold' : 'normal'} → ${pts}pt\n`;
+      php += `    \$pdf->SetFont('helvetica', ${style}, ${pts});\n`;
+    }
 
-    php += `    // Fonte: ${fs}px ${b ? 'bold' : 'normal'} → ${pts}pt
-    \$pdf->SetFont('helvetica', ${style}, ${pts});
-`;
-
-    groups[key].forEach(item => {
-      const mmX = Math.round(item.left * pxToMm * 100) / 100;
-      const mmY = Math.round(item.top * pxToMm * 100) / 100;
-      const escaped = item.text
+    const mmX = Math.round(item.left * pxToMm * 100) / 100;
+    const mmY = Math.round(item.top * pxToMm * 100) / 100;
+    const escaped = item.text
         .replace(/\$/g, '\\$')
         .replace(/"/g, '\\"')
         .replace(/'/g, "\\'");
@@ -1727,12 +2131,58 @@ function exportarTCPDF() {
         const mmW = Math.round(item.maxWidth * pxToMm * 100) / 100;
         const fn = item.fieldName || '-';
         php += `    \$pdf->MultiCell(${mmW}, 0, '${escaped}', 0, 'L', false, 1, ${mmX}, ${mmY}, true); // ${item.id} - ${fn} - ${escaped} (multilinha)\n`;
+      } else if (item.type === 'table') {
+        const rowHmM = Math.round(item.tableRowHeight * pxToMm * 100) / 100;
+        const fn = item.fieldName || 'Tabela';
+        const cols = item.tableColumns || [];
+        const showHeader = item.tableShowHeader !== false;
+        const colMmArr = cols.map(c => Math.round(c.width * pxToMm * 100) / 100);
+        const totalMm = colMmArr.reduce((a, b) => a + b, 0);
+        php += `    // Tabela: ${fn} (${cols.length} colunas, ${item.tableMaxRows} linhas)\n`;
+        php += `    \$tblHtml = '<table border="1" cellpadding="2" cellspacing="0" style="width:${totalMm}mm;">';\n`;
+        if (showHeader) {
+          php += `    \$tblHtml .= '<tr>';\n`;
+          let skip = 0;
+          cols.forEach((c, ci) => {
+            if (skip > 0) { skip--; return; }
+            const lbl = (c.label || '').replace(/'/g, "\\'").replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            const cfn = (c.fieldName || '').replace(/'/g, "\\'");
+            const pct = Math.round(colMmArr[ci] / totalMm * 10000) / 100;
+            const al = c.align || 'left';
+            const cs = parseInt(c.colspan) || 1;
+            if (cs > 1) {
+              let totalPct = pct;
+              for (let sj = 1; sj < cs && ci + sj < cols.length; sj++) {
+                const spct = Math.round(colMmArr[ci + sj] / totalMm * 10000) / 100;
+                totalPct += spct;
+              }
+              skip = cs - 1;
+              php += `    \$tblHtml .= '<th colspan="${cs}" width="${Math.round(totalPct * 100) / 100}%" style="text-align:${al};font-weight:bold;">${lbl}</th>';\n`;
+            } else {
+              php += `    \$tblHtml .= '<th width="${pct}%" style="text-align:${al};font-weight:bold;">${lbl}</th>';\n`;
+            }
+          });
+          php += `    \$tblHtml .= '</tr>';\n`;
+        }
+        php += `    for (\$i = 0; \$i < ${item.tableMaxRows}; \$i++) {\n`;
+        php += `        \$tblHtml .= '<tr>';\n`;
+        cols.forEach((c, ci) => {
+          const content = (c.content || '').replace(/'/g, "\\'").replace(/</g, '&lt;').replace(/>/g, '&gt;');
+          const cfn = (c.fieldName || '').replace(/'/g, "\\'");
+          const pct = Math.round(colMmArr[ci] / totalMm * 10000) / 100;
+          const al = c.align || 'left';
+          php += `        \$tblHtml .= '<td width="${pct}%" style="text-align:${al};">${content}</td>';\n`;
+        });
+        php += `        \$tblHtml .= '</tr>';\n`;
+        php += `    }\n`;
+        php += `    \$tblHtml .= '</table>';\n`;
+        php += `    \$pdf->SetXY(${mmX}, ${mmY});\n`;
+        php += `    \$pdf->writeHTML(\$tblHtml, true, false, false, false, '');\n`;
       } else {
         const fn = item.fieldName || '-';
         php += `    \$pdf->Text(${mmX}, ${mmY}, '${escaped}'); // ${item.id} - ${fn} - ${escaped}\n`;
       }
     });
-  });
 
   php += `}
 `;
@@ -1750,6 +2200,42 @@ function exportarTCPDF() {
 
   btn.textContent = orig;
   mostrarToast(`TCPDF exportado (${items.length} itens)`);
+}
+
+// ===================================================================
+// TROCAR IMAGEM DE FUNDO
+// ===================================================================
+function trocarImagem(nome) {
+  if (!nome) return;
+  PAGE_IMAGE = nome;
+  // Atualiza o fundo do canvas
+  document.getElementById('letter').style.backgroundImage = "url('assets/images/" + nome + "')";
+  // Atualiza o nome na barra
+  document.querySelector('.topbar .title').textContent =
+    document.querySelector('.topbar .title').textContent.replace(/ — .*/, ' — ' + nome);
+  // Salva a escolha via AJAX
+  fetch('api/save_image.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ page: PAGE_NUM, image: nome })
+  }).then(r => r.json()).then(d => {
+    if (d.success) mostrarToast('Imagem alterada: ' + nome);
+  }).catch(() => {});
+}
+
+// ===================================================================
+// INICIAR DROPDOWN DE IMAGENS
+// ===================================================================
+function iniciarImageSelect() {
+  const sel = document.getElementById('imageSelect');
+  sel.innerHTML = '';
+  AVAIABLE_IMAGES.forEach(img => {
+    const opt = document.createElement('option');
+    opt.value = img;
+    opt.textContent = img;
+    if (img === PAGE_IMAGE) opt.selected = true;
+    sel.appendChild(opt);
+  });
 }
 
 // ===================================================================
@@ -2000,6 +2486,7 @@ window.addEventListener('beforeunload', (e) => {
 // ===================================================================
 aplicarZoom();
 iniciarSidebar();
+iniciarImageSelect();
 carregarSalvo();
 </script>
 </body>

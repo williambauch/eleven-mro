@@ -1,7 +1,7 @@
 {
     "1": {
         "title": "Página 1",
-        "image": "page1.png",
+        "image": "pack_page_1_jic_trim.png",
         "items": [
             {
                 "id": "p001",
@@ -938,7 +938,7 @@
     },
     "2": {
         "title": "Página 2",
-        "image": "page2.png",
+        "image": "pack_page_2_jec_trim_tabela.png",
         "items": [
             {
                 "id": "p001",
@@ -1168,7 +1168,7 @@
     },
     "3": {
         "title": "Página 3",
-        "image": "page3.png",
+        "image": "pack_page_3_jmc_trim_tabela.png",
         "items": [
             {
                 "id": "p001",
@@ -1524,7 +1524,7 @@
     },
     "4": {
         "title": "Página 4",
-        "image": "page4.png",
+        "image": "pack_page_4_shift_trim.png",
         "items": [
             {
                 "id": "p001",
@@ -1922,7 +1922,7 @@
     },
     "5": {
         "title": "Página 5",
-        "image": "page5.png",
+        "image": "pack_page_5_calibrated_trim.png",
         "items": [
             {
                 "id": "p001",

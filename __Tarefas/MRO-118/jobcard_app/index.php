@@ -80,6 +80,14 @@ require_once __DIR__ . '/pages_config.php';
   <?php foreach ($PAGES as $num => $page): 
     $saveFile = __DIR__ . '/assets/data/page' . $num . '.json';
     $saved = file_exists($saveFile);
+    // Verifica se a imagem foi alterada via editor
+    $dataFilePath = __DIR__ . '/pages_data.json';
+    if (file_exists($dataFilePath)) {
+        $dataAll = json_decode(file_get_contents($dataFilePath), true);
+        if (is_array($dataAll) && isset($dataAll[$num]['image'])) {
+            $page['image'] = $dataAll[$num]['image'];
+        }
+    }
   ?>
   <a class="page-card" href="editor.php?page=<?= $num ?>">
     <div class="thumb" style="background-image: url('assets/images/<?= htmlspecialchars($page['image']) ?>');"></div>
