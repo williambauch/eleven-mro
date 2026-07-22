@@ -135,7 +135,11 @@
             "approve": true,
             "matchCommandLine": true
         },
-        "%": true
+        "%": true,
+        "/^python -c \"import pkgutil; mods=\\[m\\.name for m in pkgutil\\.iter_modules\\(\\) if m\\.name\\.lower\\(\\)\\.startswith\\(\\('pypdf','pyPdf','pdf','fitz'\\)\\)\\]; print\\(mods\\)\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
     },
     "favorites.resources": [
         {
@@ -152,6 +156,18 @@
         },
         {
             "filePath": "Timesheet\\ctrl_abertura_nrc",
+            "group": "Default"
+        },
+        {
+            "filePath": "__Tarefas\\MRO-118",
+            "group": "Default"
+        },
+        {
+            "filePath": "reports\\blank_pdf_pack_jic",
+            "group": "Default"
+        },
+        {
+            "filePath": "__Tarefas\\MRO-118\\jobcard_app",
             "group": "Default"
         }
     ]

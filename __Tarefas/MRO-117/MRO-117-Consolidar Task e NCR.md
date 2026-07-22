@@ -52,27 +52,8 @@ Atenção aos Privilégios: Garantir que a unificação não quebre as permissõ
 - `grid_public_mro_nrc`: Administrador, COMERCIAL, COORDENADOR, ENGENHARIA, Group Default, MECANICO, PLANEJAMENTO, PROGRAMACAO, SUPERVISOR
 - `grid_public_mro_tasks`: Administrador, COMERCIAL, COORDENADOR, ENGENHARIA, Group Default, **ADD MECANICO** ✅, PLANEJAMENTO, PROGRAMACAO, SUPERVISOR
 
+
 ## Sumário das alterações implementadas - WILLIAM BAUCH
-
-### `Security/sec_menu` — Remoção do item EAP/WBS
-
-**Motivo:** A aplicação `grid_public_mro_wbs` será refatorada, portanto o item "Estrutura Analítica (EAP/WBS)" foi removido do menu.
-
-- Item removido do `menu_tree.md`: `Planejamento e Engenharia > Estrutura Analítica (EAP/WBS) (grid_public_mro_wbs)`
-- Acesso à `grid_public_mro_wbs` removido de todos os grupos no banco (`sec_groups_apps`)
-
--- =============================================
--- Remove acesso a grid_public_mro_wbs
--- Descricao: Revogar acesso ao EAP/WBS de todos os grupos
--- =============================================
-UPDATE sec_groups_apps
-SET priv_access = NULL,
-    priv_insert = NULL,
-    priv_delete = NULL,
-    priv_update = NULL,
-    priv_export = NULL,
-    priv_print = NULL
-WHERE app_name = 'grid_public_mro_wbs';
 
 ### `Security/sec_form_sec_apps` — Campo `grupos_acesso` (label)
 
@@ -190,6 +171,12 @@ if (empty({root_task_id}) || {root_task_id} == 0) {
 **`events/onLoad`**
 - Adicionada chamada `mExibirCardStatus();` logo após a tradução dos grupos de acesso
 - O card só aparece para NRC (validação interna no método)
+
+### Indicador visual de tipo (`{routine_type}`)
+
+**`events/onLoad`**
+- Campo `{routine_type}` preenchido dinamicamente com `"Rotina Padrão"` ou `"Não Rotina (RN)"` conforme o valor de `{is_nrc}`
+- Exibe visualmente no topo do formulário qual o tipo do registro atual, auxiliando na identificação rápida
 
 ---
 
@@ -322,11 +309,4 @@ ON CONFLICT (app_name, group_id) DO UPDATE SET
 | `PENDING_PROG` + dentro do CAP | → `RELEASED` | `AUTO_APPROVE` |
 | `PENDING_OA` + dentro do CAP | → `RELEASED` | `AUTO_APPROVE` |
 
----
 
-### Migration 04 — Correção da referência de log
-
-**Motivo:** O `mro_engine.php` fazia INSERT em `mro_task_history`, tabela que não existia no banco. Optamos por usar `mro_nrc_approval_log` que já existia e já estava populada pelos botões manuais.
-
-**O que faz:**
-- Todo registro do motor O&A passa a usar `mro_nrc_approval_log` com `user_login = 'mro_engine'`
