@@ -2,7 +2,7 @@
 
 function mGerarPagina2XXX($pdf) {
     // =========================================================
-    // Pagina 2 — gerada do editor em 22/07/2026, 11:39:49
+    // Pagina 2 — gerada do editor em 22/07/2026, 15:58:25
     // Dimensoes LETTER: 215,9 x 279,4 mm
     // =========================================================
 
@@ -13,13 +13,6 @@ function mGerarPagina2XXX($pdf) {
     $pdf->Image($imgFundo, 0, 0, 215.9, 279.4, 'PNG', '', '', false, 300, '', false, false, 0);
     $pdf->setPageMark();
 
-    // Fonte: 11px normal → 8.25pt
-    $pdf->SetFont('helvetica', '', 8.25);
-    $pdf->Text(47.89, 50.8, '23'); // p021 - ATA - 23
-    $pdf->Text(60.85, 50.8, 'A320-214'); // p022 - A/C Type - A320-214
-    $pdf->Text(82.02, 50.8, 'PR-MLD'); // p023 - A/C Reg - PR-MLD
-    $pdf->Text(101.07, 50.8, 'A320'); // p024 - Company - A320
-    $pdf->Text(121.71, 50.8, '38.25'); // p025 - A/C Work Order - 38.25
     // Fonte: 12px bold → 9pt
     $pdf->SetFont('helvetica', 'B', 9);
     $pdf->Text(163.25, 23.02, 'N190036001'); // p009 - Card Code - N190036001
@@ -28,7 +21,12 @@ function mGerarPagina2XXX($pdf) {
     $pdf->write1DBarcode('N000000000000001900360002901000000A4E001', 'C39', 3.18, 26.72, 100, 5, null, array('text' => true), 'N'); // p010 - JIC Work Order - N000000000000001900360002901000000A4E001 (barcode)
     // Fonte: 11px normal → 8.25pt
     $pdf->SetFont('helvetica', '', 8.25);
-    $pdf->Text(3.18, 50.8, '190036'); // p020 - Origin Document - 190036
+    $pdf->Text(0.79, 50.8, '190036'); // p020 - Origin Document - 190036
+    $pdf->Text(47.36, 50.8, '23'); // p021 - ATA - 23
+    $pdf->Text(59.27, 50.8, 'A320-214'); // p022 - A/C Type - A320-214
+    $pdf->Text(78.58, 50.8, 'PR-MLD'); // p023 - A/C Reg - PR-MLD
+    $pdf->Text(97.9, 50.8, 'A320'); // p024 - Company - A320
+    $pdf->Text(120.12, 50.8, '38.25'); // p025 - A/C Work Order - 38.25
     // Fonte: 11px bold → 8.25pt
     $pdf->SetFont('helvetica', 'B', 8.25);
     // Tabela: Tabela Equipments e Tools (3 colunas, 5 linhas)

@@ -2,7 +2,7 @@
 
 function mGerarPagina1XXX($pdf) {
     // =========================================================
-    // Pagina 1 — gerada do editor em 22/07/2026, 11:38:51
+    // Pagina 1 — gerada do editor em 22/07/2026, 13:56:43
     // Dimensoes LETTER: 215,9 x 279,4 mm
     // =========================================================
 
@@ -57,7 +57,6 @@ function mGerarPagina1XXX($pdf) {
     $pdf->SetFont('helvetica', '', 8.25);
     $pdf->Text(162.72, 114.04, 'PALOMA GODOY DA SILVA SANT'); // p053 - Originado por - PALOMA GODOY DA SILVA SANT
     $pdf->Text(162.72, 102.39, 'Wing LH'); // p050 - Area/Zona - Wing LH
-    $pdf->MultiCell(45.51, 0, '1 A4 -- 2 h', 0, 'L', false, 1, 162.72, 73.82, true); // p042 - Especialidade - 1 A4 -- 2 h (multilinha)
     $pdf->Text(162.72, 61.65, '3601'); // p039 - Serial Number - 3601
     $pdf->Text(162.72, 50.01, 'A320-214'); // p036 - Tipo de Aeronave - A320-214
     // Fonte: 10px normal → 7.5pt
@@ -119,4 +118,7 @@ function mGerarPagina1XXX($pdf) {
     $pdf->SetFillColor(255, 255, 255);
     $pdf->SetXY(183.09, 214.4);
     $pdf->Cell(18, 3.7, '10/11/2026', 0, 0, 'L', true, '', 0, false, 'T', 'T'); // new-3 - Data - 10/11/2026 (date)
+    // Fonte: 11px normal → 8.25pt
+    $pdf->SetFont('helvetica', '', 8.25);
+    $pdf->MultiCell(52.12, 0, '1 A4 -- 2 h', 0, 'L', false, 1, 162.72, 73.82, true); // p042 - Especialidade - 1 A4 -- 2 h (multilinha)
 }

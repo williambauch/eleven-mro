@@ -2,7 +2,7 @@
 
 function mGerarPagina3XXX($pdf) {
     // =========================================================
-    // Pagina 3 — gerada do editor em 22/07/2026, 11:40:33
+    // Pagina 3 — gerada do editor em 22/07/2026, 16:03:48
     // Dimensoes LETTER: 215,9 x 279,4 mm
     // =========================================================
 
@@ -16,17 +16,17 @@ function mGerarPagina3XXX($pdf) {
     // Fonte: 12px bold → 9pt
     $pdf->SetFont('helvetica', 'B', 9);
     $pdf->Text(163.25, 23.02, 'N190036001'); // p010 - Card Code - N190036001
-    // Fonte: 11px normal → 8.25pt
-    $pdf->SetFont('helvetica', '', 8.25);
-    $pdf->Text(3.18, 48.15, '190036'); // p021 - Origin Document - 190036
-    $pdf->Text(49.21, 48.15, '23'); // p022 - ATA - 23
-    $pdf->Text(61.91, 48.15, 'A320-214'); // p023 - A/C Type - A320-214
-    $pdf->Text(81.49, 48.15, 'PR-MLD'); // p024 - A/C Reg - PR-MLD
-    $pdf->Text(100.01, 48.15, 'A320'); // p025 - Company - A320
-    $pdf->Text(122.5, 48.15, '38.25'); // p026 - A/C Work Order - 38.25
     // Fonte: 15px bold → 11.25pt
     $pdf->SetFont('helvetica', 'B', 11.25);
     $pdf->write1DBarcode('N000000000000001900360002901000000A4M001', 'C39', 3.18, 26.72, 100, 5, null, array('text' => true), 'N'); // p011 - JIC Work Order - N000000000000001900360002901000000A4M001 (barcode)
+    // Fonte: 11px normal → 8.25pt
+    $pdf->SetFont('helvetica', '', 8.25);
+    $pdf->Text(1.59, 48.15, '190036'); // p021 - Origin Document - 190036
+    $pdf->Text(46.83, 48.15, '23'); // p022 - ATA - 23
+    $pdf->Text(59.53, 48.15, 'A320-214'); // p023 - A/C Type - A320-214
+    $pdf->Text(78.58, 48.15, 'PR-MLD'); // p024 - A/C Reg - PR-MLD
+    $pdf->Text(97.9, 48.15, 'A320'); // p025 - Company - A320
+    $pdf->Text(120.39, 48.15, '38.25'); // p026 - A/C Work Order - 38.25
     // Fonte: 11px bold → 8.25pt
     $pdf->SetFont('helvetica', 'B', 8.25);
     // Tabela: tabela Materials (9 colunas, 5 linhas)
@@ -56,7 +56,7 @@ function mGerarPagina3XXX($pdf) {
         $tblHtml .= '</tr>';
     }
     $tblHtml .= '</table>';
-    $pdf->SetXY(1.85, 61.12);
+    $pdf->SetXY(1.85, 61.91);
     $pdf->writeHTML($tblHtml, true, false, false, false, '');
     // Fonte: 11px normal → 8.25pt
     $pdf->SetFont('helvetica', '', 8.25);

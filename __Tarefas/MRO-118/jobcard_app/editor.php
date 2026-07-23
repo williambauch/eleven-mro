@@ -2080,6 +2080,9 @@ function exportarTCPDF() {
     });
   });
 
+  // Ordena por posicao: Y (top→bottom) depois X (left→right)
+  items.sort((a, b) => a.top - b.top || a.left - b.left);
+
   if (items.length === 0) {
     mostrarToast('Nenhum item para exportar');
     btn.textContent = orig;
