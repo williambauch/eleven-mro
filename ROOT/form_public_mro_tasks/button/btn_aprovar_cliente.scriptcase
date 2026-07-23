@@ -1,0 +1,18 @@
+<?php
+
+// btn_aprovar_cliente
+
+$id = {task_id};
+$user = [usr_login]; // Variável global de login do Scriptcase
+
+// 1. Atualiza o status
+sc_exec_sql("UPDATE mro_tasks SET status_code = 'RELEASED' WHERE task_id = $id");
+
+// 2. Grava o Audit Log (Assinatura Digital)
+sc_exec_sql("INSERT INTO mro_nrc_approval_log (task_id, action_taken, user_login) VALUES ($id, 'APPROVED_BY_CLIENT', '$user')");
+
+// 3. Alerta e recarrega
+//sc_alert("NR Aprovada com sucesso!");
+//sc_exit(ref); // Recarrega a tela
+sc_commit_trans();
+sc_redir(form_public_mro_tasks, task_id=$id);

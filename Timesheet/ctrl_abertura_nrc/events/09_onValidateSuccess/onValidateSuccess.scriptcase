@@ -108,5 +108,7 @@ if (!$is_backoffice) {
     }
 }
 
+
+
     sc_commit_trans();
     sc_redir(form_public_mro_tasks, task_id=$nova_nrc_id, "_parent");

@@ -1,0 +1,16 @@
+<?php
+
+// btn_enviar_cliente
+
+$id = {task_id};
+$user = [usr_login]; // Variável global de login do Scriptcase
+
+// 1. Atualiza o status
+sc_exec_sql("UPDATE mro_tasks SET status_code = 'PENDING_OA' WHERE task_id = $id");
+
+// 2. Grava o Audit Log (Assinatura Digital)
+sc_exec_sql("INSERT INTO mro_nrc_approval_log (task_id, action_taken, user_login, remarks) VALUES ($id, 'SENT_TO_CLIENT', '$user', 'Renegociação feita com o cliente')");
+
+// 3. Commit e redireciona
+sc_commit_trans();
+sc_redir(form_public_mro_tasks, task_id=$id);

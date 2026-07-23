@@ -1,0 +1,43 @@
+<?php
+
+// 1. Evita duplo processamento
+    if(window.mroTimerInterval) {
+        clearInterval(window.mroTimerInterval);
+    }
+
+    // 2. Acha a tela
+    var display = document.getElementById('mro_timer');
+    if(!display) return;
+
+    // O PULO DO GATO: Usa o que veio do PHP, ou o que está no HTML, ou Zero.
+    var secIniciais = parseInt(segundosAjax) || parseInt(display.getAttribute('data-sec')) || 0;
+
+    // Atualiza o HTML imediatamente para o usuário já ver o tempo pular
+    display.setAttribute('data-sec', secIniciais);
+
+    // 3. Define o Ponto Zero do tablet (Tempo Delta)
+    window.mroBaselineTime = Date.now() - (secIniciais * 1000);
+
+    // 4. Liga o Motor Blindado
+    window.mroTimerInterval = setInterval(function() {
+        var relogio = document.getElementById('mro_timer');
+        
+        // Se sumiu, aguarda
+        if(!relogio) return;
+
+        // Calcula diferença real
+        var agora = Date.now();
+        var secReais = Math.floor((agora - window.mroBaselineTime) / 1000);
+        
+        // Matemática
+        var h = Math.floor(secReais / 3600);
+        var m = Math.floor((secReais % 3600) / 60);
+        var s = Math.floor(secReais % 60);
+        
+        h = h < 10 ? '0' + h : h;
+        m = m < 10 ? '0' + m : m;
+        s = s < 10 ? '0' + s : s;
+        
+        // Atualiza
+        relogio.innerHTML = '<i class="fas fa-stopwatch"></i> ' + h + ':' + m + ':' + s;
+    }, 1000);

@@ -1,0 +1,13 @@
+select
+    material_id,
+    part_number,
+    description,
+    unit_measure,
+    is_consumable,
+    unit_cost,
+    product_code,
+    stock_location,
+    stock_balance,
+    is_blocking_task
+from
+    public.mro_materials

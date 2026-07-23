@@ -1,0 +1,95 @@
+<?php
+
+$emp_id = [usr_employee_id];
+
+// 1. Verifica se existe QUALQUER tarefa deste mecânico em progresso
+$sql_ativa = "SELECT assignment_id, timesheet_id FROM mro_timesheet 
+              WHERE employee_id = $emp_id 
+              AND status = 'IN_PROGRESS' LIMIT 1";
+sc_lookup(ds_ativa, $sql_ativa);
+
+if (!empty({ds_ativa})) {
+    $tarefa_aberta_id = {ds_ativa[0][0]};
+    $id_ts = {ds_ativa[0][1]};
+    
+    // Proteção: Só exige pausa se a tarefa rodando for DIFERENTE da que ele clicou
+    if ($tarefa_aberta_id != {assignment_id}) {
+        sc_ajax_message("Você já possui a tarefa ID $tarefa_aberta_id em andamento. É obrigatório pausá-la antes de iniciar uma nova.", "Conflito de Atividades", "timeout=3000");
+        
+        // Abre o controle de pausa passando o ID da tarefa que precisa ser interrompida
+        sc_redir('control_pause_task', glo_timesheet_id=$id_ts;glo_assignment_id=$tarefa_aberta_id;glo_assignment_id_sel={assignment_id}, 'modal','', '600', '500');
+        
+        return; // IMPORTANTE: Interrompe o script para não iniciar a nova tarefa por baixo do pano
+    }
+}
+
+// 2. MRO-115: Verifica se a tarefa esta bloqueada por falta de material
+$sql_block = "SELECT t.is_blocked_material
+              FROM mro_tasks t
+              JOIN mro_task_assignments ta ON ta.task_id = t.task_id
+              WHERE ta.assignment_id = {assignment_id}";
+sc_lookup(ds_block, $sql_block);
+
+if (!empty({ds_block}) && ({ds_block[0][0]} == 't' || {ds_block[0][0]} == 'true' || {ds_block[0][0]} == 1)) {
+    sc_error_message("Tarefa bloqueada por falta de material. Resolva o bloqueio antes de iniciar.");
+    sc_error_exit();
+}
+
+// =================================================================================
+// 3. INTELIGÊNCIA DE RETOMADA (RESUME) VS INÍCIO (START)
+// =================================================================================
+
+// Verifica o status atual da atribuição do mecânico
+$sql_status = "SELECT status FROM mro_task_assignments WHERE assignment_id = {assignment_id}";
+sc_lookup(ds_status, $sql_status);
+$status_atual_tarefa = (!empty({ds_status})) ? {ds_status[0][0]} : 'NOT_STARTED';
+
+// Define o tipo de evento para a auditoria e a mensagem final
+$tipo_evento = ($status_atual_tarefa == 'PAUSED') ? 'RESUME' : 'START';
+
+// Cria a nova sessão de trabalho (um novo "chunk" de tempo)
+$sql_ts = "INSERT INTO mro_timesheet (assignment_id, employee_id, appointment_date, start_time, status) 
+           VALUES ({assignment_id}, $emp_id, CURRENT_DATE, CURRENT_TIME, 'IN_PROGRESS')
+           RETURNING timesheet_id";
+
+sc_lookup(rs_novo_id, $sql_ts);
+
+$id_ts = 0;
+if (!empty({rs_novo_id[0][0]})) {
+    $id_ts = {rs_novo_id[0][0]};
+}
+
+[glo_timesheet_id] = $id_ts; // Guarda na sessão
+
+// Atualiza o status do Assignment para Em Andamento
+sc_exec_sql("UPDATE mro_task_assignments SET status = 'IN_PROGRESS' WHERE assignment_id = {assignment_id}");
+
+// Grava auditoria com o evento correto (START ou RESUME)
+sc_exec_sql("INSERT INTO mro_assignment_events (assignment_id, timesheet_id, event_type, performed_by_id) 
+             VALUES ({assignment_id}, $id_ts, '$tipo_evento', $emp_id)");
+
+// =================================================================================
+// CÁLCULO DE TEMPO ACUMULADO (Para mandar pro JavaScript)
+// =================================================================================
+$sql_tempo = "SELECT COALESCE(SUM(EXTRACT(EPOCH FROM (end_time - start_time))), 0) 
+              FROM mro_timesheet 
+              WHERE assignment_id = {assignment_id} 
+              AND end_time IS NOT NULL"; // Pega só o que já foi fechado/pausado
+
+sc_lookup(rs_tempo, $sql_tempo);
+$segundos_acumulados = (!empty({rs_tempo[0][0]})) ? round({rs_tempo[0][0]}) : 0;
+
+// =================================================================================
+// DISPARO DO CRONÔMETRO
+// =================================================================================
+
+// Atualiza a tela (muda botão, status, etc)
+{status_code} = 'IN_PROGRESS';
+sc_ajax_javascript('nm_atualiza', array('alterar'));
+
+// A MÁGICA: Executa o método JavaScript
+sc_ajax_javascript('iniciar_relogio_mro');
+
+// Mensagem contextualizada para o mecânico
+$msg_sucesso = ($tipo_evento == 'RESUME') ? "Atividade Retomada! Cronômetro voltou a rodar." : "Atividade Iniciada! Cronômetro rodando.";
+sc_ajax_message($msg_sucesso, "Sucesso", "timeout=2000");

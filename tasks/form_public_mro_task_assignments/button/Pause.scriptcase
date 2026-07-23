@@ -1,0 +1,23 @@
+<?php
+
+$emp_id = [usr_employee_id];
+
+// 1. Verifica se existe QUALQUER tarefa deste mecânico em progresso
+sc_lookup(ds_ativa, "SELECT assignment_id,timesheet_id FROM mro_timesheet 
+                    WHERE employee_id = $emp_id 
+                    AND status = 'IN_PROGRESS' LIMIT 1");
+
+if (!empty({ds_ativa})) {
+    $tarefa_aberta_id = {ds_ativa[0][0]};
+    $id_ts = {ds_ativa[0][1]};
+    
+    
+    // Abre o controle de pausa passando o ID da tarefa que precisa ser interrompida
+    //sc_redir('control_pause_task', glo_timesheet_id=$id_ts;glo_assignment_id=$tarefa_aberta_id, 'modal','', '600', '500');
+    sc_redir('control_pause_task', glo_timesheet_id=$id_ts;glo_assignment_id=$tarefa_aberta_id;glo_assignment_id_sel={assignment_id}, 'modal','', '600', '500');
+
+} else {
+
+    // 2. Avisa o usuário que não tem atividade em progresso
+    sc_ajax_message("Você não possui tarefa em andamento.", "Aviso", "timeout=5000");
+}

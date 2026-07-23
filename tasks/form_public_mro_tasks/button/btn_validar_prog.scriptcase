@@ -1,0 +1,16 @@
+<?php
+
+// btn_validar_prog
+
+$id = {task_id};
+$user = [usr_login]; // Variável global de login do Scriptcase
+
+// 1. A Programação deu o OK. Salva no Log.
+sc_exec_sql("INSERT INTO mro_nrc_approval_log (task_id, action_taken, user_login) VALUES ($id, 'PROGRAMMING_OK', '$user')");
+
+// 2. Chama a função do O&A que criamos (Ela é quem decide o próximo status)
+fn_calcular_oa_nrc({task_id}, {project_id}, false);
+
+//sc_alert("Auditoria de contrato realizada!");
+sc_commit_trans();
+sc_redir(form_public_mro_tasks, task_id={task_id});

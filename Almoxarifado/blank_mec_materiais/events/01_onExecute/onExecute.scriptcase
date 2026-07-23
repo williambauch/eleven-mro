@@ -1,0 +1,252 @@
+<?php
+
+// =========================================================================
+// MRO SYSTEM - MECÂNICO (RETIRADA KANBAN E DEVOLUÇÃO)
+// =========================================================================
+
+// Captura a matrícula do mecânico logado silenciosamente
+$matricula_logada = isset([usr_login]) ? [usr_login] : ''; 
+
+if (isset($_POST['action_mec'])) {
+    header('Content-Type: application/json');
+    $action = $_POST['action_mec'];
+
+    if (empty($matricula_logada)) {
+        echo json_encode(['status' => 'error', 'msg' => 'Sessão inválida. Faça login novamente.']); die();
+    }
+
+    // 1. OBRIGATÓRIO: Identifica o Mecânico e seu Clock-in ATIVO
+    $sql_emp = "SELECT employee_id, full_name FROM mro_employees WHERE employee_registration = '$matricula_logada' OR user_login = '$matricula_logada'";
+    sc_lookup(rs_emp, $sql_emp);
+    if (empty({rs_emp})) {
+        echo json_encode(['status' => 'error', 'msg' => 'Cadastro de mecânico não localizado no RH.']); die();
+    }
+    $emp_id = {rs_emp[0][0]};
+    $emp_name = {rs_emp[0][1]};
+
+    $sql_act = "SELECT ta.task_id, t.task_code 
+                FROM mro_timesheet ts 
+                JOIN mro_task_assignments ta ON ts.assignment_id = ta.assignment_id 
+                JOIN mro_tasks t ON ta.task_id = t.task_id
+                WHERE ts.employee_id = $emp_id AND ts.end_time IS NULL";
+    sc_lookup(rs_act, $sql_act);
+    
+    if (empty({rs_act})) {
+        echo json_encode(['status' => 'error', 'msg' => "ACESSO NEGADO: $emp_name não possui um Clock-In ativo em nenhuma JIC."]); die();
+    }
+    
+    $active_task_id = {rs_act[0][0]};
+    $active_task_code = {rs_act[0][1]};
+
+    // ---------------------------------------------------------
+    // AÇÃO: RETIRADA PELO MECÂNICO (BIPAGEM DO NICHO)
+    // ---------------------------------------------------------
+    if ($action == 'PICKUP') {
+        $nicho = isset($_POST['nicho']) ? trim($_POST['nicho']) : '';
+        if (empty($nicho)) {
+            echo json_encode(['status' => 'error', 'msg' => 'Bipe o QR Code do Nicho.']); die();
+        }
+
+        // Busca o Pacote que está aguardando naquele Nicho
+        $sql_pack = "SELECT package_id, task_id, quantity FROM mro_kanban_packages WHERE niche_code = '$nicho' AND status = 'WAITING'";
+        sc_lookup(rs_pack, $sql_pack);
+        
+        if (empty({rs_pack})) {
+            echo json_encode(['status' => 'error', 'msg' => "O $nicho está vazio ou o pacote já foi retirado."]); die();
+        }
+
+        $pkg_id = {rs_pack[0][0]};
+        $pkg_task_id = {rs_pack[0][1]};
+        $pkg_qtd = {rs_pack[0][2]};
+
+        // TRAVA DE SEGURANÇA: Mecânico só pode pegar pacote se ele for da JIC em que está logado
+        if ($pkg_task_id != $active_task_id) {
+            echo json_encode(['status' => 'error', 'msg' => "BLOQUEIO DE QUALIDADE: Este pacote não pertence à JIC atual ($active_task_code) que você está executando."]); die();
+        }
+
+        // Atualiza o pacote para RETIRADO
+        sc_exec_sql("UPDATE mro_kanban_packages SET status = 'PICKED_UP', picked_by = $emp_id, picked_at = NOW() WHERE package_id = $pkg_id");
+        
+        // Atualiza o status de materiais na JIC indicando que o mecânico pegou as peças
+        sc_exec_sql("UPDATE mro_tasks SET material_status = 'COLLECTED' WHERE task_id = $active_task_id");
+
+        echo json_encode(['status' => 'success', 'msg' => "Sucesso! $pkg_qtd itens retirados do $nicho para a JIC $active_task_code."]); die();
+    }
+
+    // ---------------------------------------------------------
+    // AÇÃO: DEVOLUÇÃO DE SOBRAS
+    // ---------------------------------------------------------
+    if ($action == 'RETURN') {
+        $material  = isset($_POST['material']) ? trim($_POST['material']) : '';
+        $qtd       = isset($_POST['qtd']) ? (int)$_POST['qtd'] : 0;
+
+        if (empty($material) || $qtd <= 0) {
+            echo json_encode(['status' => 'error', 'msg' => 'Informe Material e Quantidade.']); die();
+        }
+
+        // Registra a devolução atrelada à JIC em que ele está operando
+        $sql_ret = "INSERT INTO mro_material_returns (task_id, part_number, quantity, employee_id, created_at) 
+                    VALUES ($active_task_id, '$material', $qtd, $emp_id, NOW())";
+        sc_exec_sql($sql_ret);
+
+        echo json_encode(['status' => 'success', 'msg' => "Sobras ($qtd un) do P/N $material devolvidas com sucesso."]); die();
+    }
+}
+?>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>MRO - Retirada de Materiais</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+	<link href="/libs/syncfusion/styles/material3.css" rel="stylesheet">
+	<script src="/libs/syncfusion/scripts/ej2-syncfusion.js" type="text/javascript"></script>
+	<script src="/libs/syncfusion/mro_config.js" type="text/javascript"></script>
+
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f6f8; margin: 0; padding: 20px; }
+        .header-title { font-size: 18px; font-weight: bold; color: #1a202c; margin-bottom: 20px; }
+        .mro-card { background: #fff; border-radius: 6px; padding: 25px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); max-width: 500px; margin: 0 auto; margin-top: 15px;}
+        
+        .card-green { border-top: 4px solid #198754; }
+        .card-orange { border-top: 4px solid #fd7e14; }
+
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-size: 13px; font-weight: bold; color: #4a5568; margin-bottom: 8px; text-transform: uppercase; }
+        
+        .btn-mro { color: #fff; border: none; padding: 12px 20px; font-size: 14px; font-weight: bold; border-radius: 4px; cursor: pointer; width: 100%; transition: 0.2s; }
+        .btn-success { background: #198754; } .btn-success:hover { background: #157347; }
+        .btn-warning { background: #fd7e14; } .btn-warning:hover { background: #e36a00; }
+        
+        .e-tab .e-tab-header { background: transparent; border-bottom: 2px solid #e2e8f0; }
+        .e-tab .e-tab-header .e-toolbar-item.e-active .e-tab-wrap { border-bottom: 3px solid #0d6efd; }
+    </style>
+</head>
+<body>
+
+    <div class="header-title">
+        <i class="fa-solid fa-dolly" style="color: #0d6efd;"></i> MRO - Autoatendimento (Supermercado)
+    </div>
+
+    <div id="mecanico_tabs"></div>
+
+    <div id="tab_retirada" style="display: none;">
+        <div class="mro-card card-green">
+            <h3 style="margin-top: 0; color: #333;"><i class="fa-solid fa-hand-holding-hand"></i> Retirada de Pacote</h3>
+            <p style="font-size: 12px; color: #6c757d;">O sistema reconhece seu usuário e sua JIC automaticamente.</p>
+            
+            <div class="form-group">
+                <label><i class="fa-solid fa-qrcode" style="font-size: 16px; margin-right:5px;"></i> Bipe o Nicho Kanban</label>
+                <input type="text" id="ret_nicho">
+            </div>
+            
+            <button class="btn-mro btn-success" onclick="processarRetirada()"><i class="fa-solid fa-check-double"></i> Confirmar Retirada para JIC Ativa</button>
+        </div>
+    </div>
+
+    <div id="tab_devolucao" style="display: none;">
+        <div class="mro-card card-orange">
+            <h3 style="margin-top: 0; color: #333;"><i class="fa-solid fa-rotate-left"></i> Devolução de Sobras</h3>
+            <p style="font-size: 12px; color: #6c757d;">Material será devolvido e creditado da sua JIC atual.</p>
+            
+            <div class="form-group">
+                <label><i class="fa-solid fa-barcode" style="font-size: 16px; margin-right:5px;"></i> Part Number / Material</label>
+                <input type="text" id="dev_material">
+            </div>
+            <div class="form-group">
+                <label>Quantidade Devolvida</label>
+                <input type="text" id="dev_qtd">
+            </div>
+
+            <button class="btn-mro btn-warning" onclick="processarDevolucao()"><i class="fa-solid fa-warehouse"></i> Registrar Devolução</button>
+        </div>
+    </div>
+
+<script>
+    var toastObj, txtNichoRet, txtMaterialDev, numQtdDev;
+
+    document.addEventListener('DOMContentLoaded', function () {
+        toastObj = new ej.notifications.Toast({ position: { X: 'Right', Y: 'Top' } });
+        toastObj.appendTo(document.body);
+
+        var tabObj = new ej.navigations.Tab({
+            items: [
+                { header: { text: '🛒 Retirada de Material' }, content: '#tab_retirada' },
+                { header: { text: '♻️ Devolução (Sobras)' }, content: '#tab_devolucao' }
+            ]
+        });
+        tabObj.appendTo('#mecanico_tabs');
+
+        txtNichoRet = new ej.inputs.TextBox({ placeholder: 'Ex: NICHO-01', cssClass: 'e-outline' });
+        txtNichoRet.appendTo('#ret_nicho');
+
+        txtMaterialDev = new ej.inputs.TextBox({ placeholder: 'Bipe o Part Number...', cssClass: 'e-outline' });
+        txtMaterialDev.appendTo('#dev_material');
+        
+        numQtdDev = new ej.inputs.NumericTextBox({ format: 'n0', min: 1, value: 1 });
+        numQtdDev.appendTo('#dev_qtd');
+
+        setTimeout(function(){ document.getElementById('ret_nicho').focus(); }, 300);
+    });
+
+    function processarRetirada() {
+        var nicho = txtNichoRet.value;
+        if(!nicho) {
+            toastObj.show({ title: 'Atenção', content: 'Bipe o Nicho.', cssClass: 'e-toast-warning' });
+            return;
+        }
+
+        $.ajax({
+            type: "POST", url: "", data: { action_mec: 'PICKUP', nicho: nicho },
+            dataType: "json",
+            success: function(res) {
+                if(res.status === 'success') {
+                    toastObj.show({ title: 'Aprovado', content: res.msg, cssClass: 'e-toast-success' });
+                    txtNichoRet.value = '';
+                } else {
+                    toastObj.show({ title: 'Erro de Validação', content: res.msg, cssClass: 'e-toast-danger' });
+                    txtNichoRet.value = ''; // Limpa para nova tentativa
+                }
+            }
+        });
+    }
+
+    function processarDevolucao() {
+        var material = txtMaterialDev.value;
+        var qtd = numQtdDev.value;
+
+        if(!material || !qtd) {
+            toastObj.show({ title: 'Atenção', content: 'Bipe Material.', cssClass: 'e-toast-warning' });
+            return;
+        }
+
+        $.ajax({
+            type: "POST", url: "", data: { action_mec: 'RETURN', material: material, qtd: qtd },
+            dataType: "json",
+            success: function(res) {
+                if(res.status === 'success') {
+                    toastObj.show({ title: 'Devolvido', content: res.msg, cssClass: 'e-toast-success' });
+                    txtMaterialDev.value = '';
+                    numQtdDev.value = 1;
+                    document.getElementById('dev_material').focus();
+                } else {
+                    toastObj.show({ title: 'Erro', content: res.msg, cssClass: 'e-toast-danger' });
+                }
+            }
+        });
+    }
+
+    // Enter automático nos campos
+    $('#ret_nicho').on('keypress', function(e) {
+        if(e.which == 13) { e.preventDefault(); processarRetirada(); }
+    });
+    $('#dev_material').on('keypress', function(e) {
+        if(e.which == 13) { e.preventDefault(); $('#dev_qtd').focus(); }
+    });
+</script>
+</body>
+</html>
+<?php

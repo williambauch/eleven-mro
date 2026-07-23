@@ -1,0 +1,30 @@
+<?php
+
+// ================================================================
+// Incluir a skill padrão no mestre-detalhe de recursos
+// ================================================================
+// Quando uma tarefa é criada com skill_code definido, insere
+// o próprio skill_code como resource_code em mro_task_resources.
+// Isso permite que o mestre-detalhe já venha com a skill
+// padrão vinculada.
+
+$var_skill_code = addslashes({skill_code});
+$var_project_id = (int){project_id};
+$var_task_id = (int){task_id};
+
+if (!empty($var_skill_code)) {
+    // Evita duplicatas: só insere se ainda não existir
+    $var_check = "SELECT 1 FROM mro_task_resources 
+                  WHERE task_id = " . $var_task_id . " 
+                    AND resource_code = '" . $var_skill_code . "'";
+    sc_lookup(ds_check, $var_check);
+
+    if ({ds_check} === false || empty({ds_check})) {
+        $var_insert = "INSERT INTO mro_task_resources 
+                       (project_id, task_id, resource_code, budgeted_hours)
+                       VALUES (" . $var_project_id . ", " . $var_task_id . ", '" . $var_skill_code . "', 0)";
+
+        sc_log_add("auto_insert_skill", "task_id=" . $var_task_id . ", skill_code=" . $var_skill_code);
+        sc_exec_sql($var_insert);
+    }
+}

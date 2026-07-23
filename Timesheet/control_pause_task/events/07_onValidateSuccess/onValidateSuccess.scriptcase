@@ -80,7 +80,7 @@ sc_exec_sql($sql_pause2);
 // ROTA 5: O MECÂNICO ESCOLHEU PULAR PARA UMA NOVA TAREFA
 // ========================================================
 if (!empty($v_ass_id_sel) && $v_ass_id_sel != $v_ass_id) {
-
+	
     // MRO-115: Verifica se a tarefa de destino esta bloqueada por material
     sc_lookup(ds_block_dest, "SELECT t.is_blocked_material 
                               FROM mro_tasks t 
@@ -89,8 +89,8 @@ if (!empty($v_ass_id_sel) && $v_ass_id_sel != $v_ass_id) {
     if (!empty({ds_block_dest}) && ({ds_block_dest[0][0]} == 't' || {ds_block_dest[0][0]} == 'true' || {ds_block_dest[0][0]} == 1)) {
         sc_error_message("A tarefa de destino esta bloqueada por falta de material. Selecione outra tarefa.");
         sc_error_exit();
-    }
-
+    }	
+	
 	// Gera novo relógio (Timesheet)
 	$sql_ts = "INSERT INTO mro_timesheet (assignment_id, employee_id, appointment_date, start_time, status) 
                VALUES ($v_ass_id_sel, [usr_employee_id], CURRENT_DATE, NOW(), 'IN_PROGRESS')

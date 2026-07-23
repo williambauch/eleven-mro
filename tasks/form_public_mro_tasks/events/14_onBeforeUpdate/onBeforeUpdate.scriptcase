@@ -1,0 +1,26 @@
+<?php
+
+// Converte skill_code vazio para null para evitar violacao da FK fk_tasks_skill
+if (empty({skill_code})) {
+    {skill_code} = 'null';
+}
+
+// Converte root_task_id = 0 para null para evitar violacao da FK mro_tasks_root_task_id_fkey
+if (empty({root_task_id}) || {root_task_id} == 0) {
+    {root_task_id} = 'null';
+}
+
+// Converte oa_batch_id = 0 para null para evitar violacao da FK mro_tasks_oa_batch_id_fkey
+if (empty({oa_batch_id}) || {oa_batch_id} == 0) {
+    {oa_batch_id} = 'null';
+}
+
+// Converte parent_task_id = 0 para null para evitar violacao da FK mro_tasks_parent_task_id_fkey
+if (empty({parent_task_id}) || {parent_task_id} == 0) {
+    {parent_task_id} = 'null';
+}
+
+// Converte wbs_id = 0 para null para evitar violacao da FK mro_tasks_wbs_id_fkey
+if (empty({wbs_id}) || {wbs_id} == 0) {
+    {wbs_id} = 'null';
+}

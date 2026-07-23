@@ -1,0 +1,387 @@
+<?php
+
+// =========================================================================
+// MÁQUINA PHP: BUSCANDO OS DADOS REAIS DO POSTGRESQL (SCRIPTCASE)
+// AVISO: NUNCA COLOQUE A TAG DE ABERTURA DO PHP NA LINHA 1 DE UMA BLANK APP
+// =========================================================================
+
+// ---------------------------------------------------------
+// 1. Dados para a Grid Principal (Ferramentas Emprestadas)
+// ---------------------------------------------------------
+$sql_grid = "
+    SELECT 
+        e.employee_registration AS Chapa, 
+        e.full_name AS Nome, 
+        p.p6_proj_id AS Projeto, 
+        t.task_code AS JIC, 
+        tl.part_number AS PartNumber, 
+        tt.status AS Status 
+    FROM mro_tool_transactions tt
+    INNER JOIN mro_employees e ON tt.employee_id = e.employee_id
+    LEFT JOIN mro_tasks t ON tt.task_id = t.task_id
+    LEFT JOIN mro_projects p ON t.project_id = p.project_id
+    LEFT JOIN mro_tools tl ON tt.tool_id = tl.tool_id
+    WHERE tt.status = 'ACTIVE'
+    ORDER BY tt.created_at DESC
+";
+sc_lookup(rs_grid, $sql_grid);
+
+$arr_grid = array();
+if ({rs_grid} !== false && is_array({rs_grid})) {
+    foreach ({rs_grid} as $row) {
+        $arr_grid[] = array(
+            "Chapa"      => isset($row[0]) ? $row[0] : '',
+            "Nome"       => isset($row[1]) ? $row[1] : '',
+            "Projeto"    => isset($row[2]) ? $row[2] : '',
+            "JIC"        => isset($row[3]) ? $row[3] : '',
+            "PartNumber" => isset($row[4]) ? $row[4] : '',
+            "Status"     => isset($row[5]) ? $row[5] : ''
+        );
+    }
+}
+$json_grid = json_encode($arr_grid) ?: '[]';
+
+
+// ---------------------------------------------------------
+// 2. Dados para o Gráfico de Movimentação Diária (Emprestadas x Devolvidas)
+// ---------------------------------------------------------
+$sql_mov = "
+    SELECT 
+        TO_CHAR(created_at, 'DD/MM') AS Data,
+        COUNT(*) AS Emprestadas,
+        SUM(CASE WHEN STATUS = 'CLOSED' THEN 1 ELSE 0 END) AS Devolvidas
+    FROM mro_tool_transactions
+    WHERE created_at >= CURRENT_DATE - INTERVAL '5 days'
+    GROUP BY TO_CHAR(created_at, 'DD/MM'), DATE(created_at)
+    ORDER BY DATE(created_at) ASC
+";
+sc_lookup(rs_mov, $sql_mov);
+
+$arr_mov = array();
+if ({rs_mov} !== false && is_array({rs_mov})) {
+    foreach ({rs_mov} as $row) {
+        $arr_mov[] = array(
+            "Data"        => isset($row[0]) ? $row[0] : '',
+            "Emprestadas" => isset($row[1]) ? (int)$row[1] : 0,
+            "Devolvidas"  => isset($row[2]) ? (int)$row[2] : 0
+        );
+    }
+}
+if(empty($arr_mov)) $arr_mov[] = array("Data" => "Hoje", "Emprestadas" => 0, "Devolvidas" => 0);
+$json_mov = json_encode($arr_mov) ?: '[]';
+
+
+// ---------------------------------------------------------
+// 3. Dados para o Gráfico de Pizza (Pendências por Funcionário)
+// ---------------------------------------------------------
+$sql_pendentes = "
+    SELECT 
+        e.full_name AS Funcionario, 
+        COUNT(tt.transaction_id) AS Pendentes
+    FROM mro_tool_transactions tt
+    INNER JOIN mro_employees e ON tt.employee_id = e.employee_id 
+    WHERE tt.status = 'ACTIVE'
+    GROUP BY e.full_name
+    ORDER BY Pendentes DESC
+    LIMIT 5
+";
+sc_lookup(rs_pendentes, $sql_pendentes);
+
+$arr_pendentes = array();
+if ({rs_pendentes} !== false && is_array({rs_pendentes})) {
+    foreach ({rs_pendentes} as $row) {
+        $nome_completo = isset($row[0]) ? (string)$row[0] : 'Desconhecido';
+        $primeiro_nome = explode(' ', trim($nome_completo))[0]; 
+        $qtd = isset($row[1]) ? (int)$row[1] : 0;
+        
+        $arr_pendentes[] = array(
+            "Funcionario" => $primeiro_nome,
+            "Pendentes"   => $qtd,
+            "text"        => $primeiro_nome . ": " . $qtd
+        );
+    }
+}
+if(empty($arr_pendentes)) $arr_pendentes[] = array("Funcionario" => "Nenhum", "Pendentes" => 1, "text" => "Tudo OK");
+$json_pendentes = json_encode($arr_pendentes) ?: '[]';
+
+
+// ---------------------------------------------------------
+// 4. Dados para o Gráfico de Barras (Tempo Médio de Retorno por Funcionário)
+// ---------------------------------------------------------
+$sql_tempo = "
+    SELECT 
+        e.full_name AS Tipo,
+        ROUND(AVG(EXTRACT(EPOCH FROM (tt.checkin_time - tt.checkout_time)) / 3600)::numeric, 1) AS Horas
+    FROM mro_tool_transactions tt
+    INNER JOIN mro_employees e ON tt.employee_id = e.employee_id 
+    WHERE tt.status='CLOSED'
+    GROUP BY e.full_name
+    ORDER BY Horas DESC
+    LIMIT 4
+";
+sc_lookup(rs_tempo, $sql_tempo);
+
+$arr_tempo = array();
+if ({rs_tempo} !== false && is_array({rs_tempo})) {
+    foreach ({rs_tempo} as $row) {
+        $nome_completo = isset($row[0]) ? (string)$row[0] : 'Desconhecido';
+        $primeiro_nome = explode(' ', trim($nome_completo))[0]; 
+        
+        $arr_tempo[] = array(
+            "Tipo"  => $primeiro_nome,
+            "Horas" => isset($row[1]) ? (float)$row[1] : 0
+        );
+    }
+}
+if(empty($arr_tempo)) $arr_tempo[] = array("Tipo" => "Sem Dados", "Horas" => 0);
+$json_tempo = json_encode($arr_tempo) ?: '[]';
+
+?>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard Ferramentaria - MRO</title>
+    
+    <link href="/libs/syncfusion/styles/material3.css" rel="stylesheet">
+    <script src="/libs/syncfusion/scripts/ej2-syncfusion.js" type="text/javascript"></script>
+    <script src="/libs/syncfusion/mro_config.js" type="text/javascript"></script>
+
+    <style>
+        body { 
+            font-family: 'Roboto', 'Segoe UI', Tahoma, sans-serif; 
+            background-color: #f4f6f8; 
+            margin: 0; 
+            padding: 15px; 
+            box-sizing: border-box;
+        }
+        
+        .dashboard-header { 
+            font-size: 20px; 
+            color: #1a202c; 
+            margin-bottom: 15px; 
+            font-weight: 600;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 8px;
+        }
+        
+        /* Layout Superior: Gráficos Enfileirados horizontalmente */
+        .row-charts {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 15px;
+            width: 100%;
+        }
+        
+        .card-chart { 
+            background: #fff; 
+            border-radius: 6px; 
+            padding: 10px; /* Reduzido para ficar mais compacto */
+            box-sizing: border-box; 
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            flex: 1 1 calc(33.33% - 15px); /* Divide em 3 colunas perfeitas */
+            min-width: 250px;
+        }
+        
+        .card-title { 
+            font-size: 12px; 
+            color: #4a5568; 
+            margin-bottom: 8px; 
+            font-weight: bold; 
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid #edf2f7; 
+            padding-bottom: 6px; 
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        /* Contêiner de altura reduzida para os gráficos */
+        .chart-container { 
+            width: 100%; 
+            height: 130px; /* Altura diminuída conforme solicitado */
+        }
+        
+        /* Área da Grid abaixo dos gráficos */
+        .main-grid {
+            background: #fff;
+            border-radius: 6px;
+            padding: 15px;
+            box-sizing: border-box;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-header">MRO System - Controle e Indicadores de Ferramental</div>
+
+    <div class="row-charts">
+        <div class="card-chart">
+            <div class="card-title">📊 Movimentação Diária</div>
+            <div id="chart-movimentacao" class="chart-container"></div>
+        </div>
+
+        <div class="card-chart">
+            <div class="card-title">🍩 Não Devolvidas por Func.</div>
+            <div id="chart-pendentes" class="chart-container"></div>
+        </div>
+
+        <div class="card-chart">
+            <div class="card-title">📈 Tempo de Retorno (Horas)</div>
+            <div id="chart-tempo" class="chart-container"></div>
+        </div>
+    </div>
+
+    <div class="main-grid">
+        <div class="card-title" style="border:none; margin-bottom:12px; font-size:14px;">📋 Listagem Dinâmica de Ferramentas Emprestadas (Live)</div>
+        <div id="grid-ferramentas"></div>
+    </div>
+
+<script>
+    // =========================================================================
+    // INJETANDO OS JSONs GERADOS PELO PHP NO JAVASCRIPT
+    // =========================================================================
+    var gridData      = <?php echo $json_grid; ?>;
+    var movData       = <?php echo $json_mov; ?>;
+    var pendentesData = <?php echo $json_pendentes; ?>;
+    var tempoData     = <?php echo $json_tempo; ?>;
+
+    document.addEventListener('DOMContentLoaded', function () {
+        setTimeout(carregarGrid, 30);
+        setTimeout(carregarGrafico1, 60);
+        setTimeout(carregarGrafico2, 90);
+        setTimeout(carregarGrafico3, 120);
+    });
+
+    // ==========================================
+    // FUNÇÃO: CARREGAR GRID
+    // ==========================================
+    function carregarGrid() {
+        try {
+            if (window.ej && ej.grids && ej.grids.Grid) {
+                
+                var modulosGrid = [];
+                if (ej.grids.Page) modulosGrid.push(ej.grids.Page);
+                if (ej.grids.Sort) modulosGrid.push(ej.grids.Sort);
+                if (ej.grids.Filter) modulosGrid.push(ej.grids.Filter);
+                if (ej.grids.Toolbar) modulosGrid.push(ej.grids.Toolbar);
+                
+                if (modulosGrid.length > 0) {
+                    try { ej.grids.Grid.Inject.apply(ej.grids.Grid, modulosGrid); } catch(e){}
+                }
+
+                var config = {
+                    dataSource: gridData,
+                    allowPaging: (typeof ej.grids.Page !== 'undefined'),
+                    allowSorting: (typeof ej.grids.Sort !== 'undefined'),
+                    allowFiltering: (typeof ej.grids.Filter !== 'undefined'),
+                    pageSettings: { pageSize: 10 }, // Mantido 10 itens por página
+                    columns: [
+                        { field: 'Chapa', headerText: 'Chapa', width: 80, textAlign: 'Center' },
+                        { field: 'Nome', headerText: 'Funcionário', width: 140 },
+                        { field: 'Projeto', headerText: 'Projeto', width: 110 },
+                        { field: 'JIC', headerText: 'JIC', width: 90 },
+                        { field: 'PartNumber', headerText: 'Part Number', width: 120 },
+                        { field: 'Status', headerText: 'Status', width: 110, template: '#statusTemplate', textAlign: 'Center' }
+                    ]
+                };
+
+                if (typeof ej.grids.Toolbar !== 'undefined') {
+                    config.toolbar = ['Search'];
+                }
+
+                var grid = new ej.grids.Grid(config);
+                grid.appendTo('#grid-ferramentas');
+            }
+        } catch (err) {
+            console.error("Erro fatal ao renderizar a Grid:", err);
+        }
+    }
+
+    // ==========================================
+    // FUNÇÃO: GRAFICO 1 (COLUNAS)
+    // ==========================================
+    function carregarGrafico1() {
+        try {
+            if (ej.charts && ej.charts.Chart) {
+                try { ej.charts.Chart.Inject(ej.charts.ColumnSeries, ej.charts.Category, ej.charts.Tooltip); } catch(e){}
+                
+                var chartMov = new ej.charts.Chart({
+                    primaryXAxis: { valueType: 'Category', majorGridLines: { width: 0 } },
+                    series: [
+                        { dataSource: movData, xName: 'Data', yName: 'Emprestadas', name: 'Emprestadas', type: 'Column', fill: '#00bdae' },
+                        { dataSource: movData, xName: 'Data', yName: 'Devolvidas', name: 'Devolvidas', type: 'Column', fill: '#404041' }
+                    ],
+                    height: '100%', 
+                    width: '100%',
+                    tooltip: { enable: true }
+                });
+                chartMov.appendTo('#chart-movimentacao');
+            }
+        } catch (err) { console.error("Erro no gráfico 1:", err); }
+    }
+
+    // ==========================================
+    // FUNÇÃO: GRAFICO 2 (ROSCA/PIZZA)
+    // ==========================================
+    function carregarGrafico2() {
+        try {
+            if (ej.charts && ej.charts.AccumulationChart) {
+                try { ej.charts.AccumulationChart.Inject(ej.charts.PieSeries, ej.charts.AccumulationDataLabel, ej.charts.AccumulationTooltip); } catch(e){}
+                
+                var chartPendentes = new ej.charts.AccumulationChart({
+                    series: [{
+                        dataSource: pendentesData, xName: 'Funcionario', yName: 'Pendentes',
+                        innerRadius: '45%',
+                        dataLabel: { visible: true, name: 'text', position: 'Outside' }
+                    }],
+                    height: '100%', 
+                    width: '100%',
+                    tooltip: { enable: true }
+                });
+                chartPendentes.appendTo('#chart-pendentes');
+            }
+        } catch (err) { console.error("Erro no gráfico 2:", err); }
+    }
+
+    // ==========================================
+    // FUNÇÃO: GRAFICO 3 (BARRAS HORIZONTAIS)
+    // ==========================================
+    function carregarGrafico3() {
+        try {
+            if (ej.charts && ej.charts.Chart) {
+                try { ej.charts.Chart.Inject(ej.charts.BarSeries, ej.charts.Category, ej.charts.Tooltip); } catch(e){}
+                
+                var chartTempo = new ej.charts.Chart({
+                    primaryXAxis: { valueType: 'Category', majorGridLines: { width: 0 } },
+                    series: [
+                        { dataSource: tempoData, xName: 'Tipo', yName: 'Horas', type: 'Bar', fill: '#357cd2' }
+                    ],
+                    height: '100%',
+                    width: '100%',
+                    tooltip: { enable: true }
+                });
+                chartTempo.appendTo('#chart-tempo');
+            }
+        } catch (err) { console.error("Erro no gráfico 3:", err); }
+    }
+</script>
+
+<script id="statusTemplate" type="text/x-template">
+    ${if(Status == 'ATRASADA')}
+        <span style="color: white; background: #ff4d4f; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; display: inline-block; width:80px;">${Status}</span>
+    ${else}
+        <span style="color: white; background: #28a745; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; display: inline-block; width:80px;">${Status}</span>
+    ${/if}
+</script>
+
+</body>
+</html>
+<?php // Tag fechada com segurança ?>

@@ -1,0 +1,64 @@
+<?php
+
+// ScriptInit da grid_public_mro_tasks
+// Aplica filtros automaticos na consulta: project_id via global e,
+// para usuarios com perfil exclusivo MECANICO, filtra por created_by.
+// ====================================================================
+// 1. TRADUZ group_id da sessao para nomes legiveis (ex: 3 → MECANICO)
+// ====================================================================
+$ids_brutos = is_array([usr_groups]) ? implode(',', [usr_groups]) : [usr_groups];
+$ids_brutos = str_replace(' ', '', $ids_brutos);
+
+$meus_grupos_nomes = [];
+
+if (!empty($ids_brutos)) {
+    sc_lookup(rs_grupos, "SELECT description FROM sec_groups WHERE group_id IN ($ids_brutos)");
+    if (!empty({rs_grupos})) {
+        foreach ({rs_grupos} as $grupo) {
+            $meus_grupos_nomes[] = strtoupper(trim($grupo[0]));
+        }
+    }
+}
+
+// ====================================================================
+// 2. MONTA WHERE UNICO (filtros combinados num so sc_select_where)
+// ====================================================================
+$var_cond = "";
+
+// Filtro 1: se for MECANICO com perfil unico, ve apenas as proprias tasks
+$quantidade_perfis = count($meus_grupos_nomes);
+if ($quantidade_perfis == 1 && in_array('MECANICO', $meus_grupos_nomes)) {
+    $var_usuario = [usr_login];
+    $var_cond = "created_by = '$var_usuario'";
+}
+
+// Filtro 2: se veio de um projeto especifico, filtra por ele
+if (!empty([var_project_id])) {
+    $var_pid = [var_project_id];
+    if ($var_cond != "") {
+        $var_cond .= " AND project_id = $var_pid";
+    } else {
+        $var_cond = "project_id = $var_pid";
+    }
+}
+
+// Aplica o WHERE completo (respeita sc_where_atual se ja existir)
+if ($var_cond != "") {
+    if (empty({sc_where_atual})) {
+        sc_select_where(add) = "WHERE $var_cond";
+    } else {
+        sc_select_where(add) = "AND $var_cond";
+    }
+}
+
+// ====================================================================
+// 3. ALERTA DE MENSAGEM (vindo do botao RUN)
+// ====================================================================
+
+// Verifica se existe alguma mensagem vinda do botão RUN
+if (!empty([glo_aviso_run])) {    
+    // Limpa a variável imediatamente para a mensagem não ficar repetindo
+    // toda vez que o usuário mudar de página ou pesquisar algo na Grid.    
+    sc_alert([glo_aviso_run]);
+    [glo_aviso_run] = '';
+}

@@ -1,0 +1,344 @@
+<?php
+
+// =========================================================================
+// MRO SYSTEM - ALMOXARIFADO (KITTING AVANÇADO COM PAINEL DUPLO DE GRIDS)
+// =========================================================================
+
+$usuario_logado = isset([usr_login]) ? [usr_login] : 'SISTEMA_ALMOX';
+
+if (isset($_POST['action_almox'])) {
+    header('Content-Type: application/json');
+    $action = $_POST['action_almox'];
+
+    // ---------------------------------------------------------
+    // AÇÃO 1: CARREGAR GRID DE JICs LIBERADAS (ESQUERDA)
+    // ---------------------------------------------------------
+    if ($action == 'LOAD_GRID_JCS') {
+        // Seleciona informações chave da JIC e herda o p6_proj_id da tabela de projetos/tasks
+        $sql_jcs = "
+            SELECT 
+                t.task_id, 
+                COALESCE(p.p6_proj_id, 'N/A') AS projeto, 
+                t.task_code AS jic, 
+                COALESCE(t.task_name, 'Sem descrição técnica') AS descricao
+            FROM mro_tasks t 
+			JOIN mro_projects p ON t.project_id=p.project_id
+            WHERE t.status_code = 'RELEASED' 
+            ORDER BY t.task_code ASC
+        ";
+        sc_lookup(rs_jcs, $sql_jcs);
+        
+        $jcs = array();
+        if ({rs_jcs} !== false && is_array({rs_jcs})) {
+            foreach ({rs_jcs} as $row) {
+                $jcs[] = array(
+                    'task_id'   => $row[0],
+                    'projeto'   => $row[1],
+                    'jic'       => $row[2],
+                    'descricao' => $row[3]
+                );
+            }
+        }
+        echo json_encode($jcs); die();
+    }
+
+    // ---------------------------------------------------------
+    // AÇÃO 2: CARREGAR MATERIAIS DA JIC SELECIONADA (DIREITA)
+    // ---------------------------------------------------------
+    if ($action == 'LOAD_MATERIALS') {
+        $task_id = (int)$_POST['task_id'];
+        
+        $sql_mat = "
+            SELECT 
+                tm.task_material_id, 
+                m.part_number AS material_code, 
+                m.part_number, 
+                tm.planned_qty, 
+                COALESCE(tm.applied_qty, tm.planned_qty) AS applied_qty 
+            FROM mro_task_materials tm
+            INNER JOIN mro_materials m ON tm.material_id = m.material_id
+            WHERE tm.task_id = $task_id AND (tm.is_applied IS FALSE OR tm.is_applied IS NULL)
+        ";
+        sc_lookup(rs_mat, $sql_mat);
+        
+        $mats = array();
+        if ({rs_mat} !== false && is_array({rs_mat})) {
+            foreach ({rs_mat} as $row) {
+                $mats[] = array(
+                    'task_material_id' => $row[0],
+                    'material_code'    => isset($row[1]) ? $row[1] : 'N/A',
+                    'part_number'      => isset($row[2]) ? $row[2] : 'N/A',
+                    'planned_qty'      => (int)$row[3],
+                    'applied_qty'      => (int)$row[4]
+                );
+            }
+        }
+        echo json_encode($mats); die();
+    }
+
+    // ---------------------------------------------------------
+    // AÇÃO 3: GERAR PACOTE E ATUALIZAR IS_APPLIED
+    // ---------------------------------------------------------
+    if ($action == 'ALLOCATE') {
+        $task_id   = isset($_POST['task_id']) ? (int)$_POST['task_id'] : 0;
+        $nicho     = isset($_POST['nicho']) ? trim($_POST['nicho']) : '';
+        $materiais = isset($_POST['materiais']) ? json_decode($_POST['materiais'], true) : array();
+
+        if (empty($task_id) || empty($nicho) || empty($materiais)) {
+            echo json_encode(['status' => 'error', 'msg' => 'Selecione a JIC, defina o Nicho e marque os materiais aplicados na tabela.']); die();
+        }
+
+        $total_itens = 0;
+
+        foreach ($materiais as $mat) {
+            $tm_id    = (int)$mat['task_material_id'];
+            $app_qty  = (int)$mat['applied_qty'];
+            
+            $total_itens += $app_qty;
+
+            $sql_upd = "UPDATE mro_task_materials SET applied_qty = $app_qty, is_applied = true WHERE task_material_id = $tm_id";
+            sc_exec_sql($sql_upd);
+        }
+
+        $sql_insert = "INSERT INTO mro_kanban_packages (task_id, niche_code, quantity, status, created_by, created_at) 
+                       VALUES ($task_id, '$nicho', $total_itens, 'WAITING', '$usuario_logado', NOW())";
+        sc_exec_sql($sql_insert);
+
+        echo json_encode(['status' => 'success', 'msg' => "Pacote alocado no $nicho com sucesso! Total de $total_itens peças cadastradas."]); die();
+    }
+}
+
+// Lista estática de nichos para o DropDown de destino
+$arr_nichos = array();
+for ($i = 1; $i <= 20; $i++) {
+    $num = str_pad($i, 2, '0', STR_PAD_LEFT);
+    $arr_nichos[] = array('id' => "NICHO-$num", 'text' => "Nicho Kanban $num");
+}
+$json_nichos = json_encode($arr_nichos);
+?>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>MRO - Painel de Kitting Almoxarifado</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+	
+	<link href="/libs/syncfusion/styles/material3.css" rel="stylesheet">
+	<script src="/libs/syncfusion/scripts/ej2-syncfusion.js" type="text/javascript"></script>
+	<script src="/libs/syncfusion/mro_config.js" type="text/javascript"></script>
+
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f4f6f8; margin: 0; padding: 15px; box-sizing: border-box; }
+        .header-title { font-size: 18px; font-weight: bold; color: #1a202c; margin-bottom: 15px; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; }
+        
+        /* Layout Master-Detail de Duas Grids em Linha */
+        .dashboard-grid-layout { display: grid; grid-template-columns: 45% 55%; gap: 15px; align-items: start; }
+        
+        .mro-panel { background: #fff; border-radius: 4px; padding: 15px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); border: 1px solid #e2e8f0; }
+        .panel-title { font-size: 12px; font-weight: bold; color: #4a5568; margin-bottom: 12px; text-transform: uppercase; border-bottom: 1px solid #edf2f7; padding-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
+        
+        /* Layout interno compacto de ações da base mestre */
+        .action-container { display: flex; flex-direction: row; gap: 10px; align-items: flex-end; margin-bottom: 12px; background: #f8f9fa; padding: 10px; border-radius: 4px; border: 1px dashed #dee2e6; }
+        .action-field { flex: 1; }
+        .action-field label { display: block; font-size: 11px; font-weight: bold; color: #6c757d; margin-bottom: 4px; text-transform: uppercase; }
+        
+        .btn-mro { background: #0d6efd; color: #fff; border: none; height: 38px; padding: 0 15px; font-size: 12px; font-weight: bold; border-radius: 4px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: 0.2s; white-space: nowrap; }
+        .btn-mro:hover { background: #0b5ed7; }
+        
+        /* Classes auxiliares Syncfusion */
+        .e-grid .e-headercell { background-color: #f8f9fa; font-weight: bold; font-size: 12px; }
+        .e-grid .e-rowcell { font-size: 12px; }
+    </style>
+</head>
+<body>
+
+    <div class="header-title">
+        <i class="fa-solid fa-boxes-packing" style="color: #0d6efd;"></i> MRO System - Central de Triagem e Kitting (Almoxarifado)
+    </div>
+
+    <div class="dashboard-grid-layout">
+        
+        <div class="mro-panel" style="border-top: 3px solid #6c757d;">
+            <div class="panel-title">
+                <span><i class="fa-solid fa-folder-open"></i> 1. Selecione a JIC Liberada</span>
+                <span id="selected_jic_badge" class="e-badge e-badge-info" style="font-size:10px; padding:4px 8px; visibility: hidden;">Nenhuma</span>
+            </div>
+            <div id="grid_jics"></div>
+        </div>
+
+        <div class="mro-panel" style="border-top: 3px solid #0d6efd;">
+            <div class="panel-title">
+                <span><i class="fa-solid fa-cubes"></i> 2. Materiais Requeridos na Tarefa</span>
+                <span style="font-size: 11px; color: #6c757d; font-weight: normal;"><i class="fa-solid fa-keyboard"></i> Clique duplo em 'Qtd Aplicada'</span>
+            </div>
+
+            <div class="action-container">
+                <div class="action-field">
+                    <label>Escolha o Nicho Kanban de Destino</label>
+                    <input type="text" id="ddl_nicho">
+                </div>
+                <button class="btn-mro" onclick="executarKitting()">
+                    <i class="fa-solid fa-box-archive"></i> Vincular e Despachar Pacote
+                </button>
+            </div>
+            
+            <div id="grid_materiais"></div>
+        </div>
+
+    </div>
+
+<script>
+    var toastObj;
+    var ddlNichos;
+    var gridJics;
+    var gridMateriais;
+    var currentTaskId = null; // Guarda a JIC selecionada em memória global
+
+    document.addEventListener('DOMContentLoaded', function () {
+        // Inicializa Toaster
+        toastObj = new ej.notifications.Toast({ position: { X: 'Right', Y: 'Top' } });
+        toastObj.appendTo(document.body);
+
+        // Inicializa DropDown de Nichos
+        ddlNichos = new ej.dropdowns.DropDownList({
+            dataSource: <?php echo $json_nichos; ?>, 
+            fields: { text: 'text', value: 'id' },
+            placeholder: 'Selecione o Nicho Kanban...', 
+            allowFiltering: true
+        });
+        ddlNichos.appendTo('#ddl_nicho');
+
+        // Inicializa Grid de JICs (Esquerda)
+        gridJics = new ej.grids.Grid({
+            dataSource: [],
+            allowPaging: true,
+            allowSorting: true,
+            pageSettings: { pageSize: 8 },
+            rowHeight: 34,
+            // Captura o clique na linha para atualizar o detalhe automaticamente
+            rowSelected: function(args) {
+                var rowData = args.data;
+                currentTaskId = rowData.task_id;
+                
+                // Atualiza o indicador visual no header
+                var badge = document.getElementById('selected_jic_badge');
+                badge.innerText = "JIC: " + rowData.jic;
+                badge.style.visibility = 'visible';
+
+                // Dispara a busca de materiais do lado direito
+                carregarMateriais(currentTaskId);
+            },
+            columns: [
+                { field: 'projeto', headerText: 'Projeto (WBS)', width: 100, textAlign: 'Center' },
+                { field: 'jic', headerText: 'JIC Code', width: 110, customAttributes: {style: 'font-weight: bold; color: #0d6efd;'} },
+                { field: 'descricao', headerText: 'Descrição da Ordem', width: 180 }
+            ]
+        });
+        gridJics.appendTo('#grid_jics');
+
+        // Inicializa Grid de Materiais (Direita)
+        gridMateriais = new ej.grids.Grid({
+            dataSource: [],
+            editSettings: { allowEditing: true, mode: 'Batch' },
+            selectionSettings: { type: 'Multiple', checkboxOnly: true },
+            rowHeight: 32,
+            columns: [
+                { type: 'checkbox', width: 40 },
+                { field: 'task_material_id', isPrimaryKey: true, visible: false },
+                { field: 'material_code', headerText: 'Código', width: 90, allowEditing: false },
+                { field: 'part_number', headerText: 'Part Number', width: 110, allowEditing: false },
+                { field: 'planned_qty', headerText: 'Planejado', width: 90, allowEditing: false, textAlign: 'Center' },
+                { 
+                    field: 'applied_qty', 
+                    headerText: 'Qtd Aplicada', 
+                    width: 100, 
+                    textAlign: 'Center',
+                    editType: 'numericedit', 
+                    edit: { params: { min: 1, format: 'n0' } },
+                    customAttributes: {style: 'background-color: #fff3cd; font-weight: bold; border: 1px dashed #fd7e14;'}
+                }
+            ]
+        });
+        gridMateriais.appendTo('#grid_materiais');
+
+        // Carrega a Grid Master de JICs via Ajax ao abrir a tela
+        scCarregarMasterJics();
+    });
+
+    // Ajax: Busca as JICs do banco
+    function scCarregarMasterJics() {
+        gridJics.showSpinner();
+        $.ajax({
+            type: "POST", url: "", data: { action_almox: 'LOAD_GRID_JCS' }, dataType: "json",
+            success: function(res) {
+                gridJics.dataSource = res;
+                gridJics.hideSpinner();
+            }
+        });
+    }
+
+    // Ajax: Busca os materiais da JIC clicada
+    function carregarMateriais(taskId) {
+        gridMateriais.showSpinner();
+        $.ajax({
+            type: "POST", url: "", data: { action_almox: 'LOAD_MATERIALS', task_id: taskId }, dataType: "json",
+            success: function(res) {
+                gridMateriais.dataSource = res;
+                gridMateriais.hideSpinner();
+            }
+        });
+    }
+
+    // Processa a gravação em lote da separação
+    function executarKitting() {
+        var nicho = ddlNichos.value;
+
+        if(!currentTaskId) {
+            toastObj.show({ title: 'Atenção', content: 'Selecione uma JIC na tabela da esquerda primeiro.', cssClass: 'e-toast-warning' });
+            return;
+        }
+        if(!nicho) {
+            toastObj.show({ title: 'Atenção', content: 'Selecione o Nicho Kanban de destino para os materiais.', cssClass: 'e-toast-warning' });
+            return;
+        }
+
+        // Força a gravação de alterações pendentes de inputs abertos nas células do Syncfusion
+        gridMateriais.editModule.batchSave();
+
+        // Pega as linhas cujos checkboxes foram marcados
+        var itensSelecionados = gridMateriais.getSelectedRecords();
+
+        if(itensSelecionados.length === 0) {
+            toastObj.show({ title: 'Atenção', content: 'Marque a caixa de seleção dos materiais que estão entrando no pacote.', cssClass: 'e-toast-warning' });
+            return;
+        }
+
+        $.ajax({
+            type: "POST", url: "", 
+            data: { 
+                action_almox: 'ALLOCATE', 
+                task_id: currentTaskId, 
+                nicho: nicho, 
+                materiais: JSON.stringify(itensSelecionados) 
+            },
+            dataType: "json",
+            success: function(res) {
+                if(res.status === 'success') {
+                    toastObj.show({ title: 'Sucesso', content: res.msg, cssClass: 'e-toast-success' });
+                    ddlNichos.value = null;
+                    
+                    // Atualiza a grid detalhe (fazendo sumir os itens empenhados)
+                    carregarMaterials(currentTaskId);
+                } else {
+                    toastObj.show({ title: 'Impedimento', content: res.msg, cssClass: 'e-toast-danger' });
+                }
+            }
+        });
+    }
+</script>
+</body>
+</html>
+<?php

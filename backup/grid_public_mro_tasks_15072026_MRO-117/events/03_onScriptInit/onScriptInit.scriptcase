@@ -1,0 +1,25 @@
+<?php
+
+// Verifica se a variável global existe e não está vazia
+if (!empty([var_project_id])) {    
+    // Injeta o WHERE no banco de forma segura e exata (Filtra apenas o ID exato)
+	if (empty({sc_where_atual})) {
+       sc_select_where(add) = " WHERE project_id = " . [var_project_id];		
+    } else {
+        sc_select_where(add) = " AND project_id = " . [var_project_id];
+    }
+    
+}
+
+
+
+// Verifica se existe alguma mensagem vinda do botão RUN
+if (!empty([glo_aviso_run])) {
+    
+    // Exibe o alerta
+    sc_alert([glo_aviso_run]);
+    
+    // Limpa a variável imediatamente para a mensagem não ficar repetindo
+    // toda vez que o usuário mudar de página ou pesquisar algo na Grid.
+    [glo_aviso_run] = ''; 
+}
