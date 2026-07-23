@@ -1,1 +1,1 @@
-SELECT * FROM "public".mro_task_resources WHERE resource_code in (SELECT DISTINCT skill_code FROM mro_skills)
+SELECT * FROM "public".mro_task_resources WHERE resource_code in (SELECT DISTINCT skill_code FROM mro_skills) AND task_id = [glo_task_id]

@@ -1,95 +1,141 @@
 <?php
 
-function mGerarPagina5Calibrated($pdf) {
+function mGerarPagina5Calibrated($pdf, $data = array()) {
     // =========================================================
-    // Pagina 5 — gerada do editor em 22/07/2026, 11:37:41
+    // Pagina 5 — Calibrated Tool
     // Dimensoes LETTER: 215,9 x 279,4 mm
+    // 8 cards em 2 colunas x 4 linhas, com paginacao
     // =========================================================
 
-    $pdf->AddPage();
+    $var_task_code     = trim($data['task_code']);
+    $var_reg           = trim($data['aircraft_registration']);
+    $var_model         = trim($data['model']);
+    $var_task_id       = $data['task_id'];
 
-    // --- Imagem de fundo ---
-    $imgFundo = '../_lib/img/grp__NM__bg__NM__pack_page_5_calibrated_trim.png';
-    $pdf->Image($imgFundo, 0, 0, 215.9, 279.4, 'PNG', '', '', false, 300, '', false, false, 0);
-    $pdf->setPageMark();
+    // --- Busca ferramentas calibráveis da tarefa ---
+    $var_sql_calib = "SELECT COALESCE(string_agg(
+        COALESCE(tl.last_calibration_date::text, '') || '|' ||
+        COALESCE(tl.description, '') || '|' ||
+        COALESCE(tl.calibration_due_date::text, '') || '|' ||
+        COALESCE(tl.part_number, '') || '|' ||
+        COALESCE(tl.serial_number, '')
+    , '~~' ORDER BY tl.part_number), '') AS calib_data
+    FROM mro_task_tools tt
+    INNER JOIN mro_tools tl ON tt.tool_id = tl.tool_id
+    WHERE tt.task_id = " . (int)$var_task_id;
+    sc_lookup(ds_calib, $var_sql_calib);
 
-    // Fonte: 13px normal → 9.75pt
-    $pdf->SetFont('helvetica', '', 9.75);
-    $pdf->Text(66.41, 7.14, 'A320-214'); // p019 - - - A320-214
-    $pdf->Text(123.56, 7.14, 'PR-MLD'); // p021 - - - PR-MLD
-    $pdf->Text(173.83, 7.14, 'N190036001'); // p023 - - - N190036001
-    // Fonte: 11px normal → 8.25pt
-    $pdf->SetFont('helvetica', '', 8.25);
-    $pdf->Text(166.69, 54.77, 'Equipment pass (02)'); // new-9 - Equipment pass 02 - Equipment pass (02)
-    $pdf->Text(166.69, 69.59, 'SN equipamento (02)'); // new-5 - SN equipamento 02 - SN equipamento (02)
-    $pdf->Text(55.83, 54.77, 'Equipamento apto para tarefa'); // p192 - Equipment pass - Equipamento apto para tarefa
-    $pdf->Text(55.83, 69.59, 'SN equipamento'); // p244 - SN equipamento - SN equipamento
-    $pdf->Text(1.32, 69.59, 'PN equipamento'); // p198 - PN equipamento - PN equipamento
-    $pdf->Text(1.32, 54.77, 'Proxima Calibração'); // p168 - Proxima Calibração - Proxima Calibração
-    $pdf->Text(1.32, 40.48, 'Measure Taken'); // p095 - Measure Taken (Unit) - Measure Taken
-    $pdf->Text(55.83, 40.48, 'Incerteza-erro-desv'); // p107 - Incerteza-erro-desvio - Incerteza-erro-desv
-    $pdf->Text(20.11, 25.93, 'Task sub'); // p034 - Task sub item - Task sub
-    $pdf->Text(166.69, 25.93, 'Inspector Stamp (02)'); // new-6 - Inspector Stamp 02 - Inspector Stamp (02)
-    $pdf->Text(130.97, 25.93, 'Task sub item (02)'); // new-1 - Task sub item 02 - Task sub item (02)
-    $pdf->Text(112.18, 40.48, 'Measure Taken (Unit)  (02)'); // new-8 - Measure Taken (Unit) 02 - Measure Taken (Unit)  (02)
-    $pdf->Text(166.69, 40.48, 'Incerteza-erro-desvio (02)'); // new-2 - Incerteza-erro-desvio 02 - Incerteza-erro-desvio (02)
-    $pdf->Text(112.18, 54.77, 'Proxima Calibração (02)'); // new-3 - Proxima Calibração 02 - Proxima Calibração (02)
-    $pdf->Text(55.83, 25.93, 'Inspector Stamp'); // p054 - Inspector Stamp - Inspector Stamp
-    $pdf->Text(1.32, 134.67, 'PN equipamento'); // new-12 - PN equipamento (03) - PN equipamento
-    $pdf->Text(1.32, 119.86, 'Proxima Calibração'); // new-13 - Proxima Calibração (03) - Proxima Calibração
-    $pdf->Text(1.32, 105.57, 'Measure Taken'); // new-14 - Measure Taken (Unit) (03) - Measure Taken
-    $pdf->Text(55.83, 105.57, 'Incerteza-erro-desv'); // new-15 - Incerteza-erro-desvio (03) - Incerteza-erro-desv
-    $pdf->Text(20.11, 91.02, 'Task sub'); // new-16 - Task sub item (03) - Task sub
-    $pdf->Text(55.83, 91.02, 'Inspector Stamp'); // new-18 - Inspector Stamp (03) - Inspector Stamp
-    $pdf->Text(55.83, 134.67, 'SN equipamento'); // new-11 - SN equipamento (03) - SN equipamento
-    $pdf->Text(55.83, 119.86, 'Equipamento apto para tarefa'); // new-10 - Equipment pass (03) - Equipamento apto para tarefa
-    $pdf->Text(166.69, 134.67, 'SN equipamento'); // new-20 - SN equipamento (04) - SN equipamento
-    $pdf->Text(112.18, 119.86, 'Proxima Calibração'); // new-22 - Proxima Calibração (04) - Proxima Calibração
-    $pdf->Text(112.18, 105.57, 'Measure Taken'); // new-23 - Measure Taken (Unit) (04) - Measure Taken
-    $pdf->Text(166.69, 105.57, 'Incerteza-erro-desv'); // new-24 - Incerteza-erro-desvio (04) - Incerteza-erro-desv
-    $pdf->Text(130.97, 91.02, 'Task sub'); // new-25 - Task sub item (04) - Task sub
-    $pdf->Text(166.69, 91.02, 'Inspector Stamp'); // new-27 - Inspector Stamp (04) - Inspector Stamp
-    $pdf->Text(166.69, 119.86, 'Equipamento apto para tarefa'); // new-19 - Equipment pass (04) - Equipamento apto para tarefa
-    $pdf->Text(112.18, 69.59, 'PN equipamento (02)'); // new-4 - PN equipamento 02 - PN equipamento (02)
-    $pdf->Text(112.18, 134.67, 'PN equipamento'); // new-21 - PN equipamento (04) - PN equipamento
-    $pdf->Text(55.83, 200.29, 'SN equipamento'); // new-29 - SN equipamento (05) - SN equipamento
-    $pdf->Text(1.32, 200.29, 'PN equipamento'); // new-30 - PN equipamento (05) - PN equipamento
-    $pdf->Text(1.32, 185.47, 'Proxima Calibração'); // new-31 - Proxima Calibração (05) - Proxima Calibração
-    $pdf->Text(55.83, 171.19, 'Incerteza-erro-desv'); // new-33 - Incerteza-erro-desvio (05) - Incerteza-erro-desv
-    $pdf->Text(55.83, 156.63, 'Inspector Stamp'); // new-36 - Inspector Stamp (05) - Inspector Stamp
-    $pdf->Text(55.83, 185.47, 'Equipamento apto para tarefa'); // new-28 - Equipment pass (05) - Equipamento apto para tarefa
-    $pdf->Text(22.23, 156.63, 'Task sub'); // new-34 - Task sub item (05) - Task sub
-    $pdf->Text(1.32, 171.19, 'Measure Taken'); // new-32 - Measure Taken (Unit) (05) - Measure Taken
-    $pdf->Text(166.69, 200.29, 'SN equipamento'); // new-38 - SN equipamento (06) - SN equipamento
-    $pdf->Text(112.18, 185.47, 'Proxima Calibração'); // new-40 - Proxima Calibração (06) - Proxima Calibração
-    $pdf->Text(112.18, 171.19, 'Measure Taken'); // new-41 - Measure Taken (Unit) (06) - Measure Taken
-    $pdf->Text(166.69, 171.19, 'Incerteza-erro-desv'); // new-42 - Incerteza-erro-desvio (06) - Incerteza-erro-desv
-    $pdf->Text(130.97, 156.63, 'Task sub'); // new-43 - Task sub item (06) - Task sub
-    $pdf->Text(166.69, 156.63, 'Inspector Stamp'); // new-45 - Inspector Stamp (06) - Inspector Stamp
-    $pdf->Text(166.69, 185.47, 'Equipamento apto para tarefa'); // new-37 - Equipment pass (06) - Equipamento apto para tarefa
-    $pdf->Text(55.83, 265.91, 'SN equipamento'); // new-47 - SN equipamento (07) - SN equipamento
-    $pdf->Text(1.32, 265.91, 'PN equipamento'); // new-48 - PN equipamento (07) - PN equipamento
-    $pdf->Text(1.32, 251.09, 'Proxima Calibração'); // new-49 - Proxima Calibração (07) - Proxima Calibração
-    $pdf->Text(1.32, 236.8, 'Measure Taken'); // new-50 - Measure Taken (Unit) (07) - Measure Taken
-    $pdf->Text(55.83, 236.8, 'Incerteza-erro-desv'); // new-51 - Incerteza-erro-desvio (07) - Incerteza-erro-desv
-    $pdf->Text(20.11, 222.25, 'Task sub'); // new-52 - Task sub item (07) - Task sub
-    $pdf->Text(55.83, 251.09, 'Equipamento apto para tarefa'); // new-46 - Equipment pass (07) - Equipamento apto para tarefa
-    $pdf->Text(112.18, 200.29, 'PN equipamento'); // new-39 - PN equipamento (06) - PN equipamento
-    $pdf->Text(166.69, 265.91, 'SN equipamento'); // new-56 - SN equipamento (08) - SN equipamento
-    $pdf->Text(112.18, 265.91, 'PN equipamento'); // new-57 - PN equipamento (08) - PN equipamento
-    $pdf->Text(112.18, 251.09, 'Proxima Calibração'); // new-58 - Proxima Calibração (08) - Proxima Calibração
-    $pdf->Text(112.18, 236.8, 'Measure Taken'); // new-59 - Measure Taken (Unit) (08) - Measure Taken
-    $pdf->Text(166.69, 236.8, 'Incerteza-erro-desv'); // new-60 - Incerteza-erro-desvio (08) - Incerteza-erro-desv
-    $pdf->Text(130.97, 222.25, 'Task sub'); // new-61 - Task sub item (08) - Task sub
-    $pdf->Text(166.69, 222.25, 'Inspector Stamp'); // new-63 - Inspector Stamp (08) - Inspector Stamp
-    $pdf->Text(166.69, 251.09, 'Equipamento apto para tarefa'); // new-55 - Equipment pass (08) - Equipamento apto para tarefa
-    $pdf->Text(55.83, 222.25, 'Inspector Stamp'); // new-54 - Inspector Stamp (07) - Inspector Stamp
-    $pdf->Text(1.32, 25.93, 'Data'); // p029 - Data - Data
-    $pdf->Text(112.18, 25.93, 'Data (02)'); // new-7 - Data 02 - Data (02)
-    $pdf->Text(1.32, 91.02, 'Data'); // new-17 - Data (03) - Data
-    $pdf->Text(112.18, 91.02, 'Data'); // new-26 - Data (04) - Data
-    $pdf->Text(1.32, 156.63, 'Data'); // new-35 - Data (05) - Data
-    $pdf->Text(112.18, 156.63, 'Data'); // new-44 - Data (06) - Data
-    $pdf->Text(1.32, 222.25, 'Data'); // new-53 - Data (07) - Data
-    $pdf->Text(112.18, 222.25, 'Data'); // new-62 - Data (08) - Data
+    $var_records = array();
+    if ({ds_calib} !== false && !empty({ds_calib})) {
+        $var_raw = {ds_calib[0][0]};
+        if (!empty($var_raw)) {
+            $var_rows = explode('~~', $var_raw);
+            foreach ($var_rows as $var_row) {
+                $var_parts = explode('|', $var_row);
+                if (count($var_parts) >= 5) {
+                    $var_ts_data = strtotime($var_parts[0]);
+                    $var_ts_prox = strtotime($var_parts[2]);
+                    $var_records[] = array(
+                        'data'        => $var_ts_data ? date('d/m/Y', $var_ts_data) : ' ',
+                        'task_sub'    => $var_parts[1],
+                        'inspector'   => '* Inspector Stamp',
+                        'measure'     => $var_parts[1],
+                        'incer'       => '* Incerteza-erro-desv',
+                        'prox_calib'  => $var_ts_prox ? date('d/m/Y', $var_ts_prox) : ' ',
+                        'equip_pass'  => '* Equipment pass',
+                        'pn'          => $var_parts[3] ?: ' ',
+                        'sn'          => $var_parts[4] ?: ' ',
+                    );
+                }
+            }
+        }
+    }
+
+    // Fallback: se nao ha dados, cria 8 registros placeholder
+    if (empty($var_records)) {
+        for ($i = 0; $i < 8; $i++) {
+            $var_records[] = array(
+                'data'        => ' ',
+                'task_sub'    => ' ',
+                'inspector'   => '* Inspector Stamp',
+                'measure'     => ' ',
+                'incer'       => '* Incerteza-erro-desv',
+                'prox_calib'  => ' ',
+                'equip_pass'  => '* Equipment pass',
+                'pn'          => ' ',
+                'sn'          => ' ',
+            );
+        }
+    }
+
+    // --- Posicoes fixas dos cards ---
+    // 4 linhas (base Y) x 2 colunas (esquerda/direita)
+    $card_positions = array(
+        // base_y  | X col esq          | X col dir
+        1 => array('y' => 25.93, 'xl' =>  1.32, 'xr' => 112.18),
+        2 => array('y' => 25.93, 'xl' =>  1.32, 'xr' => 112.18),
+        3 => array('y' => 91.02, 'xl' =>  1.32, 'xr' => 112.18),
+        4 => array('y' => 91.02, 'xl' =>  1.32, 'xr' => 112.18),
+        5 => array('y' => 156.63,'xl' =>  1.32, 'xr' => 112.18),
+        6 => array('y' => 156.63,'xl' =>  1.32, 'xr' => 112.18),
+        7 => array('y' => 222.25,'xl' =>  1.32, 'xr' => 112.18),
+        8 => array('y' => 222.25,'xl' =>  1.32, 'xr' => 112.18),
+    );
+
+    // Nomes de campo => [ x_offset_esq, x_offset_dir, y_offset, largura, is_multicell ]
+    $field_cfg = array(
+        'data'       => array(  0.00,   0.00,  0.00,   0,     false),
+        'task_sub'   => array( 18.79,  18.79,  0.00,  34.13, true),
+        'inspector'  => array( 54.51,  54.51,  0.00,  49.21, true),
+        'measure'    => array(  0.00,  -0.26, 14.55,  52.12, true),
+        'incer'      => array( 53.98,  54.51, 14.55,  49.74, true),
+        'prox_calib' => array( -0.79,   0.00, 28.84,  52.92, true),
+        'equip_pass' => array( 54.51,  54.51, 28.84,  48.68, true),
+        'pn'         => array(  0.00,  -0.26, 43.66,  52.65, true),
+        'sn'         => array( 54.51,  54.77, 43.66,  48.68, true),
+    );
+
+    // --- Renderizacao ---
+    // Agrupa registros em paginas de 8
+    $var_chunks = array_chunk($var_records, 8);
+    $var_page_count = 0;
+
+    foreach ($var_chunks as $var_chunk) {
+        $pdf->AddPage();
+        $var_page_count++;
+
+        $imgFundo = '../_lib/img/grp__NM__bg__NM__pack_page_5_calibrated_trim.png';
+        $pdf->Image($imgFundo, 0, 0, 215.9, 279.4, 'PNG', '', '', false, 300, '', false, false, 0);
+        $pdf->setPageMark();
+
+        // Header
+        $pdf->SetFont('helvetica', '', 9.75);
+        $pdf->Text(173.83, 7.14, $var_task_code);
+        $pdf->Text(123.56, 7.14, $var_reg);
+        $pdf->Text(66.41, 7.14, $var_model);
+
+        // Cards (fonte 10px = 7.5pt)
+        $pdf->SetFont('helvetica', '', 7.5);
+        foreach ($var_chunk as $var_idx => $var_rec) {
+            $var_card = $var_idx + 1;
+            $var_pos = $card_positions[$var_card];
+            $var_base_y = $var_pos['y'];
+
+            // Card 1=esquerda, 2=direita, 3=esquerda, 4=direita ...
+            $var_is_right = ($var_card % 2 == 0);
+            $var_x_base = $var_is_right ? $var_pos['xr'] : $var_pos['xl'];
+
+            foreach ($field_cfg as $var_field => $var_cfg) {
+                $var_x = $var_x_base + ($var_is_right ? $var_cfg[1] : $var_cfg[0]);
+                $var_y = $var_base_y + $var_cfg[2];
+                $var_w = $var_cfg[3];
+                $var_is_mc = $var_cfg[4];
+                if ($var_is_mc && $var_w > 0) {
+                    $pdf->MultiCell($var_w, 0, $var_rec[$var_field], 0, 'L', false, 1, $var_x, $var_y, true);
+                } else {
+                    $pdf->Text($var_x, $var_y, $var_rec[$var_field]);
+                }
+            }
+        }
+    }
 }
