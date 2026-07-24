@@ -139,6 +139,10 @@
         "/^python -c \"import pkgutil; mods=\\[m\\.name for m in pkgutil\\.iter_modules\\(\\) if m\\.name\\.lower\\(\\)\\.startswith\\(\\('pypdf','pyPdf','pdf','fitz'\\)\\)\\]; print\\(mods\\)\"$/": {
             "approve": true,
             "matchCommandLine": true
+        },
+        "/^python -c \"import sys; print\\(sys\\.version\\)\"$/": {
+            "approve": true,
+            "matchCommandLine": true
         }
     },
     "favorites.resources": [
@@ -168,6 +172,14 @@
         },
         {
             "filePath": "__Tarefas\\MRO-118\\jobcard_app",
+            "group": "Default"
+        },
+        {
+            "filePath": "tasks\\form_public_mro_task_assignments_progress",
+            "group": "Default"
+        },
+        {
+            "filePath": "Timesheet\\control_split_assignment",
             "group": "Default"
         }
     ]

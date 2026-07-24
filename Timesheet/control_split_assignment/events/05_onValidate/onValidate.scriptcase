@@ -1,0 +1,25 @@
+<?php
+
+// ====================================================================
+// MRO-119: Validacao — nao permitir split para o mesmo funcionario
+// ====================================================================
+
+$var_assignment_id = (int){assignment_id};
+$var_new_employee  = (int){employee_info};
+
+if ($var_assignment_id > 0 && $var_new_employee > 0) {
+    $var_sql = "SELECT executed_by_employee_id
+                FROM mro_task_assignments
+                WHERE assignment_id = " . $var_assignment_id;
+    sc_lookup(rs_orig_emp, $var_sql);
+
+    if ({rs_orig_emp} === false) {
+        sc_error_message("Erro ao consultar funcionario original.");
+        sc_error_exit();
+    }
+
+    if (!empty({rs_orig_emp}) && (int){rs_orig_emp[0][0]} == $var_new_employee) {
+        sc_error_message("Nao e possivel dividir o assignment para o mesmo funcionario da atribuicao original.");
+        sc_error_exit();
+    }
+}

@@ -1,0 +1,49 @@
+{
+  "nome": "control_split_assignment",
+  "tipo": "Control",
+  "nome_tabela": "control_split_assignment",
+  "campos": [
+    {
+      "nome": "assignment_id",
+      "tipo": "integer",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "task_info",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "skill_info",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "employee_info",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "hours_origin",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "hours_split",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "status_info",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    }
+  ]
+}

@@ -1,0 +1,129 @@
+<?php
+
+// ====================================================================
+// MRO-119: Executa o split do assignment
+//
+// 1. Consulta dados completos do assignment original
+// 2. Atualiza assignment original com metade das horas
+// 3. Cria NOVO assignment com a outra metade
+// 4. Registra evento SPLIT em mro_assignment_events
+// 5. Fecha modal e recarrega a pagina do supervisor
+// ====================================================================
+
+$var_assignment_id = (int){assignment_id};
+$var_original_hours = (float)[glo_split_original_hours];
+$var_new_hours = $var_original_hours / 2;
+
+sc_begin_trans();
+
+// 1. Carrega dados completos do assignment original
+$var_sql = "SELECT task_id, skill_id, planned_skill_id, project_id, supervisor_id,
+                   resource_id, role_id
+            FROM mro_task_assignments
+            WHERE assignment_id = " . $var_assignment_id;
+sc_lookup(rs_orig, $var_sql);
+
+if ({rs_orig} === false) {
+    sc_rollback_trans();
+    sc_error_message("Erro ao carregar assignment original.");
+    sc_error_exit();
+}
+
+if (empty({rs_orig})) {
+    sc_rollback_trans();
+    sc_error_message("Assignment original nao encontrado.");
+    sc_error_exit();
+}
+
+$var_task_id          = (int){rs_orig[0][0]};
+$var_skill_id         = !empty({rs_orig[0][1]}) ? (int){rs_orig[0][1]} : "NULL";
+$var_planned_skill_id = !empty({rs_orig[0][2]}) ? (int){rs_orig[0][2]} : "NULL";
+$var_project_id       = !empty({rs_orig[0][3]}) ? (int){rs_orig[0][3]} : "NULL";
+$var_supervisor_id    = !empty({rs_orig[0][4]}) ? (int){rs_orig[0][4]} : "[usr_employee_id]";
+$var_resource_id      = !empty({rs_orig[0][5]}) ? (int){rs_orig[0][5]} : "NULL";
+$var_role_id          = addslashes({rs_orig[0][6]});
+
+// 2. Atualiza assignment original com metade das horas
+$var_sql_upd = "UPDATE mro_task_assignments
+                SET planned_qty_hours = " . $var_new_hours . ",
+                    updated_at = CURRENT_TIMESTAMP,
+                    updated_by = '[usr_login]'
+                WHERE assignment_id = " . $var_assignment_id;
+sc_exec_sql($var_sql_upd);
+
+if (sc_error_update) {
+    sc_rollback_trans();
+    sc_error_message("Erro ao atualizar horas do assignment original.");
+    sc_error_exit();
+}
+
+// 3. Cria NOVO assignment com a outra metade
+$var_sql_ins = "INSERT INTO mro_task_assignments
+                (task_id, skill_id, planned_skill_id, project_id, status_code,
+                 planned_qty_hours, supervisor_id, executed_by_employee_id,
+                 resource_id, role_id, created_by, created_at)
+                VALUES
+                (" . $var_task_id . ",
+                 " . $var_skill_id . ",
+                 " . $var_planned_skill_id . ",
+                 " . $var_project_id . ",
+                 'NOT_STARTED',
+                 " . $var_new_hours . ",
+                 " . $var_supervisor_id . ",
+                 " . (int){employee_info} . ",
+                 " . $var_resource_id . ",
+                 '" . $var_role_id . "',
+                 '[usr_login]',
+                 CURRENT_TIMESTAMP)";
+sc_exec_sql($var_sql_ins);
+
+if (sc_error_insert) {
+    sc_rollback_trans();
+    sc_error_message("Erro ao criar novo assignment.");
+    sc_error_exit();
+}
+
+// 4. Registra evento SPLIT no assignment original
+$var_desc = "Assignment dividido: " . number_format($var_original_hours, 2) .
+            "h dividido em 2 registros de " . number_format($var_new_hours, 2) . "h cada.";
+
+$var_sql_event = "INSERT INTO mro_assignment_events
+                  (assignment_id, event_type, performed_by_id, new_employee_id, description, user_agent)
+                  VALUES
+                  (" . $var_assignment_id . ",
+                   'SPLIT',
+                   [usr_employee_id],
+                   " . (int){employee_info} . ",
+                   '" . addslashes($var_desc) . "',
+                   '[usr_login]')";
+sc_exec_sql($var_sql_event);
+
+// 5. Commit final
+sc_commit_trans();
+
+// 6. Card de sucesso
+echo "<div style='max-width: 480px; margin: 20px auto; background: linear-gradient(135deg, #d4edda, #c3e6cb); 
+            border: 1px solid #b8daff; color: #155724; padding: 20px 24px; border-radius: 8px; 
+            text-align: center; font-size: 16px; font-weight: 500; box-shadow: 0 2px 8px rgba(0,0,0,0.08);'>
+        <i class='fas fa-check-circle' style='color: #28a745; font-size: 24px; margin-bottom: 8px; display: block;'></i>
+        Assignment dividido com sucesso!
+    </div>";
+
+// 8. Botao Voltar para o Painel do Supervisor
+$var_link_supervisor = sc_make_link('tabs_supervisor');
+
+echo <<<HTML
+<script>
+function scBtnFn_btn_voltar_tabs_supervisor() {
+    window.location.href = '$var_link_supervisor';
+}
+</script>
+<div style="text-align: center; margin: 24px 0;">
+    <a id="sc_btn_voltar_tabs_supervisor_bot" onclick="scBtnFn_btn_voltar_tabs_supervisor(); return false;"
+       style="font-family: 'Source Sans 3', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; color: #444; font-size: 14px; font-weight: normal; text-decoration: none; border-width: 1px; border-color: #ddd; border-style: solid; border-radius: 4px; background-color: #f8f9fa; padding: 3px 13px; cursor: pointer; transition: all 0.2s; display: inline-block; vertical-align: middle;">
+        <i class="icon_fa fas fa-arrow-left"></i>&nbsp;&nbsp;Voltar Painel Supervisor
+    </a>
+</div>
+HTML;
+
+exit();

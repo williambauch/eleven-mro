@@ -21,6 +21,27 @@ A app é chamada no grid das tarefas e no form tbm
 A app chamado hoje é a pdf_pack_jic que fica na pasta Reports.
 
 
+Os campos lista abaixo ainda não consegui identificar de onde é obtido no banco.
+
+Página 01 - JIC
+* 01 List if applicable
+* 02 List if applicable
+* Revisão da Referência
+* Aqui Assinatura do Cliente
+* Assinatura do IIO se necessário
+
+Página 03 - JMC
+* Provider (Sign & Stamp)
+* Requester (Sign & Stamp)
+
+Página 04 - Shift
+* SHIFT
+* STAMP
+
+Página 05 — Calibrated Tool
+* Inspector Stamp
+* Incerteza-erro-desv
+* Equipment pass
 
 
 

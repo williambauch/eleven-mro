@@ -164,6 +164,15 @@ if (!empty({is_nrc})) {
 
 
 // ====================================================================
+// MRO-119: baseline_phase_code editavel apenas em DRAFT
+// ====================================================================
+if (!empty({task_id}) && {status_code} != 'DRAFT') {
+    sc_field_readonly({baseline_phase_code}, 'on');
+} else {
+    sc_field_readonly({baseline_phase_code}, 'off');
+}
+
+// ====================================================================
 // DEBUG — Informacoes para teste (exibe apenas no topo do formulario)
 // ====================================================================
 

@@ -104,6 +104,12 @@
       "tipo": "varchar",
       "required": false,
       "pk": false
+    },
+    {
+      "nome": "btn_split_assignment",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
     }
   ]
 }

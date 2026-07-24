@@ -11,3 +11,12 @@ $js_popup = "window.open('$url_timeline', 'Timeline', 'width=800,height=600,scro
 {ver_historico} = "<a href='javascript:void(0)' onclick=\"$js_popup\" title='Ver Histórico de Atribuições'>
     <i class='fas fa-history' style='color: #1a73e8; cursor: pointer; font-size: 18px;'></i>
 </a>";
+
+// ====================================================================
+// MRO-119: Botao Adicionar Mecanico (split assignment)
+// ====================================================================
+$url_split = sc_make_link(control_split_assignment, glo_assignment_id_split={assignment_id});
+
+{btn_split_assignment} = "<a href='$url_split' target='_parent' title='Adicionar outro mecanico a esta tarefa (divide as horas pela metade)'>
+    <i class='fas fa-user-plus' style='color: #188038; cursor: pointer; font-size: 18px;'></i>
+</a>";
