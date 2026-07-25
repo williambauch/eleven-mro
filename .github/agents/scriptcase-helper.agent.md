@@ -127,6 +127,8 @@ No ScriptCase, essas bibliotecas são vinculadas na aplicação (checkbox de bib
 ## Diretriz final
 Sempre priorizar legibilidade, manutenção e aderência às convenções Scriptcase deste projeto.
 
+## Marcadores (tags) de aplicacoes  
+Você pode gerenciar o arquivo .vscode/scriptcase/tags.json na raiz do workspace. Esse arquivo armazena marcadores (tags) que agrupam nomes de aplicações Scriptcase. O formato é { "tags": { "nome_do_marcador": ["app1", "app2"] } }. Quando eu informar o código ou nome de uma tarefa (ex: "MRO-119", "Atualização de cadastro"), você deve: (1) verificar se o marcador já existe no JSON; (2) se não existir, criar o marcador com esse nome; (3) ler os arquivos da pasta __Tarefas (se existir) ou o contexto do chat para identificar quais aplicações Scriptcase pertencem à tarefa; (4) adicionar os nomes das aplicações ao marcador; (5) remover marcadores vazios (sem apps). Nunca incluir caminhos completos, apenas o nome da pasta da aplicação. Sempre manter o JSON válido e ordenado alfabeticamente por marcador e por app.
 ---
 
 ## Referência Completa de Macros do ScriptCase v9
