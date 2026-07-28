@@ -1,16 +1,15 @@
 # DEFINICAO DA TAREFA
 
-=========== DEFINICAO DA TAREFA ===========
+Resumo:
+A entidade principal de Tarefas precisa ser expandida para melhorar o planejamento e a alocação. É necessário incluir a rastreabilidade das Fases do projeto, permitir que mais de um mecânico/funcionário seja atribuído à mesma tarefa e criar filtros rápidos para identificar gargalos operacionais.
 
-**Incluir classificacao por fases, permitir multipla atribuicao e criar filtros avancados de pendencias e impedimentos no grid.**
+Critérios de Aceite:
 
-A entidade principal de Tarefas precisa ser expandida para melhorar o planejamento e a alocacao. Necessario incluir a rastreabilidade das Fases do projeto, permitir que mais de um mecanico/funcionario seja atribuido a mesma tarefa e criar filtros rapidos para identificar gargalos operacionais.
+Novos Campos: Adicionar os campos "Fase Baseline" (baseline_phase_code ) e "Fase" (phase_code) (buscando da tabela mro_project_phases) na interface da Tarefa.
 
-Criterios de Aceite:
+Grid e Pesquisa: Incluir esses dois novos campos nos filtros de pesquisa e habilitar a "quebra" (agrupamento) por eles nos grids.
 
-- Novos Campos: Adicionar os campos "Fase Baseline" (baseline_phase_code) e "Fase" (phase_code) (buscando da tabela mro_project_phases) na interface da Tarefa.
-- Grid e Pesquisa: Incluir esses dois novos campos nos filtros de pesquisa e habilitar a "quebra" (agrupamento) por eles nos grids.
-- Filtros de Pendencias: Criar botoes/filtros rapidos no grid de tarefas para listar: Tarefas retidas por predecessoras, Tarefas com falta de ferramentas, e Tarefas com falta de materiais.
+Filtros de Pendências: Criar botões/filtros rápidos no grid de tarefas para listar: Tarefas retidas por predecessoras, Tarefas com falta de ferramentas, e Tarefas com falta de materiais.
 
 Notas Técnicas:
 
@@ -23,6 +22,29 @@ form_public_mro_task_assignments_planned
 form_public_mro_task_assignments_progress/
 form_public_mro_task_assignments_blocked
 form_public_mro_task_assignments_completed
+
+
+# Rodrigo Souza - Nova Demanda 28/07/2026
+### filtro de tarefas “com impedimento” 
+Precisa incluir um filtro de tarefas “com impedimento” de tarefa predecessora, ou seja, a tarefa atual está impedida de seguir se tiver uma predecessora amarrada a ela que ainda não foi concluída.
+
+pensar numa lógica, ao criar ou importar ou associar uma tarefa predecessora, a sucessora tem que ficar marcada com algo do tipo “bloqueio predecessora”.
+
+E ao concluir a atividade predecessora, liberar a atividade sucessora.
+
+revisar lógica de “Liberar Tarefa” para só liberar se não tiver nenhum bloqueio
+
+dep_type	Significado	Registros
+FS =	Finish-to-Start (Término-Início) — A sucessora só pode começar quando a predecessora terminar	1.198 (99,75%)
+SS =	Start-to-Start (Início-Início) — A sucessora pode começar junto com a predecessora	3 (0,25%)
+
+### incluir todos esses campos no grid grid_public_mro_tasks e nos filtros
+Is Critical Path
+Is Rii
+Requires RII
+Is Blocked Material
+Is Blocked Tool
+Is Blocked Labor
 
 
 ## Sumário das alterações implementadas - WILLIAM BAUCH
@@ -44,7 +66,7 @@ form_public_mro_task_assignments_completed
 
 ---
 
-## `form_public_mro_tasks`
+## `form_public_mro_tasks` — Formulário principal de edição de tarefas (criação, alteração, abas de fases, dependências e dados operacionais)
 
 ### Exposicao dos campos phase_code e baseline_phase_code com lookup
 
@@ -56,7 +78,7 @@ form_public_mro_task_assignments_completed
 
 ---
 
-## `grid_public_mro_tasks`
+## `grid_public_mro_tasks` — Grid principal de consulta, filtros refinados, agrupamento por fases e liberação de tarefas para execução
 
 ### Campos adicionados ao filtro refinado e avancado
 
@@ -69,14 +91,43 @@ Os seguintes campos foram adicionados ao **filtro refinado** e ao **filtro avan�
 | `is_blocked_tool` | Blocked Tool |
 | `is_blocked_labor` | Blocked Labor |
 | `is_blocked_material` | Blocked Material |
+| `is_blocked_predecessor` | Blocked Predecessor |
+| `is_critical_path` | Is Critical Path |
+| `is_rii` | Is Rii |
+| `requires_rii` | Requires Rii |
 
 ### Quebra dinamica (agrupamento) por fases
 
 - Adicionado recurso de **quebra dinamica** para os campos `baseline_phase_code` (Fase Baseline) e `phase_code` (Fase), permitindo agrupar tarefas por fase no grid
 
+### Badge de bloqueio por predecessora no onRecord
+
+**`events/onRecord`**
+- Adicionado badge `predecessor_badge` com icone `fa-link-slash` e estilo vermelho (`#fce4ec` / `#c62828`) quando `is_blocked_predecessor = true`
+- Exibe tooltip "Bloqueada por tarefa predecessora"
+
+### Validacao de bloqueio no btn_liberar_para_execucao
+
+**`button/btn_liberar_para_execucao`**
+- Adicionada validacao no inicio: se `is_blocked_predecessor = true`, exibe erro e impede liberacao
+- Mensagem: "Esta tarefa nao pode ser liberada porque possui dependencia de uma tarefa predecessora que ainda nao foi concluida."
+
+### Dupla protecao no checkbox RUN
+
+**`events/onScriptInit`** (JS)
+- **Protecao 1 — Desabilitar checkbox:** A funcao `esconderCheckboxRun()` percorre os spans `id_sc_field_btn_predecessor_N` e, se `data-blocked='1'`, desabilita (`disabled = true`) e desmarca o checkbox `NM_ck_runN` da linha, alem de aplicar opacidade 0.4 no `td`
+- **Protecao 2 — Sobrescrita do "Selecionar Todos":** A funcao nativa `nm_marca_check_grid()` (chamada pelo checkbox `NM_ck_run0` no cabecalho) foi sobrescrita para marcar **apenas** checkboxes nao desabilitados (`!this.disabled`), impedindo que o "Selecionar Todos" marque tasks bloqueadas por predecessora
+- Executa no `setTimeout` ao carregar e novamente a cada `ajaxComplete` (cobertura para paginacao, ordenacao e filtros)
+
+### Aba "Dependencias" com duas sub-aplicacoes
+
+- Adicionada nova aba **"Dependencias"** no form, contendo duas sub-aplicacoes (detalhes) vinculadas ao mestre via `[glo_task_id]`:
+  - `form_public_mro_task_dependencies_predecessoras` — tarefas que bloqueiam a task atual
+  - `form_public_mro_task_dependencies_sucessoras` — tarefas que a task atual bloqueia
+
 ---
 
-## `control_split_assignment` (NOVA)
+## `Timesheet/control_split_assignment` (NOVA)
 
 ### App tipo Control para dividir assignments (multipla atribuicao)
 
@@ -123,38 +174,108 @@ Os seguintes campos foram adicionados ao **filtro refinado** e ao **filtro avan�
 
 ---
 
-## `form_public_mro_task_assignments_blocked`
+## `mro_tasks` — Bloqueio por Predecessora (Nova Demanda 28/07/2026)
 
-### Botao "Adicionar Mecanico" por linha
+### Migration 03 — Adicionar coluna is_blocked_predecessor
 
-**`events/onRecord`**
-- Mesmo icone `btn_split_assignment` chamando `control_split_assignment`
-- Aba no `tabs_supervisor`: **Com Impedimentos** (status BLOCKED)
-- Permite dividir a carga para desbloquear com nova alocacao
+**`migrations/MRO-119_03_add_is_blocked_predecessor.sql`**
+- Adiciona coluna `is_blocked_predecessor` (boolean, NOT NULL, DEFAULT false) na tabela `mro_tasks`
+- Cria indices `idx_task_dep_successor` e `idx_task_dep_predecessor` em `mro_task_dependencies` para performance das subqueries da trigger
+
+### Migration 04 — Trigger function + triggers
+
+**`migrations/MRO-119_04_trigger_blocked_predecessor.sql`**
+- Cria trigger function `fn_update_blocked_predecessor()` em PL/pgSQL
+- **Trigger 1** (`trg_task_dependencies_blocked`): AFTER INSERT, UPDATE ou DELETE em `mro_task_dependencies` — recalcula `is_blocked_predecessor` da sucessora ao criar, editar ou remover dependencia
+- **Trigger 2** (`trg_tasks_status_blocked`): AFTER UPDATE OF `status_code` em `mro_tasks` — ao concluir ou cancelar uma tarefa, recalcula flag de todas as suas sucessoras e da propria task (se for sucessora de alguem)
+
+### Migration 05 — Sincronizacao dos dados existentes
+
+**`migrations/MRO-119_05_sync_blocked_predecessor.sql`**
+- Deve rodar APOS as migrations 03 e 04
+- Atualiza `is_blocked_predecessor` para todas as tasks que ja possuiam dependencias antes da criacao da coluna
+- A partir dai, a trigger mantem o flag sincronizado automaticamente
+
+**`migrations/MRO-119_06_add_dependencies_apps_sec.sql`**
+- Registra `form_public_mro_task_dependencies_predecessoras` e `form_public_mro_task_dependencies_sucessoras` na tabela `sec_apps` (app_type = form)
+- Concede as mesmas permissoes de grupo do `form_public_mro_tasks` para ambas as apps em `sec_groups_apps`
 
 ---
 
-## Testes de validacao (MODELO 737NG - GOL, 3 assignments)
+## `form_public_mro_task_dependencies_predecessoras` (NOVA)
 
-### Teste A - Split de assignment IN_PROGRESS (7h)
-- **Assignment origem:** 15716 (Mecanico Teste, 7h, IN_PROGRESS)
-- **Novo funcionario:** Gabriela Lichevis
-- **Resultado:** Original atualizado para 3.50h, novo assignment 3.50h NOT_STARTED
-- **Validacao no banco:** OK — 2 registros, horas somam 7h
+### App Form para gerenciar dependencias (predecessoras)
 
-### Teste B - Split de assignment NOT_STARTED (3.50h)
-- **Assignment origem:** 15722 (Gabriela Lichevis, 3.50h, NOT_STARTED)
-- **Novo funcionario:** Clodoaldo Jose Ribeiro
-- **Resultado:** Original atualizado para 1.75h, novo assignment 1.75h NOT_STARTED
-- **Validacao no banco:** OK — 3 registros, horas somam 7h
+**Vinculada como detalhe do `form_public_mro_tasks`.** Permite adicionar, editar e remover tarefas predecessoras que bloqueiam a tarefa atual.
 
-### Teste C - Split de assignment BLOCKED (4h)
-- **Assignment origem:** 15712 (Mecanico Teste, 4h, BLOCKED)
-- **Novo funcionario:** Bruno de Lima Azevedo
-- **Resultado:** Original atualizado para 2.00h, novo assignment 2.00h NOT_STARTED
-- **Validacao no banco:** OK — 2 registros, horas somam 4h
+- Filtro mestre-detalhe: `successor_task_id = [glo_task_id]` (task atual e a sucessora)
+- Tipo: Form (CRUD direto na tabela `mro_task_dependencies`)
 
-### Teste D - Validacao mesmo funcionario
-- **Tentativa:** Split para o mesmo funcionario do assignment original
-- **Resultado:** Bloqueado com `sc_error_message` — "Nao e possivel dividir o assignment para o mesmo funcionario da atribuicao original."
-- **Validacao:** OK — impeditivo funciona corretamente
+**`events/onValidate`** — Validacoes de negocio:
+- Impede auto-referencia (`predecessor_task_id = successor_task_id`)
+- Impede duplicidade (mesmo par ja cadastrado)
+
+**`events/onAfterInsert`** — Apos inserir:
+- Consulta `is_blocked_predecessor` no banco (ja atualizado pela trigger)
+- Usa `sc_master_value("is_blocked_predecessor", valor)` para atualizar o campo no form pai `form_public_mro_tasks`
+
+**`events/onAfterUpdate`** — Apos alterar:
+- Mesma logica do onAfterInsert
+
+**`events/onBeforeDelete`** — Antes de deletar:
+- Armazena `successor_task_id` em `[glo_succ_id_deleted]` para usar apos a exclusao
+
+**`events/onAfterDelete`** — Apos deletar:
+- Le `[glo_succ_id_deleted]` e atualiza `is_blocked_predecessor` no form pai via `sc_master_value`
+
+---
+
+## `form_public_mro_task_dependencies_sucessoras` (NOVA)
+
+### App Form para gerenciar sucessoras
+
+**Vinculada como detalhe do `form_public_mro_tasks`.** Lista as tarefas que dependem da task atual (bloqueadas por ela).
+
+- Filtro mestre-detalhe: `predecessor_task_id = [glo_task_id]` (task atual e a predecessora)
+- Tipo: Form (CRUD direto na tabela `mro_task_dependencies`)
+- `events/onValidate`**: mesmas validacoes da `..._predecessoras` (auto-referencia e duplicidade)
+- **Não atualiza o mestre** via `sc_master_value` — quem muda o `is_blocked_predecessor` e a task sucessora, nao a atual
+
+---
+
+## Testes de validacao (Trigger Predecessora)
+
+### Teste A - Bloqueio ao criar dependencia (INSERT)
+- **Operacao:** `INSERT INTO mro_task_dependencies (predecessor_id=1, successor_id=15070, 'FS')`
+- **Pred status:** PLANNED
+- **Resultado esperado:** Sucessora marcada como `is_blocked_predecessor = true`
+- **Resultado:** ✅ **APROVADO** — trigger `trg_task_dependencies_blocked` funcionou
+
+### Teste B - Liberacao ao concluir predecessora (UPDATE status_code)
+- **Operacao:** `UPDATE mro_tasks SET status_code = 'COMPLETED' WHERE task_id = 1`
+- **Resultado esperado:** Sucessora liberada (`is_blocked_predecessor = false`)
+- **Resultado:** ✅ **APROVADO** — trigger `trg_tasks_status_blocked` funcionou
+
+### Teste C - Remocao de dependencia (DELETE)
+- **Operacao:** `DELETE FROM mro_task_dependencies WHERE pred_id=1 AND succ_id=15070`
+- **Resultado esperado:** Sucessora permanece `false` (ja havia sido liberada no teste B)
+- **Resultado:** ✅ **APROVADO** — trigger `trg_task_dependencies_blocked` funcionou para DELETE
+
+### Teste D - Multiplas predecessoras (liberacao parcial)
+- **Cenario:** WB-ROTINA-A com 3 predecessoras ativas (MI220, 370017, 370018)
+- **Operacao:** `UPDATE mro_tasks SET status_code = 'COMPLETED' WHERE task_id = 15083` (conclui MI220)
+- **Resultado esperado:** WB-ROTINA-A continua bloqueada (ainda ha 370017 e 370018 ativas)
+- **Resultado:** ✅ **APROVADO** — `is_blocked_predecessor` permanece `true`
+
+### Teste E - Validacao no Liberar para Execucao
+- **Cenario:** Task com `is_blocked_predecessor = true` no grid
+- **Operacao:** Clicar no botao "Liberar Execucao"
+- **Resultado esperado:** Bloqueado com mensagem de erro
+- **Resultado:** ✅ **APROVADO** — teste visual confirmado
+
+### Validacao no banco (aos 28/07/2026)
+| Metrica | Valor |
+|---------|-------|
+| Tasks com `is_blocked_predecessor = true` | 616 |
+| Tasks com `is_blocked_predecessor = false` | 15.660 |
+| Total de tasks | 16.276 |

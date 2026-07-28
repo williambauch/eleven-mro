@@ -62,3 +62,51 @@ if (!empty([glo_aviso_run])) {
     sc_alert([glo_aviso_run]);
     [glo_aviso_run] = '';
 }
+
+
+
+
+
+?>
+<script>
+// MRO-119: Desabilitar checkbox RUN se a task estiver bloqueada por predecessora
+function esconderCheckboxRun() {
+  const predSpans = document.querySelectorAll("span[id^='id_sc_field_btn_predecessor_']");
+  predSpans.forEach(span => {
+    const match = span.id.match(/id_sc_field_btn_predecessor_(\d+)$/);
+    if (!match) return;
+
+    const linhaNum = match[1];
+    const innerSpan = span.querySelector('span[data-blocked]');
+    if (!innerSpan) return;
+
+    const blocked = innerSpan.getAttribute('data-blocked');
+    const checkbox = document.getElementById('NM_ck_run' + linhaNum);
+
+    if (checkbox && blocked === '1') {
+      checkbox.disabled = true;
+      checkbox.checked = false;
+      checkbox.closest('td').style.opacity = '0.4';
+    }
+  });
+}
+
+setTimeout(esconderCheckboxRun, 1);
+
+$(document).ajaxComplete(function () {
+  setTimeout(esconderCheckboxRun, 1);
+});
+
+document.addEventListener("DOMContentLoaded", function () {
+  // MRO-119: Sobrescreve funcao nativa do ScriptCase para nao selecionar checkboxes desabilitados
+  window.nm_marca_check_grid = function(obj_mark) {
+    $(".sc-ui-check-run").each(function() {
+      if (!this.disabled) {
+        this.checked = obj_mark.checked;
+      }
+    });
+  };
+});
+</script>
+
+<?php

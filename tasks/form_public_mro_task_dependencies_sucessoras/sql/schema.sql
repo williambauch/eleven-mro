@@ -1,0 +1,1 @@
+SELECT * FROM "public".mro_task_dependencies WHERE predecessor_task_id = [glo_task_id]

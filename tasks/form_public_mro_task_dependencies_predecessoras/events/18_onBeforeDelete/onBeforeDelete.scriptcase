@@ -1,0 +1,5 @@
+<?php
+
+// MRO-119: Armazenar successor_task_id antes de deletar
+// para usar no onAfterDelete ao atualizar o form pai
+[glo_succ_id_deleted] = (int){successor_task_id};

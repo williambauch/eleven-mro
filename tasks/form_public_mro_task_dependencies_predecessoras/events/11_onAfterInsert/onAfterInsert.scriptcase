@@ -1,0 +1,14 @@
+<?php
+
+// MRO-119: Atualizar label no form pai
+$var_succ = (int){successor_task_id};
+
+if ($var_succ > 0) {
+    $var_sql = "SELECT is_blocked_predecessor FROM mro_tasks WHERE task_id = " . $var_succ;
+    sc_lookup(rs_block, $var_sql);
+
+    if (!empty({rs_block})) {
+        $var_label = ({rs_block[0][0]} == 't' || {rs_block[0][0]} == 1 || {rs_block[0][0]} === true) ? "Com bloqueio" : "Sem bloqueio";
+        sc_master_value("is_blocked_predecessor_label", $var_label);
+    }
+}

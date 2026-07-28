@@ -6,6 +6,16 @@ $v_status  = {status_code};
 $v_projeto = {project_id};
 
 // ====================================================================
+// MRO-119: Verificar bloqueio por predecessora
+// ====================================================================
+$v_is_blocked_pred = {is_blocked_predecessor};
+
+if ($v_is_blocked_pred == 't' || $v_is_blocked_pred === true || $v_is_blocked_pred == 1) {
+    sc_error_message("A tarefa ID $v_task_id não pode ser liberada porque possui dependência de uma tarefa predecessora que ainda não foi concluída.");
+    sc_error_exit();
+}
+
+// ====================================================================
 // CRÍTICA DE STATUS: Só processa se estiver como NOT_STARTED
 // ====================================================================
 if ($v_status == 'PLANNING' || $v_status == 'NOT_STARTED' || $v_status == 'PLANNED') {

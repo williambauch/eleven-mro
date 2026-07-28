@@ -9,7 +9,9 @@
       "form_public_mro_tasks",
       "grid_public_mro_tasks",
       "tabs_supervisor",
-      "control_split_assignment"
+      "control_split_assignment",
+      "form_public_mro_task_dependencies_predecessoras",
+      "form_public_mro_task_dependencies_sucessoras"
     ],
     "MRO-118": [
       "blank_pdf_pack_jic",

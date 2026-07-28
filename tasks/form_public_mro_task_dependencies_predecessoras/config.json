@@ -1,0 +1,61 @@
+{
+  "nome": "form_public_mro_task_dependencies_predecessoras",
+  "tipo": "Form",
+  "nome_tabela": "\"public\".mro_task_dependencies",
+  "campos": [
+    {
+      "nome": "dependency_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": true
+    },
+    {
+      "nome": "predecessor_task_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "successor_task_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "dep_type",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "lag_hours",
+      "tipo": "numeric",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "created_at",
+      "tipo": "datetime",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "created_by",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "updated_at",
+      "tipo": "datetime",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "updated_by",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    }
+  ]
+}

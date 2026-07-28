@@ -18,3 +18,15 @@ if (!empty({is_nrc})) {
         sc_error_exit();
     }
 }
+
+
+// ====================================================================
+// MRO-115 VALIDACAO DO CAMPO Skill_Code
+// ====================================================================
+// O campo Skill_Code e obrigatorio pois e utilizado na montagem do
+// codigo de barras do Pack JIC (posicao 34-35 do barcode).
+
+if (empty({Skill_Code})) {
+    sc_error_message("O campo Skill Code e obrigatÓrio. Ele e utilizado na geração do código de barras do Pack JIC.");
+    sc_error_exit();
+}

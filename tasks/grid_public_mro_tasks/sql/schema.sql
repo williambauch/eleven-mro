@@ -56,5 +56,6 @@ SELECT
     estimated_material_cost,
     created_by,
     corrective_action,
-    is_milestone
+    is_milestone,
+    is_blocked_predecessor
 FROM public.mro_tasks

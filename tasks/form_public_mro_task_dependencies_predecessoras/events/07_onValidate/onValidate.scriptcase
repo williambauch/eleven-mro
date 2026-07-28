@@ -1,0 +1,39 @@
+<?php
+
+// ====================================================================
+// MRO-119: Validações de dependência (predecessora)
+// ====================================================================
+
+if (!empty({successor_task_id}) && !empty({predecessor_task_id})) {
+
+    $var_pred = (int){predecessor_task_id};
+    $var_succ = (int){successor_task_id};
+
+    // 1. Impedir auto-referência (task ser predecessor dela mesma)
+    if ($var_pred == $var_succ) {
+        sc_error_message("Uma tarefa não pode ser predecessora dela mesma.");
+        sc_error_exit();
+    }
+
+    // 2. Impedir duplicidade (mesmo par já cadastrado)
+    $var_sql_dup = "SELECT dependency_id FROM mro_task_dependencies
+                    WHERE predecessor_task_id = " . $var_pred . "
+                      AND successor_task_id = " . $var_succ;
+
+    // Se for UPDATE, excluir o próprio registro da verificação
+    if (!empty({dependency_id})) {
+        $var_sql_dup .= " AND dependency_id != " . (int){dependency_id};
+    }
+
+    sc_lookup(ds_dup, $var_sql_dup);
+
+    if ({ds_dup} === false) {
+        sc_error_message("Erro ao verificar duplicidade de dependência.");
+        sc_error_exit();
+    }
+
+    if (!empty({ds_dup})) {
+        sc_error_message("Esta dependência já está cadastrada.");
+        sc_error_exit();
+    }
+}
