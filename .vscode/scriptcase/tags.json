@@ -15,7 +15,13 @@
       "blank_pdf_pack_jic",
       "form_public_mro_task_resources",
       "grid_public_mro_tasks",
-      "pdf_pack_jic"
+      "pdf_pack_jic",
+      "ctrl_abertura_nrc"
+    ],
+    "MRO-125": [
+      "blank_pdf_pack_jic",
+      "ctrl_abertura_nrc",
+      "form_public_mro_tasks"
     ]
   }
 }

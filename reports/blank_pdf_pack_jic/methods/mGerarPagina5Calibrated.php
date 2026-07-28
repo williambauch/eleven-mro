@@ -39,11 +39,11 @@ function mGerarPagina5Calibrated($pdf, $data)
                         $var_records[] = array(
                             'data'        => $var_ts_data ? date('d/m/Y', $var_ts_data) : ' ',
                             'task_sub'    => $var_parts[1],
-                            'inspector'   => '* Inspector Stamp',
+                            'inspector'   => '',
                             'measure'     => $var_parts[1],
-                            'incer'       => '* Incerteza-erro-desv',
+                            'incer'       => '',
                             'prox_calib'  => $var_ts_prox ? date('d/m/Y', $var_ts_prox) : ' ',
-                            'equip_pass'  => '* Equipment pass',
+                            'equip_pass'  => '',
                             'pn'          => $var_parts[3] ?: ' ',
                             'sn'          => $var_parts[4] ?: ' ',
                         );
@@ -58,11 +58,11 @@ function mGerarPagina5Calibrated($pdf, $data)
                 $var_records[] = array(
                     'data'        => ' ',
                     'task_sub'    => ' ',
-                    'inspector'   => '* Inspector Stamp',
+                    'inspector'   => ' ',
                     'measure'     => ' ',
-                    'incer'       => '* Incerteza-erro-desv',
+                    'incer'       => ' ',
                     'prox_calib'  => ' ',
-                    'equip_pass'  => '* Equipment pass',
+                    'equip_pass'  => ' ',
                     'pn'          => ' ',
                     'sn'          => ' ',
                 );

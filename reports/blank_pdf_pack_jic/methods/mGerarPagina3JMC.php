@@ -89,6 +89,6 @@ function mGerarPagina3JMC($pdf, $data)
         $pdf->writeHTML($tblHtml, true, false, false, false, '');
         // Fonte: 11px normal -> 8.25pt
         $pdf->SetFont('helvetica', '', 8.25);
-        $pdf->Text(48.68, 260.61, '* Provider (Sign & Stamp)'); // p047
-        $pdf->Text(136.26, 261.41, '* Requester (Sign & Stamp)'); // p048
+        $pdf->Text(48.68, 260.61, ''); // p047
+        $pdf->Text(136.26, 261.41, ''); // p048
 }

@@ -106,10 +106,10 @@ function mGerarPagina4Shift($pdf, $data)
                 $pdf->Text(177.01, $var_y['mtr'], $var_rec['mtr']);
 
                 // SHIFT
-                $pdf->Text(202.94, $var_y['shift'], '* SHIFT');
+                $pdf->Text(202.94, $var_y['shift'], '');
 
                 // STAMP
-                $pdf->Text(182.56, $var_y['stamp'], '* STAMP');
+                $pdf->Text(182.56, $var_y['stamp'], '');
 
                 // Data_stamp (apenas card 1)
                 if ($var_card == 1 && isset($var_y['data_stamp'])) {

@@ -58,20 +58,74 @@ $parent_code  = {rs_parent[0][0]};
 $v_project_id = {rs_parent[0][1]}; 
 
 // ====================================================================
-// 3. LÓGICA DE GERAÇÃO DO CÓDIGO DA NRC
+// 3. LOGICA DE GERACAO DO CODIGO DA NRC (hierarquia completa)
 // ====================================================================
-$base_code = (substr($parent_code, 0, 2) === 'NR') ? $parent_code : 'NR' . $parent_code;
+// Regras do cliente (MRO-125):
+//   N-   = N{JIC}{seq_N}           ex: "N370021001"      (10 chars)
+//   NN-  = NN{JIC}{seq_NN}{seq_N}  ex: "NN14A081001001"  (14 chars)
+//   NNN  = NNN{JIC}{seq1}{seq2}{seq3} ex: "NNN131414008001001" (18 chars)
+// A cada nivel, adiciona-se um "N" no prefixo e herda-se os
+// sequenciais do pai + um novo sequencial de 3 digitos.
 
-$sql_last_child = "SELECT task_code FROM mro_tasks WHERE parent_task_id = $v_parent_task AND task_code LIKE '$base_code-%' ORDER BY task_id DESC LIMIT 1";
+// Trata formato antigo "NR{JIC}-{seq2}" converte para "N{JIC}{seq3}"
+$var_normalizado = $parent_code;
+if (substr($var_normalizado, 0, 2) === 'NR') {
+    $var_temp = substr($var_normalizado, 2);
+    $var_partes = explode('-', $var_temp);
+    $var_jic_old = $var_partes[0];
+    $var_seq_old = isset($var_partes[1]) ? str_pad((int)$var_partes[1], 3, '0', STR_PAD_LEFT) : '001';
+    $var_normalizado = 'N' . $var_jic_old . $var_seq_old;
+}
+
+// Detecta quantos "N" de prefixo o pai tem
+$var_nivel = 0;
+$var_resto = $var_normalizado;
+while (substr($var_resto, 0, 1) === 'N') {
+    $var_nivel++;
+    $var_resto = substr($var_resto, 1);
+}
+// nivel=0 = rotina, nivel=1 = N-, nivel=2 = NN-, nivel=3 = NNN
+
+// Extrai JIC (6 primeiros caracteres apos os N's) e sequenciais herdados
+if ($var_nivel > 0) {
+    $var_jic = substr($var_resto, 0, 6);
+    $var_seqs_pai = substr($var_resto, 6);
+} else {
+    // Rotina: o proprio task_code e o JIC
+    $var_jic = $var_normalizado;
+    $var_seqs_pai = '';
+}
+
+// Monta a base do novo codigo:
+// prefixo com +1 N + JIC + sequenciais herdados do pai
+$var_novo_nivel = $var_nivel + 1;
+$var_prefixo = str_repeat('N', $var_novo_nivel);
+$var_base = $var_prefixo . $var_jic . $var_seqs_pai;
+
+// Busca o ultimo filho para determinar o proximo sequencial
+// Procura tanto no formato novo (N...) quanto no antigo (NR...-)
+$var_jic_esc = addslashes($var_jic);
+$sql_last_child = "SELECT task_code FROM mro_tasks
+                   WHERE parent_task_id = $v_parent_task
+                   AND (task_code LIKE '" . addslashes($var_base) . "%'
+                        OR task_code LIKE 'NR" . $var_jic_esc . "-%')
+                   ORDER BY task_id DESC LIMIT 1";
 sc_lookup(rs_child, $sql_last_child);
 
 $next_seq = 1;
 if (!empty({rs_child[0][0]})) {
-    $parts = explode('-', {rs_child[0][0]});
-    $last_seq = (int) end($parts); 
+    $var_child_code = {rs_child[0][0]};
+    if (substr($var_child_code, 0, 2) === 'NR') {
+        // Formato antigo: extrai seq apos o hifen
+        $parts = explode('-', $var_child_code);
+        $last_seq = (int) end($parts);
+    } else {
+        // Novo formato: extrai os 3 ultimos caracteres
+        $last_seq = (int) substr($var_child_code, -3);
+    }
     $next_seq = $last_seq + 1;
 }
-$novo_task_code = $base_code . '-' . str_pad($next_seq, 2, '0', STR_PAD_LEFT);
+$novo_task_code = $var_base . str_pad($next_seq, 3, '0', STR_PAD_LEFT);
 
 // ====================================================================
 // 4. INSERT DA NOVA NRC
