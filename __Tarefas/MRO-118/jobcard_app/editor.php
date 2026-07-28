@@ -455,10 +455,10 @@ $imagesJson = json_encode($availableImages);
 
   /* ===== BORDAS VISÍVEIS ===== */
   .letter.show-borders .placed-item {
-    border-color: rgba(0,0,0,0.15);
+    border-color: rgba(230,126,34,0.35);
   }
   .letter.show-borders .placed-item:hover {
-    border-color: rgba(52,152,219,0.5);
+    border-color: rgba(230,126,34,0.7);
   }
   .letter.show-borders .placed-item.selected {
     border-color: #e74c3c;
@@ -470,10 +470,10 @@ $imagesJson = json_encode($availableImages);
     border-left-color: #8e44ad;
   }
   .letter.show-borders .placed-item.multiline {
-    border-color: rgba(39,174,96,0.25);
+    border-color: rgba(230,126,34,0.25);
   }
   .letter.show-borders .placed-item.multiline:hover {
-    border-color: rgba(39,174,96,0.55);
+    border-color: rgba(230,126,34,0.55);
   }
 
   .placed-item {

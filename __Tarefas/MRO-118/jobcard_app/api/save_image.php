@@ -11,7 +11,7 @@ if (!$input || !isset($input['page']) || !isset($input['image'])) {
 $page = (int)$input['page'];
 $image = preg_replace('/[^a-zA-Z0-9_.-]/', '', $input['image']);
 
-if ($page < 1 || $page > 5) {
+if ($page < 1 || $page > 6) {
     echo json_encode(['success' => false, 'error' => 'Página inválida']);
     exit;
 }

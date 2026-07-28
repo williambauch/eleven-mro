@@ -2,7 +2,7 @@
 header('Content-Type: application/json; charset=utf-8');
 
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-if ($page < 1 || $page > 5) {
+if ($page < 1 || $page > 6) {
     echo json_encode(['saved' => false, 'error' => 'Página inválida']);
     exit;
 }

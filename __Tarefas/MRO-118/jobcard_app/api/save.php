@@ -9,7 +9,7 @@ if (!$input || !isset($input['page']) || !isset($input['items'])) {
 }
 
 $page = (int)$input['page'];
-if ($page < 1 || $page > 5) {
+if ($page < 1 || $page > 6) {
     echo json_encode(['success' => false, 'error' => 'Página inválida']);
     exit;
 }
