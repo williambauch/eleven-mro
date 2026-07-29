@@ -2,9 +2,10 @@
 
 // Exibe o tipo de rotina no topo da tela
 {routine_type} = empty({is_nrc}) ? "Rotina Padrão" : "Não Rotina (RN)";
-
+ 
 // MRO-119: Label de bloqueio por predecessora
 {is_blocked_predecessor_label} = {is_blocked_predecessor} ? "Com bloqueio" : "Sem bloqueio";
+
 
 // ====================================================================
 // GRUPOS DE ACESSO DO USUÁRIO

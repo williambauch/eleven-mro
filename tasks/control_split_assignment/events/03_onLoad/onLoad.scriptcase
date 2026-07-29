@@ -1,0 +1,63 @@
+<?php
+
+// ====================================================================
+// MRO-119: control_split_assignment — Carrega dados do assignment
+// ====================================================================
+
+// Recebe o assignment_id via global (setado pelo icone na app do supervisor)
+$var_assignment_id = (int)[glo_assignment_id_split];
+{assignment_id} = $var_assignment_id;
+
+if ($var_assignment_id <= 0) {
+    sc_error_message("Assignment invalido.");
+    sc_error_exit();
+}
+
+// Query dados do assignment original + task + skill + employee
+$var_sql = "SELECT
+                t.task_code,
+                t.task_name,
+                COALESCE(e.full_name, 'Nao atribuido') AS employee_name,
+                s.skill_code AS skill_code,
+                a.planned_qty_hours,
+                a.status_code,
+                a.skill_id,
+                a.task_id,
+                a.project_id,
+                a.supervisor_id,
+                a.planned_skill_id
+            FROM mro_task_assignments a
+            LEFT JOIN mro_tasks t ON t.task_id = a.task_id
+            LEFT JOIN mro_employees e ON e.employee_id = a.executed_by_employee_id
+            LEFT JOIN mro_skills s ON s.skill_id = a.skill_id
+            WHERE a.assignment_id = " . $var_assignment_id;
+sc_lookup(rs_orig, $var_sql);
+
+if ({rs_orig} === false) {
+    sc_error_message("Erro ao consultar assignment: " . {rs_orig_erro});
+    sc_error_exit();
+}
+
+if (empty({rs_orig})) {
+    sc_error_message("Assignment nao encontrado (ID: " . $var_assignment_id . ").");
+    sc_error_exit();
+}
+
+// Preenche os campos de exibicao
+$var_task_code    = {rs_orig[0][0]};
+$var_task_name    = {rs_orig[0][1]};
+$var_employee     = {rs_orig[0][2]};
+$var_skill        = {rs_orig[0][3]};
+$var_hours        = (float){rs_orig[0][4]};
+$var_status       = {rs_orig[0][5]};
+$var_hours_split  = $var_hours / 2;
+
+{task_info} = $var_task_code . " - " . $var_task_name;
+{skill_info} = $var_skill;
+{employee_info} = $var_employee;
+{hours_origin} = number_format($var_hours, 2, ',', '.');
+{hours_split} = number_format($var_hours_split, 2, ',', '.');
+{status_info} = $var_status;
+
+// Armazena horas originais em global para usar no onValidateSuccess
+[glo_split_original_hours] = $var_hours;

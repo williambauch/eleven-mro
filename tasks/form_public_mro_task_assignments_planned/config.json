@@ -16,6 +16,12 @@
       "pk": true
     },
     {
+      "nome": "btn_split_assignment",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
       "nome": "created_at",
       "tipo": "datetime",
       "required": false,
@@ -101,12 +107,6 @@
     },
     {
       "nome": "updated_by",
-      "tipo": "varchar",
-      "required": false,
-      "pk": false
-    },
-    {
-      "nome": "btn_split_assignment",
       "tipo": "varchar",
       "required": false,
       "pk": false

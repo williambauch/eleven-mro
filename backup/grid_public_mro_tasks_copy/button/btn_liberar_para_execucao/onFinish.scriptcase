@@ -1,0 +1,8 @@
+<?php
+
+$total_selecionado = $this->count_all;
+
+$mensagem = "Liberação concluída!<br><br>";
+$mensagem .= "As tarefas com status <b>PLANNING</b> selecionadas foram liberadas no Painel do Supervisor.";
+
+[glo_aviso_run] = $mensagem;

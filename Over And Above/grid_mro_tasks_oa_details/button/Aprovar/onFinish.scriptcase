@@ -1,0 +1,90 @@
+<?php
+
+// 1. Consulta dos status (Pode manter como está, está correta para Postgres)
+$sql_check = "
+    SELECT 
+        COUNT(*) as total,
+        SUM(CASE WHEN status_code = 'RELEASED' THEN 1 ELSE 0 END) as qtd_aprovadas,
+        SUM(CASE WHEN status_code = 'COMMERCIAL_REVIEW' THEN 1 ELSE 0 END) as qtd_reprovadas
+    FROM mro_tasks 
+    WHERE oa_batch_id = [batch_id]";
+
+sc_lookup(rs, $sql_check);
+
+if (!empty({rs})) {
+    $total = {rs[0][0]};
+    $aprovadas = {rs[0][1]};
+    $reprovadas = {rs[0][2]};
+    
+    // 2. Definir o novo status do lote
+    if ($reprovadas > 0) {
+        $novo_status = 'REJECTED';
+    } elseif ($aprovadas == $total) {
+        $novo_status = 'APPROVED';
+    } elseif ($aprovadas > 0) {
+        $novo_status = 'PARTIAL';
+    } else {
+        $novo_status = 'PENDING_REVIEW';
+    }
+    
+    // 3. Executar o Update com segurança
+    // No Postgres, a concatenação de data é tranquila, mas o valor da 
+    // global [batch_id] deve ser tratado como um parâmetro de segurança.
+    
+    $data_aprovacao = ($novo_status == 'APPROVED') ? date('Y-m-d H:i:s') : 'NULL';
+    
+    // Se o $data_aprovacao for null, tratamos no SQL para ficar limpo
+    if ($data_aprovacao == 'NULL') {
+        sc_exec_sql("UPDATE mro_oa_batches 
+                     SET status = '$novo_status', 
+                         approved_at = NULL 
+                     WHERE batch_id = [batch_id]");
+    } else {
+        sc_exec_sql("UPDATE mro_oa_batches 
+                     SET status = '$novo_status', 
+                         approved_at = '$data_aprovacao' 
+                     WHERE batch_id = [batch_id]");
+    }
+}
+
+
+$tb1 = "
+<TABLE align='center' cellpadding='0' cellspacing='0'>
+ <TR>
+  <TD align='center'>
+   <table style='border-collapse: collapse; border-width: 0px'>
+     <tr>
+        <td style='padding: 0 7px; vertical-align: top; white-space: nowrap'>
+		A tela será recarregada automaticamente.
+        </td>
+      </tr>
+   </table>
+  </TD>
+ </TR>
+</TABLE> <br>";
+
+$tot = count([total_chked]);
+
+$contacts = "";
+
+for($x=0;$x<$tot;$x++){
+
+ $contacts .= [total_chked][$x]."<br>"; 			
+
+}
+	
+
+$tb2 = "<table cellpadding='4' cellspacing='2'>
+       <tr>
+         <td colspan='2' border='none'><strong> (".$tot.") NRs Aprovadas: <strong></td>
+      </tr>
+      <tr>                      
+        <td border='none'><font color='#003366'><strong>  ".$contacts." </strong></font> </td>         
+       </tr>
+</table>";
+
+echo $tb1.$tb2;
+
+echo "<script>
+setTimeout(parent.location.reload(), 25000);
+</script>";
