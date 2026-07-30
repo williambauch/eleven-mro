@@ -1,0 +1,24 @@
+<?php
+
+// onLoadRecord
+// MRO-120: Exibe horas consumidas vs orcadas para este recurso
+
+$var_task_id  = (int){task_id};
+$var_res_code = addslashes({resource_code});
+$var_orcado   = (float){budgeted_hours};
+
+// Soma as horas efetivamente trabalhadas (assignments finalizados)
+$var_sql = "SELECT COALESCE(SUM(a.actual_qty_hours), 0)
+            FROM mro_task_assignments a
+            JOIN mro_skills s ON s.skill_id = a.skill_id
+            WHERE a.task_id = $var_task_id
+              AND s.skill_code = '$var_res_code'
+              AND a.status_code IN ('PENDING_HANDOVER', 'SUPSIG')";
+sc_lookup(rs_consumo, $var_sql);
+
+$var_consumido = 0;
+if (!empty({rs_consumo})) {
+    $var_consumido = (float){rs_consumo[0][0]};
+}
+
+{consumed_hours} = number_format($var_consumido, 2, ',', '.') ;

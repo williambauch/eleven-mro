@@ -38,6 +38,12 @@
       "tipo": "int4",
       "required": false,
       "pk": false
+    },
+    {
+      "nome": "consumed_hours",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
     }
   ]
 }

@@ -1,0 +1,36 @@
+.css_assignment_id_label, .css_assignment_id_label span{text-align:;}
+.css_assignment_id_label span  span{line-height:1.5;}
+.css_assignment_id_line, .css_assignment_id_line >span{text-align:left;}
+.css_assignment_id_line span  span{line-height:1.5;}
+.css_assignment_id_obj, .css_assignment_id_obj span{text-align:left;}
+.css_assignment_id_obj span  span{line-height:1.5;}
+.css_task_id_label, .css_task_id_label span{ }
+.css_task_id_label span  span{line-height:1.5;}
+.css_task_id_line, .css_task_id_line >span{text-align:left;}
+.css_task_id_line span  span{line-height:1.5;}
+.css_task_id_obj, .css_task_id_obj span{text-align:left;}
+.css_task_id_obj span  span{line-height:1.5;}
+.css_planned_qty_hours_label, .css_planned_qty_hours_label span{ }
+.css_planned_qty_hours_label span  span{line-height:1.5;}
+.css_planned_qty_hours_line, .css_planned_qty_hours_line >span{text-align:left;}
+.css_planned_qty_hours_line span  span{line-height:1.5;}
+.css_planned_qty_hours_obj, .css_planned_qty_hours_obj span{text-align:left;}
+.css_planned_qty_hours_obj span  span{line-height:1.5;}
+.css_status_code_label, .css_status_code_label span{ }
+.css_status_code_label span  span{line-height:1.5;}
+.css_status_code_line, .css_status_code_line >span{ }
+.css_status_code_line span  span{line-height:1.5;}
+.css_status_code_obj, .css_status_code_obj span{ }
+.css_status_code_obj span  span{line-height:1.5;}
+.css_display_tempo_label, .css_display_tempo_label span{ }
+.css_display_tempo_label span  span{line-height:1.5;}
+.css_display_tempo_line, .css_display_tempo_line >span{ }
+.css_display_tempo_line span  span{line-height:1.5;}
+.css_display_tempo_obj, .css_display_tempo_obj span{ }
+.css_display_tempo_obj span  span{line-height:1.5;}
+.css_hh_alert_label, .css_hh_alert_label span{ }
+.css_hh_alert_label span  span{line-height:1.5;}
+.css_hh_alert_line, .css_hh_alert_line >span{ }
+.css_hh_alert_line span  span{line-height:1.5;}
+.css_hh_alert_obj, .css_hh_alert_obj span{ }
+.css_hh_alert_obj span  span{line-height:1.5;}

@@ -16,6 +16,42 @@ $sql_tempo = "SELECT COALESCE(SUM(EXTRACT(EPOCH FROM (COALESCE(end_time, NOW()) 
 sc_lookup(rs_tempo, $sql_tempo);
 $segundos_totais = (!empty({rs_tempo[0][0]})) ? round({rs_tempo[0][0]}) : 0;
 
+// MRO-120: Busca HH planejado do assignment
+$sql_hh = "SELECT planned_qty_hours FROM mro_task_assignments WHERE assignment_id = " . (int){assignment_id};
+sc_lookup(rs_hh, $sql_hh);
+$var_planned = !empty({rs_hh}) ? (float){rs_hh[0][0]} : 0;
+// Usa o mesmo calculo exato do timer (EPOCH) em vez de duration_minutes
+$var_total   = $segundos_totais / 3600;
+
+// Define cor e texto do HH inicial
+if ($var_planned > 0 && $var_total > $var_planned) {
+    $var_hh_color = '#d93025';
+    $var_hh_bg    = '#fce8e6';
+    $var_hh_border = '#d93025';
+    $var_hh_label = 'Horas Excedidas';
+} elseif ($var_planned > 0 && $var_total >= ($var_planned * 0.8)) {
+    $var_hh_color = '#f9ab00';
+    $var_hh_bg    = '#fef7e0';
+    $var_hh_border = '#f9ab00';
+    $var_hh_label = round(($var_total / $var_planned) * 100) . '%';
+} elseif ($var_planned > 0) {
+    $var_hh_color = '#188038';
+    $var_hh_bg    = '#e6f4ea';
+    $var_hh_border = '#188038';
+    $var_hh_label = 'OK';
+} else {
+    $var_hh_color = '#57606a';
+    $var_hh_bg    = '#f4f6f8';
+    $var_hh_border = '#d0d7de';
+    $var_hh_label = '';
+}
+
+$var_min_total = round($var_total * 60);
+$var_min_plan  = round($var_planned * 60);
+$var_hh_min = sprintf("%02d:%02d", floor($var_min_total / 60), $var_min_total % 60);
+$var_hh_min_plan = sprintf("%02d:%02d", floor($var_min_plan / 60), $var_min_plan % 60);
+$var_hh_texto = $var_planned > 0 ? "<div style='font-size:16px;font-weight:bold;'>" . $var_hh_label . "</div><div style='font-size:13px;'>" . number_format($var_total, 2) . "h (" . $var_hh_min . ") / " . number_format($var_planned, 2) . "h (" . $var_hh_min_plan . ")</div>" : '';
+
 // =================================================================================
 // 3. LÓGICA DE EXIBIÇÃO
 // =================================================================================
@@ -27,8 +63,9 @@ if ({status_code} == 'IN_PROGRESS') {
     
     // O TRUQUE: O 'data-sec' guarda o tempo TOTAL acumulado. A img aciona o JS.
     {display_tempo} = "
-        <div id='mro_timer' data-sec='$segundos_totais' style='font-size: 38px; font-weight: 800; color: #188038; font-family: monospace; text-align: center; padding: 15px; background: #e6f4ea; border-radius: 8px; border: 2px solid #188038; width: 250px; margin: 0 auto;'>
-            <i class='fas fa-stopwatch'></i> Carregando...
+        <div id='mro_timer' data-sec='$segundos_totais' data-planned='$var_planned' style='font-size: 38px; font-weight: 800; color: $var_hh_color; font-family: monospace; text-align: center; padding: 15px; background: $var_hh_bg; border-radius: 8px; border: 2px solid $var_hh_border; width: 250px; margin: 0 auto;'>
+            <i class='fas fa-stopwatch'></i> Carregando...<br>
+            <div style='margin-top: 4px;'>$var_hh_texto</div>
         </div>
         <img src='x' onerror='iniciar_relogio_mro(); this.remove();' style='display:none;'>
     ";
@@ -42,8 +79,9 @@ if ({status_code} == 'IN_PROGRESS') {
     $tempo_congelado = sprintf("%02d:%02d:%02d", $h, $m, $s);
 
     {display_tempo} = "
-        <div style='font-size: 38px; font-weight: 800; color: #57606a; font-family: monospace; text-align: center; padding: 15px; background: #f4f6f8; border-radius: 8px; border: 2px dashed #d0d7de; width: 250px; margin: 0 auto;'>
-            <i class='fas fa-pause-circle'></i> $tempo_congelado
+        <div style='font-size: 38px; font-weight: 800; color: $var_hh_color; font-family: monospace; text-align: center; padding: 15px; background: $var_hh_bg; border-radius: 8px; border: 2px solid $var_hh_border; width: 250px; margin: 0 auto;'>
+            <i class='fas fa-pause-circle'></i> $tempo_congelado<br>
+            <div style='margin-top: 4px;'>$var_hh_texto</div>
         </div>
     ";
 }

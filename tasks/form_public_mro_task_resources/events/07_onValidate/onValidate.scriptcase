@@ -1,0 +1,18 @@
+<?php
+
+// onValidate
+// MRO-120: Impede duplicidade de recurso (task_id + resource_code)
+
+// Só valida se for insercao (allocation_id vazio)
+if (empty({allocation_id}) && !empty({task_id}) && !empty({resource_code})) {
+    $var_task_id  = (int){task_id};
+    $var_res_code = addslashes({resource_code});
+
+    sc_lookup(rs_dup, "SELECT 1 FROM mro_task_resources
+                       WHERE task_id = $var_task_id AND resource_code = '$var_res_code'");
+
+    if (!empty({rs_dup})) {
+        sc_error_message("Já existe um recurso \"" . {resource_code} . "\" cadastrado para esta tarefa.");
+        sc_error_exit();
+    }
+}

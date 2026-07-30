@@ -40,7 +40,7 @@ if (!empty({ds_block}) && ({ds_block[0][0]} == 't' || {ds_block[0][0]} == 'true'
 // =================================================================================
 
 // Verifica o status atual da atribuição do mecânico
-$sql_status = "SELECT status FROM mro_task_assignments WHERE assignment_id = {assignment_id}";
+$sql_status = "SELECT status_code FROM mro_task_assignments WHERE assignment_id = " . (int){assignment_id};
 sc_lookup(ds_status, $sql_status);
 $status_atual_tarefa = (!empty({ds_status})) ? {ds_status[0][0]} : 'NOT_STARTED';
 
@@ -49,7 +49,7 @@ $tipo_evento = ($status_atual_tarefa == 'PAUSED') ? 'RESUME' : 'START';
 
 // Cria a nova sessão de trabalho (um novo "chunk" de tempo)
 $sql_ts = "INSERT INTO mro_timesheet (assignment_id, employee_id, appointment_date, start_time, status) 
-           VALUES ({assignment_id}, $emp_id, CURRENT_DATE, CURRENT_TIME, 'IN_PROGRESS')
+           VALUES (" . (int){assignment_id} . ", $emp_id, CURRENT_DATE, NOW(), 'IN_PROGRESS')
            RETURNING timesheet_id";
 
 sc_lookup(rs_novo_id, $sql_ts);
@@ -62,7 +62,7 @@ if (!empty({rs_novo_id[0][0]})) {
 [glo_timesheet_id] = $id_ts; // Guarda na sessão
 
 // Atualiza o status do Assignment para Em Andamento
-sc_exec_sql("UPDATE mro_task_assignments SET status = 'IN_PROGRESS' WHERE assignment_id = {assignment_id}");
+sc_exec_sql("UPDATE mro_task_assignments SET status_code = 'IN_PROGRESS' WHERE assignment_id = " . (int){assignment_id});
 
 // Grava auditoria com o evento correto (START ou RESUME)
 sc_exec_sql("INSERT INTO mro_assignment_events (assignment_id, timesheet_id, event_type, performed_by_id) 

@@ -1,7 +1,25 @@
 <?php
 
-if({motivo_pausa}!=1 && {motivo_pausa}!=6){
-	if({passagem_servico}==''){
-		sc_error_message("Passagem de serviço Obrigatória");
-	}
+// MRO-120 Se for Fim de Turno/Repasse, verifica se é o último mecânico ativo
+if ({motivo_pausa} == 2) {
+    $var_sql_count = "SELECT COUNT(*) FROM mro_task_assignments
+                      WHERE task_id = (SELECT task_id FROM mro_task_assignments WHERE assignment_id = " . (int){assignment_id} . ")
+                        AND status_code IN ('IN_PROGRESS', 'PAUSED', 'BLOCKED')
+                        AND assignment_id <> " . (int){assignment_id};
+    sc_lookup(rs_count, $var_sql_count);
+    $var_outros_ativos = !empty({rs_count}) ? (int){rs_count[0][0]} : 0;
+    
+    // Se ainda há outros mecânicos ativos, não exige passagem (não é o último)
+    if ($var_outros_ativos > 0) {
+        // Tudo ok, não exige passagem_servico
+    } elseif ({passagem_servico} == '') {
+        sc_error_message("Passagem de serviço Obrigatória");
+		sc_error_exit();
+    }
+} elseif ({motivo_pausa} != 1 && {motivo_pausa} != 6) {
+    // Demais motivos (3,4,5) — passagem obrigatória
+    if ({passagem_servico} == '') {
+        sc_error_message("Passagem de serviço Obrigatória");
+		sc_error_exit();
+    }
 }

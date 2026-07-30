@@ -125,6 +125,15 @@ Os seguintes campos foram adicionados ao **filtro refinado** e ao **filtro avan�
   - `form_public_mro_task_dependencies_predecessoras` — tarefas que bloqueiam a task atual
   - `form_public_mro_task_dependencies_sucessoras` — tarefas que a task atual bloqueia
 
+  ABA Dependências
+Essas tarefas bloqueiam a tarefa atual (detalhe_predecessoras)
+form_public_mro_task_dependencies_predecessoras
+successor_task_id =   [glo_task_id]
+
+Essas tarefas são bloqueadas pela tarefa atual (sucessoras)
+form_public_mro_task_dependencies_sucessoras
+predecessor_task_id = [glo_task_id]
+
 ---
 
 ## `Timesheet/control_split_assignment` (NOVA)

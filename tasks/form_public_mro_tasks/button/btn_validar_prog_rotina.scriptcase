@@ -1,0 +1,243 @@
+<?php
+
+// ====================================================================
+// btn_validar_prog_rotina — Valida Rotina (MRO-120)
+// ====================================================================
+// Exclusivo para Rotinas Padrao (nao NRC). Executado pela Programacao
+// quando a task esta em PENDING_PROG (apos passagem de servico).
+//
+// Fluxo:
+// 1. Busca os recursos P6 da task (skills com horas orcadas)
+// 2. Calcula quanto ja foi trabalhado por skill (actual_qty_hours)
+// 3. Para cada skill, calcula o gap: orcado - trabalhado
+// 4. Se houver saldo NEGATIVO (estouro) → BLOQUEIA e alerta a Programacao
+// 5. Se houver saldo positivo sem NOT_STARTED → cria NOVO assignment
+// 6. Se houver saldo positivo com NOT_STARTED desatualizado → ATUALIZA horas
+// 7. Se nao houver saldo nem atualizacao → apenas libera a task
+// 8. Registra log e libera a task como RELEASED
+//
+// Diferenca do btn_validar_prog (NRC):
+// - Nao chama fn_calcular_oa_nrc() — nao envolve O&A nem cliente
+// - Cria/atualiza assignments automaticamente conforme os recursos P6
+// - Bloqueia se alguma skill estourou o orcamento
+// ====================================================================
+
+$var_id      = (int){task_id};
+$var_user    = [usr_login];
+$var_projeto = (int){project_id};
+
+// ====================================================================
+// PASSO 1: Busca recursos P6 (skills com horas orcadas)
+// ====================================================================
+$var_sql_recursos = "SELECT DISTINCT tr.resource_code, COALESCE(tr.budgeted_hours, 0) AS budgeted_hours
+                     FROM mro_task_resources tr
+                     JOIN mro_resources r ON tr.resource_code = r.resource_code
+                     WHERE tr.task_id = $var_id AND r.resource_type = 'LABOR'";
+sc_lookup(rs_recursos, $var_sql_recursos);
+
+if ({rs_recursos} === false) {
+    sc_error_message("Erro ao consultar recursos da tarefa.");
+    sc_error_exit();
+}
+
+// ====================================================================
+// PASSO 2: Pre-carrega mapeamento skill_code -> skill_id (evita N subqueries)
+// ====================================================================
+sc_lookup(rs_skills, "SELECT skill_id, skill_code FROM mro_skills");
+
+$var_skill_map = [];
+if (!empty({rs_skills})) {
+    foreach ({rs_skills} as $var_linha_skill) {
+        $var_skill_map[$var_linha_skill[1]] = (int)$var_linha_skill[0];
+    }
+}
+
+// ====================================================================
+// PASSO 3: Busca horas ja trabalhadas por skill
+// ====================================================================
+$var_sql_trabalhado = "SELECT a.skill_id, sk.skill_code, COALESCE(SUM(a.actual_qty_hours), 0) AS total
+                       FROM mro_task_assignments a
+                       JOIN mro_skills sk ON sk.skill_id = a.skill_id
+                       WHERE a.task_id = $var_id
+                         AND a.status_code IN ('PENDING_HANDOVER', 'SUPSIG')
+                       GROUP BY a.skill_id, sk.skill_code";
+sc_lookup(rs_trabalhado, $var_sql_trabalhado);
+
+if ({rs_trabalhado} === false) {
+    sc_error_message("Erro ao consultar horas trabalhadas.");
+    sc_error_exit();
+}
+
+// ====================================================================
+// PASSO 4: Monta mapa de horas trabalhadas por skill_code
+// ====================================================================
+$var_horas_por_skill = [];
+if (!empty({rs_trabalhado})) {
+    foreach ({rs_trabalhado} as $var_linha) {
+        $var_horas_por_skill[$var_linha[1]] = (float)$var_linha[2];
+    }
+}
+
+// ====================================================================
+// PASSO 5: Calcula gap e verifica saldos
+// ====================================================================
+$var_tem_saldo       = 0;
+$var_skills_criar    = [];
+$var_skills_atualizar = [];
+$var_skills_negativo = []; // skills com saldo negativo (estouradas)
+
+if (!empty({rs_recursos})) {
+    foreach ({rs_recursos} as $var_res) {
+        $var_skill_code = $var_res[0];
+        $var_horas_p6   = (float)$var_res[1];
+        $var_horas_feitas = isset($var_horas_por_skill[$var_skill_code]) ? $var_horas_por_skill[$var_skill_code] : 0;
+        $var_saldo      = $var_horas_p6 - $var_horas_feitas;
+
+        if ($var_saldo < 0) {
+            // Saldo negativo — registra para exibir alerta
+            $var_skills_negativo[] = $var_skill_code . " (" . number_format($var_horas_feitas, 2, ',', '.') . "h trabalhadas de " . number_format($var_horas_p6, 2, ',', '.') . "h orcadas)";
+        } elseif ($var_saldo > 0) {
+            $var_skill_id = isset($var_skill_map[$var_skill_code]) ? $var_skill_map[$var_skill_code] : 0;
+
+            if ($var_skill_id > 0) {
+                sc_lookup(rs_existente, "SELECT assignment_id, planned_qty_hours
+                                         FROM mro_task_assignments
+                                         WHERE task_id = $var_id AND skill_id = $var_skill_id
+                                           AND status_code IN ('NOT_STARTED', 'PLANNED')
+                                         ORDER BY assignment_id LIMIT 1");
+
+                if ({rs_existente} === false) {
+                    sc_error_message("Erro ao verificar assignments existentes.");
+                    sc_error_exit();
+                }
+
+                if (empty({rs_existente})) {
+                    $var_tem_saldo = 1;
+                    $var_skills_criar[] = [
+                        'skill_id' => $var_skill_id,
+                        'skill_code' => $var_skill_code,
+                        'saldo' => $var_saldo
+                    ];
+                } else {
+                    $var_assignment_id = (int){rs_existente[0][0]};
+                    $var_horas_atuais  = (float){rs_existente[0][1]};
+
+                    if (abs($var_horas_atuais - $var_saldo) > 0.001) {
+                        $var_tem_saldo = 1;
+                        $var_skills_atualizar[] = [
+                            'assignment_id' => $var_assignment_id,
+                            'skill_code' => $var_skill_code,
+                            'saldo' => $var_saldo
+                        ];
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ====================================================================
+// PASSO 5.5: Se houver skill estourada, bloqueia e mostra alerta
+// ====================================================================
+if (!empty($var_skills_negativo)) {
+    echo "<div style='max-width: 520px; margin: 30px auto; background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 24px; border-radius: 8px; text-align: center; font-size: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);'>
+            <i class='fas fa-times-circle' style='color: #dc3545; font-size: 28px; margin-bottom: 8px; display: block;'></i>
+            <strong>Não é possível liberar a task.</strong><br>
+            <span style='font-size: 13px;'>As seguintes skills estouraram o orçamento P6. Ajuste os recursos antes de liberar:</span>
+          </div>";
+    echo "<div style='max-width: 520px; margin: 10px auto; text-align: left; font-size: 13px;'>";
+    foreach ($var_skills_negativo as $var_neg) {
+        echo "<div style='background: #fff; border: 1px solid #ddd; border-radius: 4px; padding: 8px 12px; margin-bottom: 4px;'>⚠️ $var_neg</div>";
+    }
+    echo "</div>";
+
+    $var_link_tarefa = sc_make_link(form_public_mro_tasks, task_id=$var_id);
+    echo "<div style='text-align:center;margin:20px 0;'><a href=\"$var_link_tarefa\" style=\"font-family:sans-serif;color:#444;font-size:14px;text-decoration:none;border:1px solid #ddd;border-radius:4px;background:#f8f9fa;padding:6px 16px;display:inline-block;\"><i class=\"fas fa-arrow-left\"></i> Voltar para a Tarefa</a></div>";
+    exit();
+}
+
+// ====================================================================
+// PASSO 6: Mostra resultado e executa as acoes
+// ====================================================================
+
+if (!empty($var_skills_criar) || !empty($var_skills_atualizar)) {
+    // --- TEM SALDO: executa criacao/atualizacao e libera ---
+
+    // Cria novos assignments
+    foreach ($var_skills_criar as $var_item) {
+        $var_saldo_ins = number_format($var_item['saldo'], 2, '.', '');
+        $var_skill_id_ins = $var_item['skill_id'];
+        $var_sql_ins = "INSERT INTO mro_task_assignments
+                        (task_id, skill_id, planned_skill_id, status_code, planned_qty_hours, project_id)
+                        VALUES ($var_id, $var_skill_id_ins, $var_skill_id_ins, 'NOT_STARTED', $var_saldo_ins, $var_projeto)";
+        sc_exec_sql($var_sql_ins);
+        if (sc_error_insert) {
+            sc_error_message("Erro ao criar assignment.");
+            sc_error_exit();
+        }
+    }
+
+    // Atualiza assignments existentes
+    foreach ($var_skills_atualizar as $var_item) {
+        $var_saldo_upd = number_format($var_item['saldo'], 2, '.', '');
+        $var_sql_upd_h = "UPDATE mro_task_assignments
+                          SET planned_qty_hours = $var_saldo_upd,
+                              updated_at = CURRENT_TIMESTAMP,
+                              updated_by = '" . addslashes($var_user) . "'
+                          WHERE assignment_id = " . $var_item['assignment_id'];
+        sc_exec_sql($var_sql_upd_h);
+        if (sc_error_update) {
+            sc_error_message("Erro ao atualizar horas.");
+            sc_error_exit();
+        }
+    }
+
+    // Log
+    sc_exec_sql("INSERT INTO mro_nrc_approval_log (task_id, action_taken, user_login)
+                 VALUES ($var_id, 'PROGRAMMING_OK', '" . addslashes($var_user) . "')");
+    if (sc_error_insert) {
+        sc_error_message("Erro ao registrar aprovacao.");
+        sc_error_exit();
+    }
+
+    // Libera task
+    sc_exec_sql("UPDATE mro_tasks SET status_code = 'RELEASED', updated_at = CURRENT_TIMESTAMP WHERE task_id = $var_id");
+    if (sc_error_update) {
+
+        sc_error_message("Erro ao liberar a tarefa.");
+        sc_error_exit();
+    }
+
+    // Card de sucesso
+    echo "<div style='max-width: 520px; margin: 30px auto; background: linear-gradient(135deg, #d4edda, #c3e6cb);
+                border: 1px solid #b8daff; color: #155724; padding: 24px; border-radius: 8px;
+                text-align: center; font-size: 16px; font-weight: 500; box-shadow: 0 2px 8px rgba(0,0,0,0.08);'>
+            <i class='fas fa-check-circle' style='color: #28a745; font-size: 28px; margin-bottom: 8px; display: block;'></i>
+            Rotina validada e liberada com sucesso!<br>
+            <span style='font-size: 13px; font-weight: 400;'>" . count($var_skills_criar) . " criados(s) e " . count($var_skills_atualizar) . " atualizado(s)</span>
+          </div>";
+
+} else {
+    // --- SEM SALDO: apenas commita (nada foi alterado) e mostra mensagem ---
+
+    echo "<div style='max-width: 520px; margin: 30px auto; background: #fff3cd; border: 1px solid #ffc107; color: #856404; padding: 24px; border-radius: 8px; text-align: center; font-size: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);'>
+            <i class='fas fa-exclamation-triangle' style='color: #e6a817; font-size: 28px; margin-bottom: 8px; display: block;'></i>
+            Não há saldo de horas disponível para criar ou atualizar assignments.<br>
+            <span style='font-size: 13px;'>Nenhuma alteração foi feita. Utilize o split manual ou ajuste os recursos P6 antes de liberar.</span>
+          </div>";
+
+}
+
+// Link padrao Voltar (para ambos os casos)
+$var_link_tarefa = sc_make_link(form_public_mro_tasks, task_id=$var_id);
+
+echo '<div style="text-align: center; margin: 20px 0;">
+    <a id="btn_voltar_tarefa" href="' . $var_link_tarefa . '"
+       style="font-family: sans-serif; color: #444; font-size: 14px; font-weight: normal;
+              text-decoration: none; border: 1px solid #ddd; border-radius: 4px;
+              background: #f8f9fa; padding: 6px 16px; cursor: pointer; display: inline-block;">
+        <i class="fas fa-arrow-left"></i>&nbsp;&nbsp;Voltar para a Tarefa
+    </a>
+</div>';
+
+exit();

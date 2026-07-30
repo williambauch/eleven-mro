@@ -36,11 +36,40 @@ if($v_motivo == 1) {
     sc_exec_sql($sql_flags);
 	
 } elseif ($v_motivo == 2) { 
-    // ROTA 3: FIM DE TURNO / REPASSE (Devolve pro Supervisor)
-    $motivo_txt = '';
-    $status_code = 'PENDING_HANDOVER';
-    $status_ts = 'COMPLETED';
-    $status_type = "Repasse de Turno - Notas: $v_notas";
+    // ROTA 3: FIM DE TURNO / REPASSE
+    
+    // Verifica se é o último mecânico ativo na tarefa
+    $var_sql_count = "SELECT COUNT(*) FROM mro_task_assignments
+                      WHERE task_id = (SELECT task_id FROM mro_task_assignments WHERE assignment_id = " . (int)$v_ass_id . ")
+                        AND status_code IN ('IN_PROGRESS', 'PAUSED', 'BLOCKED')
+                        AND assignment_id <> " . (int)$v_ass_id;
+    sc_lookup(rs_count_ativos, $var_sql_count);
+    $var_outros_ativos = !empty({rs_count_ativos}) ? (int){rs_count_ativos[0][0]} : 0;
+    
+    if ($var_outros_ativos > 0) {
+        // Ainda há outros mecânicos ativos — encerra a participacao deste
+        $motivo_txt = '';
+        $status_code = 'PENDING_HANDOVER';
+        $status_ts = 'COMPLETED';
+        $status_type = "Repasse de Turno - Outros mecânicos ativos - Notas: $v_notas";
+        // Nao altera a task mae (outro mecânico continua)
+    } else {
+        // Último mecânico — faz o handover para Programacao
+        $motivo_txt = '';
+        $status_code = 'PENDING_HANDOVER';
+        $status_ts = 'COMPLETED';
+        $status_type = "Repasse de Turno - Enviado a Programacao - Notas: $v_notas";
+        
+        // MRO-120: Atualiza task mae para PENDING_PROG, sem pendencia de MO
+        $var_task_id_sql = "SELECT task_id FROM mro_task_assignments WHERE assignment_id = " . (int)$v_ass_id;
+        sc_lookup(rs_task, $var_task_id_sql);
+        if (!empty({rs_task})) {
+            $var_tid = (int){rs_task[0][0]};
+            sc_exec_sql("UPDATE mro_tasks SET status_code = 'PENDING_PROG', is_blocked_labor = FALSE WHERE task_id = $var_tid");
+            sc_exec_sql("INSERT INTO mro_nrc_approval_log (task_id, action_taken, user_login) 
+                         VALUES ($var_tid, 'SENT_TO_PROG_VIA_HANDOVER', '[usr_login]')");
+        }
+    }
 	
 } elseif ($v_motivo == 6) { 
     // ROTA 4: CONCLUSÃO (Vai para o Inspetor/Supervisor assinar)
@@ -63,6 +92,16 @@ $sql_ts1 = "UPDATE mro_timesheet
                 duration_minutes = ROUND(EXTRACT(EPOCH FROM (NOW() - start_time)) / 60)
             WHERE timesheet_id = $v_ts_id";
 sc_exec_sql($sql_ts1);
+
+// MRO-120: Atualiza actual_qty_hours no assignment
+sc_exec_sql("UPDATE mro_task_assignments
+             SET actual_qty_hours = (
+                 SELECT COALESCE(SUM(duration_minutes), 0)::numeric / 60
+                 FROM mro_timesheet
+                 WHERE assignment_id = $v_ass_id
+                 AND duration_minutes IS NOT NULL
+             )
+             WHERE assignment_id = $v_ass_id");
 
 // 2. Registra o Evento de Auditoria
 $sql_ev = "INSERT INTO mro_assignment_events 

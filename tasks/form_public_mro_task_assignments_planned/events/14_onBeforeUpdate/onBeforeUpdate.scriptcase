@@ -1,7 +1,8 @@
 <?php
 
-// Lógica para Atribuição de mecânico
-if (!empty({executed_by_employee_id}) && {status_code} == 'PLANNED') {
+// MRO-120: Lógica para Atribuição de mecânico
+// Aceita PLANNED (criacao manual) e NOT_STARTED (criado pelo release)
+if (!empty({executed_by_employee_id}) && in_array({status_code}, ['PLANNED', 'NOT_STARTED'])) {
     
     // Define o supervisor logado como dono da tarefa
     {supervisor_id} = [usr_employee_id];

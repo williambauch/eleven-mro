@@ -2,10 +2,6 @@
 
 function mExibirCardStatus()
 {
-    if (empty({is_nrc})) {
-            return;
-        }
-
         $var_status = {status_code};
         $var_label  = $var_status;
         $var_cor    = '#6c757d';

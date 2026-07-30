@@ -27,7 +27,7 @@ if (!empty($ids_brutos)) {
     }
 }
 
-// Exibe o card informativo de status e grupo responsavel (apenas NRC)
+// Exibe o card informativo de status e grupo responsavel
 mExibirCardStatus();
 
 // ====================================================================
@@ -61,7 +61,13 @@ sc_btn_display('btn_enviar_cliente', 'off'); // btn_enviar_cliente
 sc_btn_display('btn_enviar_prog', 'off'); // btn_enviar_prog
 sc_btn_display('btn_enviar_coord', 'off'); // btn_enviar_coord
 sc_btn_display('btn_validar_prog', 'off'); // btn_validar_prog
+sc_btn_display('btn_validar_prog_rotina', 'off'); // btn_validar_prog_rotina
 sc_btn_display('btn_cancelar', 'off'); // btn_cancelar
+
+// Esconde botoes padrao por seguranca — liberados seletivamente abaixo
+sc_btn_display('new', 'off');
+sc_btn_display('delete', 'off');
+sc_btn_display('update', 'off');
 
 // ====================================================================
 // WORKFLOW E BOTÕES DE AÇÃO (exclusivo para Não-Rotinas)
@@ -74,15 +80,6 @@ if (!empty({is_nrc})) {
     sc_field_readonly({project_id}, 'on'); // project_id - readonly se NRC
     sc_field_readonly({task_code}, 'on'); // task_code - readonly se NRC
     sc_field_readonly({parent_task_id}, 'on'); // parent_task_id - readonly se NRC
-
-    // Desabilita o botão de Excluir por padrão, liberando somente para o mecânico nos status DRAFT
-    sc_btn_display('delete', 'off');
-
-    // Desabilita o botão de Atualizar por padrão, liberando somente para o perfil autorizado por Status
-    sc_btn_display('update', 'off');
-
-    // Desabilita o botão de Novo por padrão, liberando somente para Rotina Padrão (não NRC)
-    sc_btn_display('new', 'off');
 
     // Desabilita o bloco financeiro enquanto o O&A não é rodado
     sc_block_display('bloco_financeiro', 'off');
@@ -166,6 +163,39 @@ if (!empty({is_nrc})) {
 }
 
 // ====================================================================
+// BOTOES PARA ROTINAS PADRAO (nao NRC)
+// ====================================================================
+if (empty({is_nrc})) {
+    // Rotinas podem ser criadas (new) e editadas (update)
+    sc_btn_display('new', 'on');
+    
+    // Excluir liberado apenas em DRAFT para o criador
+    if ({status_code} == 'DRAFT' && [usr_login] == {created_by}) {
+        sc_btn_display('delete', 'on');
+    }
+    
+    // Update liberado na maioria dos status, exceto RELEASED (ja processado)
+    if ({status_code} != 'RELEASED' && {status_code} != 'COMPLETED' && {status_code} != 'CANCELLED') {
+        sc_btn_display('update', 'on');
+    }
+}
+
+// ====================================================================
+// MRO-120: WORKFLOW PARA ROTINAS (nao NRC)
+// ====================================================================
+if (empty({is_nrc}) && {status_code} == 'PENDING_PROG') {
+    // Passagem de servico — enviado para Programacao
+    sc_btn_display('new', 'off');
+    sc_btn_display('delete', 'off');
+    
+    if (in_array('PROGRAMACAO', $meus_grupos)) {
+        sc_btn_display('btn_validar_prog_rotina', 'on'); // Valida Rotina -> RELEASED
+        //sc_btn_display('btn_cancelar', 'on');
+        sc_btn_display('update', 'on');
+    }
+}
+
+// ====================================================================
 // MRO-119: baseline_phase_code editavel apenas em DRAFT
 // ====================================================================
 if (!empty({task_id}) && {status_code} != 'DRAFT') {
@@ -188,4 +218,5 @@ echo "is_nrc: <strong>" . ({is_nrc} ? 'Sim' : 'Nao') . "</strong><br>";
 echo "Task ID: <strong>" . ({task_id}) . "</strong><br>";
 echo "Project ID: <strong>" . ({project_id}) . "</strong><br>";
 echo "</div>";
+
 */

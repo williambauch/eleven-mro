@@ -1,43 +1,70 @@
 <?php
-
+// MRO-120: Timer com indicador de HH integrado
 // 1. Evita duplo processamento
-    if(window.mroTimerInterval) {
-        clearInterval(window.mroTimerInterval);
+if(window.mroTimerInterval) {
+    clearInterval(window.mroTimerInterval);
+}
+
+// 2. Acha a tela e pega o tempo que o PHP escondeu no HTML
+var display = document.getElementById('mro_timer');
+if(!display) return;
+
+var secIniciais = parseInt(display.getAttribute('data-sec')) || 0;
+var planned = parseFloat(display.getAttribute('data-planned')) || 0;
+
+// 3. Define o Ponto Zero do tablet (Tempo Delta)
+window.mroBaselineTime = Date.now() - (secIniciais * 1000);
+
+// 4. Liga o Motor Blindado
+window.mroTimerInterval = setInterval(function() {
+    var relogio = document.getElementById('mro_timer');
+    
+    // Se sumiu, aguarda
+    if(!relogio) return;
+
+    // Calcula diferença real
+    var agora = Date.now();
+    var secReais = Math.floor((agora - window.mroBaselineTime) / 1000);
+    
+    // Matemática do timer
+    var h = Math.floor(secReais / 3600);
+    var m = Math.floor((secReais % 3600) / 60);
+    var s = Math.floor(secReais % 60);
+    
+    h = h < 10 ? '0' + h : h;
+    m = m < 10 ? '0' + m : m;
+    s = s < 10 ? '0' + s : s;
+    
+    // Calcula HH
+    var totalHoras = secReais / 3600;
+    var pct = (planned > 0) ? totalHoras / planned : 0;
+    var minTotal = Math.round(totalHoras * 60);
+    var minPlan = Math.round(planned * 60);
+    var label, corFundo, corBorda, corTexto;
+    
+    // Helper: converter minutos para HH:MM
+    function fmtMin(m) { var hh = Math.floor(m/60); var mm = m%60; return (hh<10?'0':'')+hh+':'+(mm<10?'0':'')+mm; }
+
+    if (planned > 0 && totalHoras > planned) {
+        label = '<div style="font-size:16px;font-weight:bold;">Horas Excedidas</div><div style="font-size:13px;">' + totalHoras.toFixed(2) + 'h (' + fmtMin(minTotal) + ') / ' + planned.toFixed(2) + 'h (' + fmtMin(minPlan) + ')</div>';
+        corFundo = '#fce8e6'; corBorda = '#d93025'; corTexto = '#d93025';
+    } else if (planned > 0 && totalHoras >= (planned * 0.8)) {
+        label = '<div style="font-size:16px;font-weight:bold;">' + Math.round(pct * 100) + '%</div><div style="font-size:13px;">' + totalHoras.toFixed(2) + 'h (' + fmtMin(minTotal) + ') / ' + planned.toFixed(2) + 'h (' + fmtMin(minPlan) + ')</div>';
+        corFundo = '#fef7e0'; corBorda = '#f9ab00'; corTexto = '#f9ab00';
+    } else if (planned > 0) {
+        label = '<div style="font-size:16px;font-weight:bold;">OK</div><div style="font-size:13px;">' + totalHoras.toFixed(2) + 'h (' + fmtMin(minTotal) + ') / ' + planned.toFixed(2) + 'h (' + fmtMin(minPlan) + ')</div>';
+        corFundo = '#e6f4ea'; corBorda = '#188038'; corTexto = '#188038';
+    } else {
+        label = '';
+        corFundo = '#f4f6f8'; corBorda = '#d0d7de'; corTexto = '#57606a';
     }
-
-    // 2. Acha a tela
-    var display = document.getElementById('mro_timer');
-    if(!display) return;
-
-    // O PULO DO GATO: Usa o que veio do PHP, ou o que está no HTML, ou Zero.
-    var secIniciais = parseInt(segundosAjax) || parseInt(display.getAttribute('data-sec')) || 0;
-
-    // Atualiza o HTML imediatamente para o usuário já ver o tempo pular
-    display.setAttribute('data-sec', secIniciais);
-
-    // 3. Define o Ponto Zero do tablet (Tempo Delta)
-    window.mroBaselineTime = Date.now() - (secIniciais * 1000);
-
-    // 4. Liga o Motor Blindado
-    window.mroTimerInterval = setInterval(function() {
-        var relogio = document.getElementById('mro_timer');
-        
-        // Se sumiu, aguarda
-        if(!relogio) return;
-
-        // Calcula diferença real
-        var agora = Date.now();
-        var secReais = Math.floor((agora - window.mroBaselineTime) / 1000);
-        
-        // Matemática
-        var h = Math.floor(secReais / 3600);
-        var m = Math.floor((secReais % 3600) / 60);
-        var s = Math.floor(secReais % 60);
-        
-        h = h < 10 ? '0' + h : h;
-        m = m < 10 ? '0' + m : m;
-        s = s < 10 ? '0' + s : s;
-        
-        // Atualiza
-        relogio.innerHTML = '<i class="fas fa-stopwatch"></i> ' + h + ':' + m + ':' + s;
-    }, 1000);
+    
+    // Atualiza HTML com timer + HH
+    relogio.innerHTML = '<i class="fas fa-stopwatch"></i> ' + h + ':' + m + ':' + s +
+        '<div style="margin-top:4px;">' + label + '</div>';
+    
+    // Atualiza cores
+    relogio.style.background = corFundo;
+    relogio.style.borderColor = corBorda;
+    relogio.style.color = corTexto;
+}, 1000);
