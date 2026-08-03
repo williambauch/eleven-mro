@@ -40,6 +40,13 @@
       "grid_public_mro_materials",
       "grid_public_mro_tasks"
     ],
+    "MRO-124": [
+      "form_mro_task_tools",
+      "form_public_mro_projects",
+      "form_public_mro_tasks",
+      "grid_mro_task_tools",
+      "grid_public_mro_tasks"
+    ],
     "MRO-125": [
       "blank_pdf_pack_jic",
       "ctrl_abertura_nrc",

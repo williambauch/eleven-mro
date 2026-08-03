@@ -184,6 +184,12 @@
       "pk": false
     },
     {
+      "nome": "is_predecessor_manual",
+      "tipo": "bool",
+      "required": false,
+      "pk": false
+    },
+    {
       "nome": "is_nrc",
       "tipo": "bool",
       "required": false,

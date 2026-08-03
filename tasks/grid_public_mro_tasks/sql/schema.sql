@@ -57,5 +57,6 @@ SELECT
     created_by,
     corrective_action,
     is_milestone,
-    is_blocked_predecessor
+    is_blocked_predecessor,
+    is_predecessor_manual
 FROM public.mro_tasks

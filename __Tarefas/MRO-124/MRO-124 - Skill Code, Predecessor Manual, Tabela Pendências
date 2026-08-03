@@ -1,0 +1,150 @@
+# DEFINICAO DA TAREFA
+
+=========== DEFINICAO DA TAREFA ===========
+
+**Ajustes Reunião 30/07 14h : Skill Code, Predecessor Manual, Tabela Pendências e Informações da Task**
+
+1. Add bloqueio (flag) predecessor manual na tarefa
+2. Add campo livre Critical no projeto para anotação interna.
+3. Add um campo select 1:1 "Pendências" na tabela tasks que busca "Pending Code" e "Pending Description" da tabela do PDF página 5-7
+4. Em task (mestre form_public_mro_tasks) no detalhe das tools (grid_mro_task_tools e form_mro_task_tools) tem que exibir Part Number e Descrição da ferramenta (não só o PN)
+
+==============================================
+
+# BACKUP e APLICACOES CRIADAS
+
+PROJETO   MRO System
+
+**## Editado**
+- tasks/grid_public_mro_tasks (eventos onRecord e btn_predecessor_onClick, schema.sql, config.json)
+
+**## NOVO**
+- __Tarefas/MRO-124/migrations/01_add_flag_predecessor_manual.sql
+- __Tarefas/MRO-124/migrations/02_add_critical_notes_to_mro_projects.sql
+- __Tarefas/MRO-124/migrations/03_add_pending_status_to_mro_tasks.sql
+
+**# UTEIS**
+- MRO-119: trigger fn_update_blocked_predecessor calcula bloqueio automatico
+- Bloqueio manual sobrepoe visualmente o bloqueio automatico
+
+## Sumario das alteracoes implementadas - WILLIAM BAUCH
+
+## `mro_tasks` (banco)
+
+### Bloqueio predecessor manual na tarefa (Item 1)
+
+**`migrations/01_add_flag_predecessor_manual.sql`**
+- Adicionada coluna `is_predecessor_manual` (bool, NOT NULL, default false) em mro_tasks
+- Flag independente do bloqueio automatico calculado pelo trigger MRO-119
+- Permite ao usuario bloquear/liberar manualmente uma tarefa sem alterar o calculo automatico
+
+### Campo select Pendências na tarefa (Item 3) ** form_public_mro_tasks / grid_public_mro_tasks**
+
+**`migrations/03_add_pending_status_to_mro_tasks.sql`**
+- Criada tabela `mro_tasks_pending_status` (pending_id PK, pending_code unique, pending_description, is_active, created_at, updated_at)
+- Carga inicial com os Pending Codes/Descriptions da tabela do PDF paginas 5-7
+- Adicionada coluna `pending_id` (int4) em mro_tasks com FK para mro_tasks_pending_status
+- ON DELETE RESTRICT e indice idx_mro_tasks_pending_id
+- Campo `pending_id` adicionado no form_public_mro_tasks (select 1:1 Pendências)
+- Campo `pending_id` adicionado no grid_public_mro_tasks no filtro refinado e avancado
+
+---
+
+## `mro_projects` (banco)
+
+### Campo livre Critical para anotacao interna (Item 2) **form_public_mro_projects**
+
+**`migrations/02_add_critical_notes_to_mro_projects.sql`**
+- Adicionada coluna `critical_notes` (TEXT, NULL) em mro_projects
+- Campo livre para anotacao interna no projeto
+
+---
+
+## `grid_public_mro_tasks`
+
+### Icone de bloqueio de predecessora com toggle manual
+
+**`events_ajax/btn_predecessor_onClick`**
+- Evento Ajax que alterna `is_predecessor_manual` com NOT no banco
+- Registra acao via sc_log_add e recarrega a grid com sc_ajax_refresh
+
+**`events/onRecord`**
+- Icone amarelo (#f9a825) quando bloqueio manual ativo (sobrepoe o automatico)
+- Icone vermelho (#c62828) quando bloqueio automatico ativo (predecessora nao concluida)
+- Icone cinza (#ced4da) quando nao ha bloqueio
+
+- Campo `is_predecessor_manual` disponivel no filtro avancado e no filtro refinado da grid
+
+---
+
+## `grid_mro_task_tools` / `form_mro_task_tools`
+
+### Exibir Part Number e Descricao da ferramenta (Item 4) 
+
+- No detalhe das tools da task (mestre form_public_mro_tasks) passou a exibir o Part Number e a Descricao da ferramenta
+- Antes exibia apenas o Part Number (PN)
+- Ajuste feito nas aplicacoes grid_mro_task_tools e form_mro_task_tools no ScriptCase
+
+
+
+## tabela do PDF página 5-7
+Tabela – Lista de Pendências / Status
+Pending Code Pending Description
+PDGX DIGEX PROCEDURES
+DEFERID CUSTOMER DEFERRED
+CANC TASK CANCELLED
+OUTSOURCE PENDING - OUTSOURCE SERVICE
+TOOLS PENDING - TOOLS EQUIPMENT
+PARTS PENDING - PARTS / COMPONENTS
+PENDPART PENDING - PARTS PARTIALLY AVAILABLE
+PARTSNO PENDING - PARTS/ COMPONENTS (NO GO)
+PARTSGO PENDING - PARTS/ COMPONENTS (GO)
+LG PENDING - LANDING GEAR
+ENGINE PENDING - ENGINE
+REPORT PENDING - REPORT (LAUDO)
+FORM PENDING - FORM / NF
+DUP WAITING - CANCELLATION - DUPLICATE DOCU…
+LIBPROC WAITING - CANCELLATION - NEF/MEL/CDL
+N/A WAITING - CANCELLATION - NOT APPLICABLE
+CUSTOMER WAITING – CUSTOMER DEFINITION
+APROV WAITING - CUSTOMER APPROVAL
+REAPROV WAITING - CUSTOMER REAPPROVAL
+QUAL WAITING - QUALITY DEFINITION
+ENG DEFINI WAITING - ENGINEERING DEFINITION
+PLANEJ WAITING - PLANNING ANALYSIS
+PROCED WAITING - PROCEDURE
+PREDEC WAITING - PREDECESSORS
+STOR WAITING - STORAGE SCHEDULE DATE
+ENGINE RUN WAITING - ENGINE RUN
+APU WAITING - APU ON
+POWER ON WAITING - ELECTR PWR ON
+POWER OFF WAITING - ELECTR PWR OFF
+HYD ON WAITING - HYDRAULICS ON
+HYD OFF WAITING - HYDRAULICS OFF
+PNEU ON WAITING - PNEUMATICS ON
+JACKING WAITING - ACFT ON JACKING
+ON GROUND WAITING - ACFT ON GROUND
+RII WAITING - IIO INSPECTION
+BORESCOPE WAITING - BORESCOPE INSPECTION
+TESTS WAITING - TESTS
+FLIGHT WAITING - TEST FLIGHT
+FMO WAITING - MAN POWER AVAILABLE
+OPENING WAITING - ACCESS OPENING PHASE
+CLEANING WAITING - CLEANING / WASHING PHASE
+INSP WAITING - INSPECTION PHASE
+FMRO WAITING - CORRECTIVE / MODIFICATIONS PHASE
+LUB/SER WAITING - LUBRICATION / SERVICING PHASE
+CLOSING WAITING - ACCESS CLOSING PHASE
+FTEST WAITING - FINAL TESTS PHASE
+DELIV WAITING - DELIVERY PHASE
+PROV AVAILABLE - PARTS PROVIDING
+PAINT AVAILABLE - PAINTING
+NDT AVAILABLE - NON DESTRUCTIVE TESTING
+ANADE AVAILABLE - STRUCTURAL DAMAGE ANALYSIS
+TROUBLE AVAILABLE - TROUBLESHOOTING
+AVAIL AVAILABLE - TASK AVAILABLE
+INPROG AVAILABLE - TASK IN PROGRESS
+SUPSIG SUPERVISOR SIGNOFF
+
+
+==============================================
