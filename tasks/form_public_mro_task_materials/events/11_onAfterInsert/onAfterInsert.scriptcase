@@ -1,0 +1,7 @@
+<?php
+
+// MRO-121: Apos incluir material, atualiza o custo do vinculo
+// (mesma regra do import) e recalcula o custo estimado da task.
+
+$var_total = mRecalcularEstimatedMaterialCost({task_id});
+sc_master_value("estimated_material_cost", $var_total);

@@ -1,0 +1,11 @@
+<?php
+
+// onApplicationInit da form_public_mro_attachments
+// Formulario unico (inclusao/edicao de 1 anexo).
+// A listagem e feita pela grid_public_mro_attachments, que monta
+// [glo_where_attachments]. Aqui apenas o contexto e validado quando
+// houver globais de entrada.
+
+// As globais [glo_att_task_id], [glo_att_project_id] e [glo_att_aircraft_id]
+// sao usadas no onLoad (sc_btn_new) para preencher o vinculo do anexo.
+

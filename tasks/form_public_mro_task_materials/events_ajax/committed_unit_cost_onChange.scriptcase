@@ -1,0 +1,4 @@
+<?php
+
+// Recalcula os totais quando a quantidade empenhada muda.
+mCalcularTotaisEmTela();

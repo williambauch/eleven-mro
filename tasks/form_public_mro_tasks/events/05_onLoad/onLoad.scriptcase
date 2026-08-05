@@ -4,7 +4,14 @@
 {routine_type} = empty({is_nrc}) ? "Rotina Padrão" : "Não Rotina (RN)";
  
 // MRO-119: Label de bloqueio por predecessora
-{is_blocked_predecessor_label} = {is_blocked_predecessor} ? "Com bloqueio" : "Sem bloqueio";
+// Bloqueio manual sobrescreve o bloqueio automatico (mesma regra do grid)
+if (!empty({is_predecessor_manual}) && ({is_predecessor_manual} == 't' || {is_predecessor_manual} == 1 || {is_predecessor_manual} === true)) {
+    {is_blocked_predecessor_label} = "Bloqueio manual";
+} elseif (!empty({is_blocked_predecessor}) && ({is_blocked_predecessor} == 't' || {is_blocked_predecessor} == 1 || {is_blocked_predecessor} === true)) {
+    {is_blocked_predecessor_label} = "Com bloqueio predecessora";
+} else {
+    {is_blocked_predecessor_label} = "Sem bloqueio predecessora";
+}
 
 
 // ====================================================================
@@ -218,5 +225,4 @@ echo "is_nrc: <strong>" . ({is_nrc} ? 'Sim' : 'Nao') . "</strong><br>";
 echo "Task ID: <strong>" . ({task_id}) . "</strong><br>";
 echo "Project ID: <strong>" . ({project_id}) . "</strong><br>";
 echo "</div>";
-
 */

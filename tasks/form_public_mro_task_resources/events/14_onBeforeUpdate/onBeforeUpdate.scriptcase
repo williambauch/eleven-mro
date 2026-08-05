@@ -1,0 +1,24 @@
+<?php
+
+// onBeforeUpdate
+// MRO-120: Bloqueia edicao do recurso se ja existe assignment ativo na skill
+
+if (!empty({task_id}) && !empty({resource_code})) {
+    $var_task_id  = (int){task_id};
+    $var_res_code = addslashes({resource_code});
+
+    // Verifica se ha assignment ATIVO para essa skill (mecanico trabalhando ou atribuido)
+    $var_sql = "SELECT 1
+                FROM mro_task_assignments a
+                JOIN mro_skills s ON s.skill_id = a.skill_id
+                WHERE a.task_id = $var_task_id
+                  AND s.skill_code = '$var_res_code'
+                  AND a.status_code IN ('ASSIGNED', 'IN_PROGRESS', 'PAUSED', 'BLOCKED')
+                LIMIT 1";
+    sc_lookup(rs_ativ, $var_sql);
+
+    if (!empty({rs_ativ})) {
+        sc_error_message("Não é possivel editar este recurso: já existe um mecânico atribuido ou trabalhando nesta skill. Finalize a tarefa ou remova a atribuição antes.");
+        sc_error_exit();
+    }
+}

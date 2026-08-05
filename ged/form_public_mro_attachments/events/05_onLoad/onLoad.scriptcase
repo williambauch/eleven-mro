@@ -1,0 +1,20 @@
+<?php
+
+// onLoad da form_public_mro_attachments
+// 1) Apenas em INCLUSAO (sc_btn_new), preenche task_id/project_id/aircraft_id
+//    conforme o contexto de onde a app foi aberta (prioridade: TAREFA -> PROJETO -> AERONAVE).
+//    Em edicao os campos ja vem da tabela e nao devem ser sobrescritos.
+// 2) Monta [glo_att_subdir] SEMPRE, a partir dos campos do registro, para que
+//    o upload em edicao (troca de arquivo) tambem use a pasta correta.
+
+if (sc_btn_new) {
+    if ((int)[glo_att_task_id] > 0) {
+        {task_id}     = (int)[glo_att_task_id];
+    } elseif ((int)[glo_att_project_id] > 0) {
+        {project_id}  = (int)[glo_att_project_id];
+    } elseif ((int)[glo_att_aircraft_id] > 0) {
+        {aircraft_id} = (int)[glo_att_aircraft_id];
+    }
+}
+
+mMontarSubdirAnexos();

@@ -22,3 +22,31 @@ if (!empty({rs_consumo})) {
 }
 
 {consumed_hours} = number_format($var_consumido, 2, ',', '.') ;
+
+// MRO-121: Se a task esta em status final ou liberado (RELEASED),
+// desativa os botoes de edicao/exclusao — o trabalho ja foi distribuido
+if ($var_task_id > 0) {
+    sc_lookup(rs_status_task, "SELECT status_code FROM mro_tasks WHERE task_id = $var_task_id");
+
+    if (!empty({rs_status_task})) {
+        $var_status_task = {rs_status_task[0][0]};
+
+        // Status em que os recursos nao podem mais ser alterados
+        $var_status_bloqueados = [
+            'RELEASED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED',
+            'PENDING_HANDOVER', 'SUPSIG', 'CLOSED', 'APPROVED'
+        ];
+
+        if (in_array($var_status_task, $var_status_bloqueados)) {
+            sc_btn_display('new', 'off');
+            sc_btn_display('update', 'off');
+            sc_btn_display('delete', 'off');
+            sc_btn_display('copy', 'off');
+        } else {
+            sc_btn_display('new', 'on');
+            sc_btn_display('update', 'on');
+            sc_btn_display('delete', 'on');
+            sc_btn_display('copy', 'on');
+        }
+    }
+}

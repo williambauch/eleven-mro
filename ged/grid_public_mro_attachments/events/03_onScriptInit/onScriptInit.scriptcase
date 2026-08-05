@@ -1,0 +1,69 @@
+<?php
+
+// Monta o WHERE dinamico conforme o contexto recebido:
+//   [glo_att_task_id]     -> task_id = X OR project_id = Y OR aircraft_id = Z
+//   [glo_att_project_id]  -> project_id = Y OR aircraft_id = Z
+//   [glo_att_aircraft_id] -> aircraft_id = Z
+// Pelo menos 1 dos 3 deve estar preenchido.
+// sc_select_where(add) so pode ser chamada UMA vez.
+
+$var_task_id     = (int)[glo_att_task_id];
+$var_project_id  = (int)[glo_att_project_id];
+$var_aircraft_id = (int)[glo_att_aircraft_id];
+
+if ($var_task_id <= 0 && $var_project_id <= 0 && $var_aircraft_id <= 0) {
+    sc_error_message("Informe ao menos um contexto: Tarefa, Projeto ou Aeronave.");
+    sc_error_exit();
+}
+
+$var_condicoes = array();
+
+// 1. TAREFA: inclui a propria tarefa e resolve o projeto dela
+if ($var_task_id > 0) {
+    $var_condicoes[] = "task_id = " . $var_task_id;
+
+    $var_sql = "SELECT project_id FROM public.mro_tasks WHERE task_id = " . $var_task_id;
+    sc_lookup(rs_task, $var_sql);
+
+    if ({rs_task} === false) {
+        sc_error_message("Erro ao consultar a tarefa.");
+        sc_error_exit();
+    }
+
+    if (!empty({rs_task}) && !empty({rs_task[0][0]})) {
+        $var_project_id = (int){rs_task[0][0]};
+    }
+}
+
+// 2. PROJETO: inclui o projeto e resolve a aeronave dele
+if ($var_project_id > 0) {
+    $var_condicoes[] = "project_id = " . $var_project_id;
+
+    $var_sql = "SELECT aircraft_id FROM public.mro_projects WHERE project_id = " . $var_project_id;
+    sc_lookup(rs_project, $var_sql);
+
+    if ({rs_project} === false) {
+        sc_error_message("Erro ao consultar o projeto.");
+        sc_error_exit();
+    }
+
+    if (!empty({rs_project}) && !empty({rs_project[0][0]})) {
+        $var_aircraft_id = (int){rs_project[0][0]};
+    }
+}
+
+// 3. AERONAVE
+if ($var_aircraft_id > 0) {
+    $var_condicoes[] = "aircraft_id = " . $var_aircraft_id;
+}
+
+// Deduplica condicoes e injeta o WHERE (chamada unica)
+$var_condicoes = array_unique($var_condicoes);
+$var_where = implode(" OR ", $var_condicoes);
+
+if (empty({sc_where_atual})) {
+    sc_select_where(add) = "WHERE (" . $var_where . ")";
+} else {
+    sc_select_where(add) = "AND (" . $var_where . ")";
+}
+

@@ -1,0 +1,28 @@
+<?php
+
+// Ao trocar a origem do material:
+//   - se vazio, aplica o default DIGEX
+//   - se NAO for CLIENTE e o custo estiver zerado, recarrega o custo
+//     do material master (mesmo comportamento do material_id_onChange)
+//   - recalcula os totais (mudar para CLIENTE zera os custos)
+
+if (trim({material_source}) == '') {
+    {material_source} = 'DIGEX';
+}
+
+// Recarrega o custo do master quando voltar a ser um material com custo
+$var_material_id = (int){material_id};
+$var_origem      = strtoupper(trim({material_source}));
+
+if ($var_material_id > 0 && $var_origem != 'CLIENTE' && (float){unit_cost} <= 0) {
+    $var_sql = "SELECT unit_cost, description
+                FROM mro_materials
+                WHERE material_id = " . $var_material_id;
+    sc_lookup(rs_mat, $var_sql);
+
+    if ({rs_mat} !== false && !empty({rs_mat})) {
+        {unit_cost} = {rs_mat[0][0]};
+    }
+}
+
+mCalcularTotaisEmTela();

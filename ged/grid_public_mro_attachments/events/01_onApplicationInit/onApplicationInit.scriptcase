@@ -1,0 +1,4 @@
+<?php
+
+// Toda a logica de filtro foi movida para o onScriptInit
+// (sc_select_where so funciona no onScriptInit para grids).

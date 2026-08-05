@@ -1,1 +1,1 @@
-SELECT * FROM "public".mro_task_materials
+SELECT * FROM "public".mro_task_materials WHERE task_id = [task_id]

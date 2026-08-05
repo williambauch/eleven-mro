@@ -11,7 +11,7 @@
 - **`mro_task_attachments`**: Tabela ja existe, vinculada diretamente a task (`task_id`, `project_id`). Usada pelo app `form_public_mro_task_attachments` (GED).
 - **Anexos de Aeronave**: Nao existe tabela especifica. A aeronave (`mro_aircraft`) nao possui relational de documentos.
 - **Anexos de Projeto**: Nao existe tabela especifica. O projeto (`mro_projects`) nao possui relational de documentos.
-- **Necessidade**: Criar `mro_aircraft_attachments` e `mro_project_attachments` (ou tabela generica `mro_documents` com polimorfismo via `entity_type` + `entity_id`).
+- **Necessidade**: Criar tabela generica `mro_attachments` com polimorfismo via `entity_type` + `entity_id` (unificando TASK, PROJECT e AIRCRAFT). A tabela antiga `mro_task_attachments` sera descontinuada apos a migracao dos apps.
 
 ### 1.2 Calculo automatico
 
@@ -43,28 +43,26 @@
 
 ### 2.1 Modelo de Documentos
 
-**Opcao A** (Recomendada): Tabela generica `mro_documents` com polimorfismo:
+**Modelo relacional (adotado)**: Tabela `mro_attachments` espelhando o padrao da `mro_task_attachments` (task_id + project_id), acrescentando `aircraft_id` para anexos de aeronave. **Sem polimorfismo** (sem entity_type/entity_id).
 ```sql
-CREATE TABLE mro_documents (
-    document_id SERIAL PRIMARY KEY,
-    entity_type VARCHAR(30) NOT NULL,   -- 'AIRCRAFT', 'PROJECT', 'TASK'
-    entity_id INTEGER NOT NULL,
+CREATE TABLE mro_attachments (
+    attachment_id SERIAL PRIMARY KEY,
+    task_id INTEGER,        -- anexo de tarefa (nullable)
+    project_id INTEGER,     -- anexo de projeto (nullable)
+    aircraft_id INTEGER,    -- anexo de aeronave (nullable)
     file_name VARCHAR(255) NOT NULL,
-    original_name VARCHAR(255),
     file_size_kb INTEGER,
-    mime_type VARCHAR(100),
     uploaded_by VARCHAR(50),
     uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    sync_sharepoint BOOLEAN DEFAULT false,
     description TEXT
 );
-CREATE INDEX idx_mro_docs_entity ON mro_documents(entity_type, entity_id);
+CREATE INDEX idx_mro_attachments_task     ON mro_attachments(task_id);
+CREATE INDEX idx_mro_attachments_project  ON mro_attachments(project_id);
+CREATE INDEX idx_mro_attachments_aircraft ON mro_attachments(aircraft_id);
 ```
-Isso unifica o armazenamento e evita criar N tabelas de anexos.
 
-**Opcao B**: Criar tabelas separadas `mro_aircraft_attachments` e `mro_project_attachments`.
-(Similar a `mro_task_attachments`.)
-
-**Decisao**: Usar **Opcao A** (tabela unificada `mro_documents`) para simplificar manutencao futura e reuso do componente de upload.
+**Decisao**: Adotar o modelo relacional (colunas task_id/project_id/aircraft_id) por consistencia com o padrao existente da `mro_task_attachments`, simplificando o WHERE dinamico e o preenchimento dos campos no form. A tabela antiga `mro_task_attachments` sera descontinuada apos a migracao dos apps.
 
 ### 2.2 Calculo Automatico
 
@@ -104,7 +102,7 @@ Isso unifica o armazenamento e evita criar N tabelas de anexos.
 
 | Ordem | Atividade | App/Tabela |
 |:-----:|-----------|------------|
-| 0 | **Migrations de banco** | `mro_documents`, `mro_material_warehouse_balance` |
+| 0 | **Migrations de banco** | `mro_attachments`, `mro_material_warehouse_balance` |
 | 1 | Upload de anexos em Aeronave | `form_public_mro_aircraft` |
 | 2 | Upload de anexos em Projetos | `form_public_mro_projects` |
 | 3 | Botao de docs na Task + grid + painel mecanico | `form_public_mro_tasks`, `grid_public_mro_tasks`, `grid_my_tasks`, `form_public_mro_task_assignments` |
@@ -117,23 +115,36 @@ Isso unifica o armazenamento e evita criar N tabelas de anexos.
 
 ## 5. MIGRACOES PREVISTAS
 
-### 5.1 Criacao da tabela `mro_documents`
+### 5.1 Criacao da tabela `mro_attachments` (modelo relacional)
 ```sql
-CREATE TABLE IF NOT EXISTS "public"."mro_documents" (
-    "document_id" SERIAL NOT NULL,
-    "entity_type" VARCHAR(30) NOT NULL,
-    "entity_id" INTEGER NOT NULL,
-    "file_name" VARCHAR(255) NOT NULL,
-    "original_name" VARCHAR(255),
-    "file_size_kb" INTEGER,
-    "mime_type" VARCHAR(100),
-    "uploaded_by" VARCHAR(50),
-    "uploaded_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    "description" TEXT,
-    CONSTRAINT "mro_documents_pkey" PRIMARY KEY ("document_id")
+CREATE TABLE IF NOT EXISTS "public"."mro_attachments" (
+    "attachment_id"   SERIAL NOT NULL,
+    "task_id"         INTEGER,
+    "project_id"      INTEGER,
+    "aircraft_id"     INTEGER,
+    "file_name"       VARCHAR(255) NOT NULL,
+    "file_size_kb"    INTEGER,
+    "uploaded_by"     VARCHAR(50),
+    "uploaded_at"     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    "sync_sharepoint" BOOLEAN DEFAULT false,
+    "description"     TEXT,
+    CONSTRAINT "mro_attachments_pkey" PRIMARY KEY ("attachment_id")
 );
-CREATE INDEX IF NOT EXISTS "idx_mro_docs_entity" ON "public"."mro_documents"("entity_type", "entity_id");
+CREATE INDEX IF NOT EXISTS "idx_mro_attachments_task"     ON "public"."mro_attachments"("task_id");
+CREATE INDEX IF NOT EXISTS "idx_mro_attachments_project"  ON "public"."mro_attachments"("project_id");
+CREATE INDEX IF NOT EXISTS "idx_mro_attachments_aircraft" ON "public"."mro_attachments"("aircraft_id");
 ```
+
+### 5.4 Migracao dos dados existentes de `mro_task_attachments`
+```sql
+INSERT INTO "public"."mro_attachments"
+    (task_id, project_id, aircraft_id, file_name, file_size_kb,
+     uploaded_by, uploaded_at, sync_sharepoint)
+SELECT task_id, project_id, NULL, file_name, file_size_kb,
+       uploaded_by, uploaded_at, sync_sharepoint
+FROM "public"."mro_task_attachments";
+```
+A tabela antiga `mro_task_attachments` permanece intacta ate os apps (GED) migrarem para a nova estrutura; depois pode ser descontinuada.
 
 ### 5.2 Criacao da tabela `mro_material_warehouse_balance`
 ```sql

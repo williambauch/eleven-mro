@@ -44,27 +44,24 @@ O arquivo `<CODIGO_TAREFA> - <titulo>.md` deve seguir esta estrutura, nesta orde
 
 ### 1. Cabecalho — Definicao da Tarefa
 
-```
-# DEFINICAO DA TAREFA
-
-=========== DEFINICAO DA TAREFA ===========
-
-**<titulo da tarefa>**
+```md
+# <titulo da tarefa>          <- usa o TITULO ORIGINAL do card
 
 <descricao do contexto e objetivo da tarefa>
-
-Criterios de Aceite (Definition of Done):
-
 <lista de criterios de aceite>
-
-Informacoes Tecnicas (Para o Desenvolvedor):
-
-<tabelas impactadas, campos chave, observacoes importantes>
-
-==============================================
 ```
 
-### 2. Secao de backup
+**Regra obrigatoria da descricao:**
+
+- A **descricao**, o **titulo** e os **criterios de aceite** devem ser copiados
+  **o mais proximo possivel do texto original passado pelo lider do card**.
+  Nunca reescrever, resumir ou "melhorar" o texto com palavras proprias.
+- Se o usuario editar o texto (titulo/descricao/criterios), respeitar a versao
+  que ele deixou no arquivo — nunca voltar para a versao anterior.
+- O objetivo e manter rastreabilidade: o que esta no registro reflete
+  exatamente o que foi solicitado pelo lider, sem interpretacao livre.
+
+### 2. Secao de backup (OPCIONAL)
 
 ```
 # BACKUP e APLICACOES CRIADAS
@@ -80,6 +77,12 @@ PROJETO   <nome>
 **# UTEIS**
 <links, comandos, informacoes uteis>
 ```
+
+- Esta secao e **opcional**. O usuario pode pedir para remove-la do registro
+  (como ocorreu na MRO-121), pois a informacao de apps editadas/criadas ja
+  fica implicita no sumario agrupado por aplicacao.
+- Incluir somente quando o usuario pedir ou quando houver migrations/backups
+  relevantes a destacar.
 
 ### 3. Sumario das alteracoes implementadas
 
@@ -112,10 +115,13 @@ PROJETO   <nome>
 **Regras do sumario:**
 
 - Agrupar as alteracoes pelo **nome da aplicacao/pasta** como heading `##` (ex: `## form_public_mro_tasks`)
+- **Uma aplicacao por heading `##`** — nunca juntar grid+form ou app+tabela num mesmo heading
 - Dentro de cada app, cada alteracao vira um sub-item `###` com a descricao curta (sem repetir o nome da app)
 - Separar cada **app/pasta** com `---` (linha horizontal)
 - Alteracoes da **mesma app** ficam juntas SEM separador entre si
 - Bullet points descritivos do que foi feito, com foco na **regra de negocio**, nao no codigo
+- **Ser sucinto e direto** — preferir 1-3 bullets por item, sem floreios
+- **Regra de negocio** deve aparecer como `- Regra de negocio: ...` no bullet, em linha propria
 - Se um arquivo foi **deletado**, mencionar com tom adequado ("removido", "excluido")
 - Se ficou **pendente**, marcar explicitamente com `**PENDENTE**`
 - **Caminhos de eventos:** usar apenas o nome do evento, sem prefixo numerico e sem extensao. Ex: `events/onLoad` (e nao `events/05_onLoad/onLoad.scriptcase`), `events_ajax/deferment_status_onClick`

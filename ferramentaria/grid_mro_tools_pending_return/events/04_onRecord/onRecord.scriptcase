@@ -1,0 +1,10 @@
+<?php
+/*----------------------------------------------------
+  ScriptCase Event File
+  Application: grid_mro_tools_pending_return
+  Type: Grid
+  Event: onRecord
+  Created: 05/08/2026
+  Author: WBAUCH
+----------------------------------------------------*/
+

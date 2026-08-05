@@ -1,0 +1,7 @@
+<?php
+
+// MRO-121: Apos excluir material, recalcula o custo estimado
+// da task (o vinculo ja foi excluido, entao so soma o restante).
+
+$var_total = mRecalcularEstimatedMaterialCost({task_id});
+sc_master_value("estimated_material_cost", $var_total);

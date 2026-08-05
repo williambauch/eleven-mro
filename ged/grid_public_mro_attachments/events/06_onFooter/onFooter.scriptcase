@@ -1,0 +1,10 @@
+<?php
+/*----------------------------------------------------
+  ScriptCase Event File
+  Application: grid_public_mro_attachments
+  Type: Grid
+  Event: onFooter
+  Created: 03/08/2026
+  Author: WBAUCH
+----------------------------------------------------*/
+
