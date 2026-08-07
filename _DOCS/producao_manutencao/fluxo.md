@@ -18,8 +18,8 @@ Módulo responsável pela execução das tarefas no chão de fábrica. Abrange d
 - [Timesheet (form_public_mro_timesheet)](form_public_mro_timesheet.md) — registro de clock-in/clock-out e apontamento de horas.
 - [Grid de Timesheet (grid_public_mro_timesheet)](grid_public_mro_timesheet.md) — consulta de apontamentos de horas.
 - [Controle de Pausa (control_pause_task)](control_pause_task.md) — registro de pausas em tarefas em execução.
-- [Abertura de NRC (ctrl_abertura_nrc)](ctrl_abertura_nrc.md) — formulário rápido de abertura de não-rotina pelo mecânico.
-- [Fluxo de Aprovação NRC (fluxo_nrc_workflow)](fluxo_nrc_workflow.md) — diagrama do workflow de aprovação de Não-Rotinas (DRAFT → RELEASED → CANCELLED).
+- [Abertura de NRC (blank_abertura_nrc)](blank_abertura_nrc.md) — abertura direta e automática de não-rotina (MRO-122), sem tela intermediária. App legada: [ctrl_abertura_nrc](ctrl_abertura_nrc.md).
+- [Fluxo de Trabalho (NRC e Rotina Padrão)](fluxo_rotina_nrc_workflow.md) — **fonte da verdade** dos status e transições. Diagrama interativo mantido em [`fluxo_trabalho_nrc_rotina.html`](../fluxo_trabalho_nrc_rotina.html).
 - [Dispatch (grid_mro_dispatch)](grid_mro_dispatch.md) — visão de despacho das tarefas alocadas aos mecânicos.
 - [Kanban (blank_kanban_board)](blank_kanban_board.md) — quadro Kanban de tarefas para acompanhamento visual.
 - [Kanban Crítico (blank_kanban_critical)](blank_kanban_critical.md) — quadro Kanban com tarefas críticas ou bloqueadas.

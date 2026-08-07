@@ -15,9 +15,9 @@ if ($v_is_blocked_pred == 't' || $v_is_blocked_pred === true || $v_is_blocked_pr
     sc_error_exit();
 }
 // ====================================================================
-// CRÍTICA DE STATUS: Só processa se estiver como NOT_STARTED
+// CRÍTICA DE STATUS: Só processa se estiver como NOT_STARTED, PLANNING, PLANNED ou APPROVED
 // ====================================================================
-if ($v_status == 'PLANNING' || $v_status == 'NOT_STARTED' || $v_status == 'PLANNED') {
+if ($v_status == 'PLANNING' || $v_status == 'NOT_STARTED' || $v_status == 'PLANNED' || $v_status == 'APPROVED') {
     
     // 1. Atualiza o status do documento da tarefa para RELEASED (Liberado)
     sc_exec_sql("UPDATE mro_tasks SET status_code = 'RELEASED' WHERE task_id = $v_task_id");

@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Teste Mermaid - Fluxo MRO</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        html, body {
+            font-family: 'Roboto', 'Segoe UI', Tahoma, sans-serif;
+            background-color: #f4f6f8;
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        .page-header {
+            font-size: 20px;
+            color: #1a202c;
+            padding: 12px 15px 8px 15px;
+            font-weight: 600;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            padding: 10px 15px;
+            font-size: 12px;
+        }
+
+        .legend-item { display: flex; align-items: center; gap: 5px; }
+
+        .legend-swatch { width: 14px; height: 14px; border-radius: 3px; display: inline-block; }
+
+        .zoom-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin: 0 15px 10px 15px;
+            padding: 6px 10px;
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            width: fit-content;
+        }
+
+        .zoom-toolbar button {
+            border: 1px solid #cbd5e0;
+            background: #f7fafc;
+            color: #2d3748;
+            border-radius: 4px;
+            padding: 5px 12px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .zoom-toolbar button:hover { background: #e2e8f0; }
+
+        .zoom-label {
+            font-size: 13px;
+            font-weight: 700;
+            color: #4a5568;
+            min-width: 48px;
+            text-align: center;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .separator { width: 1px; height: 22px; background: #e2e8f0; margin: 0 2px; }
+
+        .diagram-box {
+            background: #fff;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            padding: 20px;
+            margin: 0 15px 15px 15px;
+            /* altura minima para cada area de diagrama */
+            min-height: 400px;
+            /* overflow oculto: a navegacao e feita pelo pan (arrastar) */
+            overflow: hidden;
+        }
+
+        .zoom-viewport { transition: transform 0.15s ease; transform-origin: top left; }
+
+        /* FUNDO BRANCO NOS LABELS DAS ARESTAS (antes era roxo) */
+        .diagram-box .edgeLabel {
+            background: #ffffff !important;
+            border-radius: 3px;
+            padding: 1px 4px;
+        }
+        .diagram-box .edgeLabel rect,
+        .diagram-box .labelBkg {
+            fill: #ffffff !important;
+            background: #ffffff !important;
+            opacity: 1 !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="page-header">
+        MRO System - Fluxo de Trabalho (NRC e Rotina Padrão)
+    </div>
+
+    <div class="legend">
+        <span class="legend-item"><span class="legend-swatch" style="background:#e3f2fd;border:1px solid #1565c0"></span> Entrada</span>
+        <span class="legend-item"><span class="legend-swatch" style="background:#fff3e0;border:1px solid #e65100"></span> Aguardando / Planejamento</span>
+        <span class="legend-item"><span class="legend-swatch" style="background:#e8f5e9;border:1px solid #2e7d32"></span> Execução / Aprovado</span>
+        <span class="legend-item"><span class="legend-swatch" style="background:#fff8e1;border:1px solid #f9a825"></span> Decisão</span>
+        <span class="legend-item"><span class="legend-swatch" style="background:#fce4ec;border:1px solid #c62828"></span> Cancelado / Bloqueado</span>
+        <span class="legend-item"><span style="display:inline-block;width:20px;border-top:2px dashed #ff6f00"></span> Retorno</span>
+        <span class="legend-item"><span style="display:inline-block;width:20px;border-top:2px dashed #c62828"></span> Reavaliar</span>
+    </div>
+
+    <div style="margin: 0 15px 10px 15px; padding: 8px 12px; background: #fff5f5; border: 1px solid #feb2b2; border-radius: 6px; font-size: 12px; color: #742a2a;">
+        <strong>⚠️ Pontos a reavaliar:</strong>
+        <ol style="margin: 6px 0 0 16px; padding: 0;">
+            <li>O auto-approve do motor O&amp;A (<code>mro_engine.php</code>) manda <code>PENDING_OA → RELEASED</code> direto, sem criar assignments — mesmo problema do Bug 1. Aguarda decisão do superior (ver MRO-122, seção "Bug 1 — EXTENSÃO").</li>
+            <li>O auto-approve <strong>"Dentro do CAP?" = Sim</strong> (<code>btn_validar_prog</code> → <code>fn_calcular_oa_nrc</code>) também vai direto para <code>RELEASED</code> sem criar assignments. Como o <code>btn_liberar_para_execucao</code> do grid só age sobre <code>APPROVED</code>, a NRC fica em <code>RELEASED</code> sem equipe alocada e ninguém consegue criar assignments depois.</li>
+            <li><strong>SUPSIG → CLOSED não implementado:</strong> o status <code>CLOSED</code> não existe na tabela <code>mro_sys_status</code>. O <code>control_pause_task</code> (motivo 6, conclusão) manda o assignment para <code>SUPSIG</code>, mas não há código que faça a transição <code>SUPSIG → CLOSED</code>. Assignments concluídos ficam em <code>SUPSIG</code> indefinidamente. O <code>COMPLETED</code> (em cinza 50% no diagrama) só existe vindo do P6 na importação — nenhum código do fluxo de execução gera <code>COMPLETED</code>.</li>
+        </ol>
+    </div>
+
+    <div class="zoom-toolbar">
+        <button type="button" onclick="mroZoomOut()">−</button>
+        <button type="button" onclick="mroZoomIn()">+</button>
+        <span class="separator"></span>
+        <span class="zoom-label" id="mro_zoom_label">100%</span>
+        <span class="separator"></span>
+        <button type="button" onclick="mroZoomFit()">Ajustar</button>
+        <button type="button" onclick="mroZoomReset()">100%</button>
+    </div>
+
+    <div class="diagram-box">
+        <div class="zoom-viewport" id="zoom_viewport">
+            <div class="mermaid">
+flowchart LR
+    %% ===================== ROTINA (TOPO) =====================
+    A2(ROTINA <BR/> Importação P6 / Cadastro<br/>ctrl_import_excel / form_public_mro_tasks) --> B2[PLANNED]
+    B2 --> B3[NOT_STARTED]
+
+    B3 -- btn_liberar_para_execucao<br/>(grid) --> R1[RELEASED]
+    R1 -. cria assignments<br/>por skill (LABOR) .-> SV{Painel Supervisor<br/>decide alocação}
+
+    SV -- atribui mecânico<br/>específico --> AS[ASSIGNED<br/>Assignment]
+    AS -- Play (clock-in) --> M[IN_PROGRESS<br/>Assignment]
+    M -- clock-in (inicia o<br/>registro de tempo) --> M
+
+    M -- concluído --> Q[Assinatura Supervisor/Qualidade<br/>SUPSIG ③<br/>Assignment]
+    Q -. assinatura não<br/>implementada .-> CM[COMPLETED<br/>③ só via P6]
+    M -- finalizar turno / repasse --> H2[PENDING_HANDOVER<br/>Assignment]
+    M -- pausa rotineira --> P[PAUSED<br/>Assignment]
+    M -- impedimento<br/>(material, ferramenta<br/>qualidade/eng) --> BL[BLOCKED<br/>Assignment]
+    P -- retomar (clock-in,<br/>volta a executar) --> M
+
+    H2 -- passagem de serviço<br/>(apenas quando é<br/>último mecânico) --> PG[PENDING_PROG]
+
+    PG -- btn_validar_prog_rotina --> V{HH dentro do<br/>orçado?}
+    V -- Não (estouro HH) --> AJ[Somente alerta<br/>ajuste recursos P6<br/>orçamento]
+    AJ -- reprograma e<br/>tenta validar de novo --> PG
+    V -- Sim --> R2[RELEASED novamente<br/>atualiza/cria assignments]
+    R2 -. redistribui assignments .-> SV
+
+    style A2 fill:#e3f2fd,stroke:#1565c0,color:#000
+    style B2 fill:#fff3e0,stroke:#e65100,color:#000
+    style B3 fill:#fff3e0,stroke:#e65100,color:#000
+    style R1 fill:#e8f5e9,stroke:#2e7d32,color:#000
+    style SV fill:#fff8e1,stroke:#f9a825,color:#000
+    style AS fill:#e8f5e9,stroke:#2e7d32,color:#000
+    style M fill:#e8f5e9,stroke:#2e7d32,color:#000
+    style H2 fill:#fff3e0,stroke:#e65100,color:#000
+    style P fill:#fff3e0,stroke:#e65100,color:#000
+    style BL fill:#fce4ec,stroke:#c62828,color:#000
+    style PG fill:#fff3e0,stroke:#e65100,color:#000
+    style V fill:#fff8e1,stroke:#f9a825,color:#000
+    style R2 fill:#e8f5e9,stroke:#2e7d32,color:#000
+    style AJ fill:#fce4ec,stroke:#c62828,color:#000
+    style Q fill:#e8f5e9,stroke:#c62828,color:#000,stroke-width:3px,stroke-dasharray: 5 5
+    style CM fill:#e8f5e9,stroke:#2e7d32,color:#000,opacity:0.5,stroke-dasharray: 5 5
+
+    %% Retorno tracejado laranja: AJ->PG(16)
+    linkStyle 16 stroke:#ff6f00,stroke-width:2px,stroke-dasharray: 5 5
+            </div>
+        </div>
+    </div>
+
+    <div class="diagram-box">
+        <div class="zoom-viewport" id="zoom_viewport_nrc">
+            <div class="mermaid">
+flowchart LR
+    %% ===================== NÃO ROTINA (EMBAIXO) =====================
+    A(NÃO ROTINA <br/> blank_abertura_nrc<br/>abertura direta de NRC - MRO-122) --> B[DRAFT]
+
+    %% btn_enviar_eng: DRAFT e PENDING_COORD -> PENDING_ENG
+    B --> BE[btn_enviar_eng]
+    E -.-> BE
+    BE --> C[PENDING_ENG]
+
+    %% btn_enviar_prog: DRAFT, PENDING_ENG, PENDING_COORD e COMMERCIAL_REVIEW -> PENDING_PROG
+    B --> BP[btn_enviar_prog]
+    C --> BP
+    E --> BP
+    I -.-> BP
+    BP --> D[PENDING_PROG]
+
+    %% btn_enviar_coord: PENDING_ENG e PENDING_PROG -> PENDING_COORD
+    C --> BC[btn_enviar_coord]
+    D --> BC
+    BC --> E[PENDING_COORD]
+
+    %% btn_cancelar: PENDING_ENG, PENDING_COORD, PENDING_PROG e COMMERCIAL_REVIEW -> CANCELLED
+    C --> BX[btn_cancelar]
+    E --> BX
+    D --> BX
+    I --> BX
+    BX --> F[CANCELLED]
+
+    D -- btn_validar_prog --> Z{Dentro do CAP<br/>do contrato?}
+    Z -- "Sim ① (auto-approve)" --> H[RELEASED]
+    Z -- Não --> G[PENDING_OA]
+
+    G -- btn_aprovar_cliente --> AP[APPROVED - Aprovado Cliente]
+    G -- btn_reprovar_cliente --> I[COMMERCIAL_REVIEW]
+    G -. "② auto-approve<br/>motor O/A" .-> H
+
+    AP -- btn_liberar_para_execucao<br/>(grid) --> H[RELEASED]
+    H -. assignments prontas<br/>para alocação .-> SV{Painel Supervisor<br/>decide alocação}
+
+    I -. btn_enviar_cliente .-> G
+
+    classDef button fill:#f5f5f5,stroke:#9e9e9e,color:#000
+    class BE,BP,BC,BX button
+
+    style A fill:#e3f2fd,stroke:#1565c0,color:#000
+    style B fill:#fff3e0,stroke:#e65100,color:#000
+    style C fill:#fff3e0,stroke:#e65100,color:#000
+    style D fill:#fff3e0,stroke:#e65100,color:#000
+    style E fill:#fff3e0,stroke:#e65100,color:#000
+    style Z fill:#fff8e1,stroke:#f9a825,color:#000
+    style G fill:#e8f5e9,stroke:#2e7d32,color:#000
+    style AP fill:#e8f5e9,stroke:#2e7d32,color:#000
+    style H fill:#e8f5e9,stroke:#c62828,color:#000,stroke-width:3px,stroke-dasharray: 5 5
+    style I fill:#fce4ec,stroke:#c62828,color:#000
+    style F fill:#fce4ec,stroke:#c62828,color:#000
+    style SV fill:#fff8e1,stroke:#f9a825,color:#000
+
+    %% Retornos tracejados laranja: E->BE(2), I->BP(7), I->G(25)
+    linkStyle 2,7,25 stroke:#ff6f00,stroke-width:2px,stroke-dasharray: 5 5
+    %% Auto-approve Z->H (verde)
+    linkStyle 18 stroke:#2e7d32,stroke-width:2px
+    %% Auto-approve motor O&A G->H (vermelho tracejado - reavaliar)
+    linkStyle 22 stroke:#c62828,stroke-width:2px,stroke-dasharray: 5 5
+    %% NRC liberada -> Painel Supervisor (alocacao de mecanicos)
+    linkStyle 24 stroke:#2e7d32,stroke-width:2px,stroke-dasharray: 5 5
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Zoom via transform CSS (Mermaid e SVG estatico)
+        var mroZoomAtual = 1;
+        var mroPanX = 0;
+        var mroPanY = 0;
+
+        function mroAplicarZoom() {
+            // Aplica o transform a todos os viewports (ROTINA + NRC)
+            var vps = document.querySelectorAll('.zoom-viewport');
+            if (vps.length) {
+                vps.forEach(function (vp) {
+                    vp.style.transform = 'translate(' + mroPanX + 'px, ' + mroPanY + 'px) scale(' + mroZoomAtual + ')';
+                });
+            }
+            var lbl = document.getElementById('mro_zoom_label');
+            if (lbl) lbl.textContent = Math.round(mroZoomAtual * 100) + '%';
+        }
+
+        function mroZoomIn() { mroZoomAtual = Math.min(3, mroZoomAtual + 0.1); mroAplicarZoom(); }
+        function mroZoomOut() { mroZoomAtual = Math.max(0.2, mroZoomAtual - 0.1); mroAplicarZoom(); }
+        function mroZoomReset() { mroZoomAtual = 1; mroPanX = 0; mroPanY = 0; mroAplicarZoom(); }
+
+        function mroZoomFit() {
+            var svg = document.querySelector('.mermaid svg');
+            var box = document.querySelector('.diagram-box');
+            if (!svg || !box) return;
+            var sw = svg.getBoundingClientRect().width;
+            var bw = box.clientWidth - 40;
+            mroZoomAtual = Math.min(3, Math.max(0.2, bw / sw));
+            mroPanX = 0;
+            mroPanY = 0;
+            mroAplicarZoom();
+        }
+
+        // =========================================================================
+        // PAN: ARRASTAR QUALQUER DIAGRAMA COM O MOUSE
+        // =========================================================================
+        (function () {
+            var boxes = document.querySelectorAll('.diagram-box');
+            if (!boxes.length) return;
+
+            var arrastando = false;
+            var iniX = 0, iniY = 0;
+            var panIniX = 0, panIniY = 0;
+
+            boxes.forEach(function (box) {
+                box.style.cursor = 'grab';
+
+                box.addEventListener('mousedown', function (e) {
+                    // Ignora cliques em botoes/links
+                    if (e.target.closest('button, a')) return;
+                    arrastando = true;
+                    iniX = e.clientX;
+                    iniY = e.clientY;
+                    panIniX = mroPanX;
+                    panIniY = mroPanY;
+                    box.style.cursor = 'grabbing';
+                    e.preventDefault();
+                });
+
+                box.addEventListener('mouseup', function () {
+                    if (arrastando) {
+                        arrastando = false;
+                        box.style.cursor = 'grab';
+                    }
+                });
+            });
+
+            window.addEventListener('mousemove', function (e) {
+                if (!arrastando) return;
+                var dx = e.clientX - iniX;
+                var dy = e.clientY - iniY;
+                mroPanX = panIniX + dx;
+                mroPanY = panIniY + dy;
+                mroAplicarZoom();
+            });
+
+            window.addEventListener('mouseup', function () {
+                if (arrastando) {
+                    arrastando = false;
+                }
+            });
+        })();
+
+        // Mermaid com fundo branco nos labels das arestas
+        // htmlLabels: false -> labels SVG puros (sem foreignObject duplicado)
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'base',
+            flowchart: { htmlLabels: false },
+            themeVariables: {
+                edgeLabelBackground: '#ffffff',
+                fontFamily: 'Roboto, Segoe UI, Tahoma, sans-serif'
+            }
+        });
+    </script>
+</body>
+</html>
+>

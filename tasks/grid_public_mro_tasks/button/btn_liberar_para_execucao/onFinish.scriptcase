@@ -3,6 +3,6 @@
 $total_selecionado = $this->count_all;
 
 $mensagem = "Liberação concluída!<br><br>";
-$mensagem .= "As tarefas em <b>PLANNING</b>, <b>NOT_STARTED</b> ou <b>PLANNED</b> foram liberadas e os assignments foram criados no Painel do Supervisor.";
+$mensagem .= "As tarefas em <b>NOT_STARTED</b>, <b>PLANNING</b>, <b>PLANNED</b> ou <b>APPROVED</b> foram liberadas e os assignments foram criados no Painel do Supervisor.";
 
 [glo_aviso_run] = $mensagem;

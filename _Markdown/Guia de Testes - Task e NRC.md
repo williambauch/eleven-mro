@@ -153,7 +153,7 @@ Validar o fluxo completo de **Rotinas (Task)** e **Não-Rotinas (NRC)** na aplic
 | # | Ação | Resultado Esperado |
 |---|------|-------------------|
 | 47 | Logar como CLIENTE, abrir NRC em PENDING_OA | Botões visíveis: `btn_aprovar_cliente`, `btn_reprovar_cliente` |
-| 48 | Clicar em btn_aprovar_cliente | Status vai para `RELEASED` |
+| 48 | Clicar em btn_aprovar_cliente | Status vai para `APPROVED` (Aprovado - Cliente). A liberação para execução (RELEASED + assignments) ocorre via `btn_liberar_para_execucao` na grid (MRO-122) |
 | 49 | Clicar em btn_reprovar_cliente | Status vai para `COMMERCIAL_REVIEW` |
 | 50 | Logar como COMERCIAL, abrir NRC em PENDING_OA | Botões visíveis: `btn_aprovar_cliente`, `btn_reprovar_cliente` |
 | 51 | Verificar bloco_financeiro | **Visível** (COMERCIAL não é MECANICO) |

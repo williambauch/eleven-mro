@@ -118,10 +118,10 @@ Perfil de **Cliente (acompanhamento)** — visualiza NRCs e aprova ou rejeita or
 **Quando uma NRC chega em PENDING_OA (Fase 5):**
 | Botão | Ação | Significado |
 |-------|------|-------------|
-| `btn_aprovar_cliente` | **Aprovar** | Cliente aprovou o orçamento, NRC segue pra liberação |
+| `btn_aprovar_cliente` | **Aprovar** | Cliente aprovou o orçamento, NRC vai para `APPROVED` (aguarda liberação na grid) |
 | `btn_reprovar_cliente` | **Recusar** | Cliente recusou, NRC vai pra negociação comercial |
 
-**Resumo do papel:** O cliente é o **aprovador final** do orçamento — ele decide se aceita o valor da NRC. Se aprovar, a NRC é liberada pra execução. Se recusar, o time comercial entra em ação pra renegociar.
+**Resumo do papel:** O cliente é o **aprovador final** do orçamento — ele decide se aceita o valor da NRC. Se aprovar, a NRC vai para `APPROVED` (Aprovado - Cliente) e fica aguardando o planejamento liberar para execução via `btn_liberar_para_execucao` na grid. Se recusar, o time comercial entra em ação pra renegociar.
 
 ---
 

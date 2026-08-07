@@ -5,8 +5,13 @@
 $id = {task_id};
 $user = [usr_login]; // Variável global de login do Scriptcase
 
-// 1. Atualiza o status
-sc_exec_sql("UPDATE mro_tasks SET status_code = 'RELEASED' WHERE task_id = $id");
+// MRO-122: Apos Aprovacao do cliente vai para liberar a execucao.
+// O status vai para APPROVED (Aprovado p/ Cliente) e a liberacao
+// efetiva (com criacao de assignments) fica para o
+// btn_liberar_para_execucao na grid_public_mro_tasks que atualiza a task para RELEASED.
+
+// 1. Atualiza o status (aprovado pelo cliente, aguardando liberacao)
+sc_exec_sql("UPDATE mro_tasks SET status_code = 'APPROVED' WHERE task_id = $id");
 
 // 2. Grava o Audit Log (Assinatura Digital)
 sc_exec_sql("INSERT INTO mro_nrc_approval_log (task_id, action_taken, user_login) VALUES ($id, 'APPROVED_BY_CLIENT', '$user')");

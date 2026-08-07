@@ -2,7 +2,7 @@
 
 function mExibirCardStatus()
 {
-    $var_status = {status_code};
+            $var_status = {status_code};
             $var_label  = $var_status;
             $var_cor    = '#6c757d';
             $var_grupo  = 'Indefinido';
@@ -60,7 +60,7 @@ function mExibirCardStatus()
                     break;
 
                 case 'APPROVED':
-                    $var_grupo = 'Liberado para execucao';
+                    $var_grupo = 'Aguardando liberação do Planejamento';
                     break;
 
                 case 'RELEASED':
@@ -69,8 +69,11 @@ function mExibirCardStatus()
                     break;
 
                 case 'PAUSED':
-                case 'BLOCKED':
                 case 'PENDING_HANDOVER':
+                    $var_grupo = 'Mecânico';
+                    break;
+
+                case 'BLOCKED':
                 case 'SUPSIG':
                     $var_grupo = 'Supervisor';
                     break;

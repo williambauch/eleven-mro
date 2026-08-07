@@ -1,0 +1,196 @@
+<?php
+
+// ====================================================================
+// MRO-122 - ABERTURA DIRETA DE NRC (app Blank)
+// Cria a NRC automaticamente, sem tela intermediaria e sem entrada
+// de dados pelo usuario. Logica adaptada do onValidateSuccess do
+// ctrl_abertura_nrc (MRO-125).
+//
+// REGRA: toda criacao de NR gera as acoes de impeditivo = S.
+// ====================================================================
+
+// ====================================================================
+// 0. CAPTURA DE VARIÁVEIS E PROTEÇÃO DE SESSÃO
+// ====================================================================
+
+$is_backoffice = (isset([glo_origem]) && [glo_origem] == 'backoffice');
+
+// ====================================================================
+// 0. GUARDA ANTI-REEXECUCAO (botao Voltar do navegador ou Atualizar pagina)
+// ====================================================================
+// O sc_redir mantem a URL da blank no historico do navegador; ao
+// clicar em Voltar, o onExecute roda novamente e criaria outra NRC.
+// A chave de sessao bloqueia reexecucoes da mesma solicitacao.
+$var_chave = 'nrc_' . ($is_backoffice ? [task_id_origem] : [usr_employee_id]);
+
+if (isset([glo_ultima_nrc]) && [glo_ultima_nrc] == $var_chave) {
+    // Ja processou esta solicitacao — nao cria outra NRC
+    // Redireciona para a grid de origem conforme a rota
+    if ($is_backoffice) {
+        sc_redir(grid_public_mro_tasks, "_self");
+    } else {
+        sc_redir(grid_my_tasks, "_self");
+    }
+}
+
+[glo_ultima_nrc] = $var_chave;
+
+if (!$is_backoffice) {
+    if (!isset([usr_employee_id]) || empty([usr_employee_id])) {
+        sc_error_message("Erro de Sessão: Não foi possível identificar o seu ID de Funcionário.");
+        sc_error_exit();
+    }
+    $emp_id = [usr_employee_id];
+} else {
+    $emp_id = isset([usr_employee_id]) && !empty([usr_employee_id]) ? [usr_employee_id] : 0;
+}
+
+// Impeditivo sempre ativo na criacao automatica (MRO-122)
+$v_impeditivo = 'S';
+
+// ====================================================================
+// 1. ROTEAMENTO: MECÂNICO VS BACKOFFICE
+// ====================================================================
+if (!$is_backoffice) {
+    // ROTA 1: MECÂNICO
+    $sql_busca = "SELECT a.assignment_id, a.status_code, 
+                         (SELECT timesheet_id FROM mro_timesheet WHERE assignment_id = a.assignment_id AND status = 'IN_PROGRESS' LIMIT 1) as ts_ativo
+                  FROM mro_task_assignments a 
+                  WHERE a.executed_by_employee_id = $emp_id 
+                  AND a.status_code IN ('ASSIGNED', 'IN_PROGRESS', 'PAUSED') 
+                  LIMIT 1";
+    sc_lookup(ds_ativa, $sql_busca);
+
+    if (empty({ds_ativa})) {
+        sc_error_message("Erro: Nenhuma tarefa alocada a você para gerar a NRC.");
+        sc_error_exit(); 
+    }
+
+    $v_parent_assignment = {ds_ativa[0][0]};
+    $v_status_atual      = {ds_ativa[0][1]};
+    $v_ts_id             = {ds_ativa[0][2]}; 
+    
+    sc_lookup(rs_assignment, "SELECT task_id FROM mro_task_assignments WHERE assignment_id = $v_parent_assignment");
+    $v_parent_task = {rs_assignment[0][0]};
+
+} else {
+    // ROTA 2: BACKOFFICE
+    $v_parent_task = [task_id_origem];
+}
+
+$sql_parent = "SELECT task_code, project_id, task_name FROM mro_tasks WHERE task_id = $v_parent_task";
+sc_lookup(rs_parent, $sql_parent);
+
+$parent_code  = {rs_parent[0][0]};
+$v_project_id = {rs_parent[0][1]}; 
+$v_parent_name = {rs_parent[0][2]};
+
+// ====================================================================
+// 2. VALORES PADRAO DA NRC (MRO-122 - sem input do usuario)
+// ====================================================================
+// task_name: "Não Rotina de {task_name do pai}"
+// instruction_text: vazio (NULL)
+$var_nome_pai = addslashes($v_parent_name);
+$v_titulo = "'Não Rotina de " . $var_nome_pai . "'";
+$v_desc   = 'NULL';
+
+// ====================================================================
+// 3. LOGICA DE GERACAO DO CODIGO DA NRC (hierarquia completa)
+// ====================================================================
+// Regras do cliente (MRO-125):
+//   N-   = N{JIC}{seq_N}           ex: "N370021001"      (10 chars)
+//   NN-  = NN{JIC}{seq_NN}{seq_N}  ex: "NN14A081001001"  (14 chars)
+//   NNN  = NNN{JIC}{seq1}{seq2}{seq3} ex: "NNN131414008001001" (18 chars)
+// A cada nivel, adiciona-se um "N" no prefixo e herda-se os
+// sequenciais do pai + um novo sequencial de 3 digitos.
+
+// Trata formato antigo "NR{JIC}-{seq2}" converte para "N{JIC}{seq3}"
+$var_normalizado = $parent_code;
+if (substr($var_normalizado, 0, 2) === 'NR') {
+    $var_temp = substr($var_normalizado, 2);
+    $var_partes = explode('-', $var_temp);
+    $var_jic_old = $var_partes[0];
+    $var_seq_old = isset($var_partes[1]) ? str_pad((int)$var_partes[1], 3, '0', STR_PAD_LEFT) : '001';
+    $var_normalizado = 'N' . $var_jic_old . $var_seq_old;
+}
+
+// Detecta quantos "N" de prefixo o pai tem
+$var_nivel = 0;
+$var_resto = $var_normalizado;
+while (substr($var_resto, 0, 1) === 'N') {
+    $var_nivel++;
+    $var_resto = substr($var_resto, 1);
+}
+// nivel=0 = rotina, nivel=1 = N-, nivel=2 = NN-, nivel=3 = NNN
+
+// Extrai JIC (6 primeiros caracteres apos os N's) e sequenciais herdados
+if ($var_nivel > 0) {
+    $var_jic = substr($var_resto, 0, 6);
+    $var_seqs_pai = substr($var_resto, 6);
+} else {
+    // Rotina: o proprio task_code e o JIC
+    $var_jic = $var_normalizado;
+    $var_seqs_pai = '';
+}
+
+// Monta a base do novo codigo:
+// prefixo com +1 N + JIC + sequenciais herdados do pai
+$var_novo_nivel = $var_nivel + 1;
+$var_prefixo = str_repeat('N', $var_novo_nivel);
+$var_base = $var_prefixo . $var_jic . $var_seqs_pai;
+
+// Busca o ultimo filho para determinar o proximo sequencial
+// Procura tanto no formato novo (N...) quanto no antigo (NR...-)
+$var_jic_esc = addslashes($var_jic);
+$sql_last_child = "SELECT task_code FROM mro_tasks
+                   WHERE parent_task_id = $v_parent_task
+                   AND (task_code LIKE '" . addslashes($var_base) . "%'
+                        OR task_code LIKE 'NR" . $var_jic_esc . "-%')
+                   ORDER BY task_id DESC LIMIT 1";
+sc_lookup(rs_child, $sql_last_child);
+
+$next_seq = 1;
+if (!empty({rs_child[0][0]})) {
+    $var_child_code = {rs_child[0][0]};
+    if (substr($var_child_code, 0, 2) === 'NR') {
+        // Formato antigo: extrai seq apos o hifen
+        $parts = explode('-', $var_child_code);
+        $last_seq = (int) end($parts);
+    } else {
+        // Novo formato: extrai os 3 ultimos caracteres
+        $last_seq = (int) substr($var_child_code, -3);
+    }
+    $next_seq = $last_seq + 1;
+}
+$novo_task_code = $var_base . str_pad($next_seq, 3, '0', STR_PAD_LEFT);
+
+// ====================================================================
+// 4. INSERT DA NOVA NRC
+// ====================================================================
+$sql_nrc = "INSERT INTO mro_tasks 
+            (task_type, task_code, task_name, instruction_text, project_id, parent_task_id, origin_document, nrc_status, status_code, is_nrc, created_by) 
+            VALUES ('NRC', '$novo_task_code', $v_titulo, $v_desc, $v_project_id, $v_parent_task,'$parent_code', 'DRAFT', 'DRAFT', true, '[usr_login]') 
+            RETURNING task_id";
+            
+sc_lookup(rs_nrc, $sql_nrc);
+$nova_nrc_id = {rs_nrc[0][0]};
+
+// ====================================================================
+// 5. ATUALIZACOES DE IMPEDIMENTO (impeditivo = S SEMPRE - MRO-122)
+// ====================================================================
+if (!$is_backoffice) {
+    // Pausa o apontamento ativo do mecanico
+    if ($v_status_atual == 'IN_PROGRESS' && !empty($v_ts_id)) {
+        sc_exec_sql("UPDATE mro_timesheet SET end_time = NOW(), status = 'PAUSED', pause_reason = 'Aguardando Avaliação da NRC $novo_task_code', duration_minutes = ROUND(EXTRACT(EPOCH FROM (NOW() - start_time)) / 60) WHERE timesheet_id = $v_ts_id");
+    }
+    
+    sc_exec_sql("UPDATE mro_task_assignments SET status_code = 'BLOCKED' WHERE assignment_id = $v_parent_assignment");
+    sc_exec_sql("UPDATE mro_tasks SET is_blocked_labor = true WHERE task_id = $v_parent_task");
+    
+    $ts_log = !empty($v_ts_id) ? $v_ts_id : "NULL";
+    sc_exec_sql("INSERT INTO mro_assignment_events (assignment_id, timesheet_id, event_type, performed_by_id, description) 
+                 VALUES ($v_parent_assignment, $ts_log, 'BLOCKED', $emp_id, 'Achado impeditivo. NRC $novo_task_code gerada.')");
+}
+
+sc_commit_trans();
+sc_redir(form_public_mro_tasks, task_id=$nova_nrc_id, "_self");

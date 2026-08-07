@@ -42,7 +42,7 @@ flowchart TB
         D2["▶️ Clock-in na Tarefa"]
         D3["⏸️ Pausar / Clock-out"]
         D4["🔧 Executar Serviço"]
-        D5["⚠️ Abrir Não-Rotina (NRC)<br/><i>ctrl_abertura_nrc</i>"]
+        D5["⚠️ Abrir Não-Rotina (NRC)<br/><i>blank_abertura_nrc (abertura direta)</i>"]
         D6["🏁 Finalizar Tarefa"]
         D1 --> D2 --> D4
         D4 --> D3
@@ -98,7 +98,8 @@ flowchart TB
     MK -->|"NRC aberta"| PE
     MK -->|"tarefa concluída"| QL
     PE -->|"O&A p/ aprovação"| CL
-    CL -->|"O&A aprovado"| PE
+    CL -->|"O&A aprovado (APPROVED)"| PE
+    PE -->|"libera p/ execução (RELEASED)<br/>cria assignments por skill"| SV
     SV -->|"bloqueios resolvidos"| MK
     CFG ---|"base de dados"| PE
     CFG ---|"base de dados"| SV

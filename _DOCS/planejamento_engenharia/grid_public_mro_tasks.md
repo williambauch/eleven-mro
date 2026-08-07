@@ -10,14 +10,14 @@ Tela central de gerenciamento das tarefas de manutenção. Reúne tanto as rotin
 - Identificar visualmente se uma tarefa é rotina ou não-rotina (NRC) através de ícones na lista.
 - Identificar bloqueios de material, ferramenta ou mão de obra através de ícones coloridos.
 - Para cada tarefa com bloqueio, clicar no ícone correspondente para alternar o status do bloqueio (material, ferramenta ou mão de obra).
-- Liberar uma tarefa do status PLANNED/NOT_STARTED para RELEASED usando o botão "Liberar para Execução".
+- Liberar uma tarefa dos status PLANNED/NOT_STARTED/APPROVED para RELEASED usando o botão "Liberar para Execução".
 
 ## Comportamentos e regras importantes
 
 - **Filtro por projeto**: Ao acessar a tela a partir de um projeto específico, a grid filtra automaticamente as tarefas daquele projeto usando a variável global `var_project_id` e a macro `sc_select_where(add)`.
 - **Filtro não acumula mais**: A configuração "Salvar o estado da Consulta na sessão" foi desativada para evitar que filtros de projetos anteriores se acumulassem, gerando SQLs inválidos com múltiplas cláusulas `project_id`.
 - **Ao liberar uma tarefa** (botão "Liberar para Execução"):
-  - A tarefa precisa estar nos status PLANNING, NOT_STARTED ou PLANNED.
+  - A tarefa precisa estar nos status PLANNING, NOT_STARTED, PLANNED ou APPROVED (MRO-122 — NRC aprovada pelo cliente aguarda a liberação para gerar os assignments).
   - O sistema atualiza o status para RELEASED.
   - Em seguida, busca os recursos de mão de obra (LABOR) importados do P6 para a tarefa.
   - Para cada especialidade encontrada, cria um registro de alocação (`mro_task_assignments`) com status NOT_STARTED e as horas planejadas.

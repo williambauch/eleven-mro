@@ -2,7 +2,7 @@
 
 > **Esta aplicação foi desativada na tarefa MRO-117.**  
 > O gerenciamento de Não-Rotinas (NRCs) agora é feito através de `grid_public_mro_tasks` / `form_public_mro_tasks`.  
-> Consulte o [Fluxo de Aprovação NRC](fluxo_nrc_workflow.md) para mais detalhes.
+> Consulte o [Fluxo de Trabalho NRC e Rotina Padrão](fluxo_rotina_nrc_workflow.md) para mais detalhes. O diagrama interativo (fonte da verdade) está em [`fluxo_trabalho_nrc_rotina.html`](../fluxo_trabalho_nrc_rotina.html).
 
 Módulo Produção e Manutenção — aplicação do tipo Grid.
 
@@ -24,6 +24,7 @@ Tela de acompanhamento das Não-Rotinas (NRCs) — tarefas não planejadas que s
   - PENDING_ENG (azul): aguardando análise da engenharia.
   - PENDING_PROG (amarelo): aguardando programação de recursos.
   - PENDING_OA (amarelo): aguardando aprovação do cliente (Over & Above).
+  - APPROVED (verde): aprovado pelo cliente, aguardando liberação para execução (MRO-122).
   - COMMERCIAL_REVIEW (amarelo): em revisão comercial.
   - RELEASED (verde): liberado para execução.
   - CANCELLED (vermelho): cancelado.
