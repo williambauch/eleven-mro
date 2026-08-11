@@ -1,0 +1,3 @@
+-- MRO-122 - blank_fluxo_trabalho (app Blank - nao possui tabela propria)
+-- Renderiza o diagrama de fluxo dos operadores (Syncfusion EJ2 Diagram).
+-- Referencia: nenhuma tabela; diagrama estatico baseado em _DOCS/diagrama_fluxo_operadores.md

@@ -1,0 +1,3 @@
+-- MRO-122 - blank_fluxo_trabalho_rotinas (app Blank - nao possui tabela propria)
+-- Renderiza o fluxo de trabalho (NRC + Rotina Padrao) usando Mermaid JS via CDN.
+-- O codigo Mermaid e identico ao _DOCS/producao_manutencao/fluxo_rotina_nrc_workflow.md

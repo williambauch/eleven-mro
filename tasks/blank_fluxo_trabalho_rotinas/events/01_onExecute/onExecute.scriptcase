@@ -1,0 +1,191 @@
+<?php
+// =========================================================================
+// blank_fluxo_trabalho_rotinas - Diagrama de Fluxo (NRC + Rotina Padrao)
+// Renderiza com Mermaid JS via CDN. O codigo e identico ao
+// _DOCS/producao_manutencao/fluxo_rotina_nrc_workflow.md
+// O Mermaid faz auto-layout: as linhas nunca cruzam os nos.
+// =========================================================================
+?>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.css">
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+
+<style>
+    body {
+        font-family: 'Roboto', 'Segoe UI', Tahoma, sans-serif;
+        background-color: #f4f6f8;
+        margin: 0;
+        padding: 15px;
+    }
+
+    .page-header {
+        font-size: 20px;
+        color: #1a202c;
+        margin-bottom: 15px;
+        font-weight: 600;
+        border-bottom: 2px solid #e2e8f0;
+        padding-bottom: 8px;
+    }
+
+    .diagram-box {
+        background: #fff;
+        border-radius: 6px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        padding: 20px;
+        overflow: auto;
+    }
+
+    .diagram-box .mermaid {
+        display: flex;
+        justify-content: center;
+    }
+</style>
+
+<div class="page-header">
+    MRO System - Fluxo de Trabalho (NRC e Rotina Padrão)
+</div>
+
+<div class="diagram-box">
+    <div class="mermaid">
+flowchart TD
+    A(blank_abertura_nrc<br/>abertura direta de NRC - MRO-122) --> B[DRAFT]
+
+    %% DRAFT → saídas
+    B -- btn_enviar_eng --> C[PENDING_ENG]
+    B -- btn_enviar_prog --> D[PENDING_PROG]
+
+    %% PENDING_ENG → saídas
+    C -- btn_enviar_prog --> D
+    C -- btn_enviar_coord --> E[PENDING_COORD]
+    C -- btn_cancelar --> F[CANCELLED]
+
+    %% PENDING_COORD → saídas
+    E -. btn_enviar_eng .-> C
+    E -- btn_enviar_prog --> D
+    E -- btn_cancelar --> F
+
+    %% PENDING_PROG → saídas
+    D -- btn_enviar_coord --> E
+    D -- btn_cancelar --> F
+    D -- btn_validar_prog --> Z{Dentro do CAP?}
+    Z -- Sim (auto-approve) --> H[RELEASED]
+    Z -- Não --> G[PENDING_OA]
+
+    %% PENDING_OA → saídas
+    G -- btn_aprovar_cliente --> AP[APPROVED - Aprovado Cliente]
+    G -- btn_reprovar_cliente --> I[COMMERCIAL_REVIEW]
+    G -. auto-approve<br/>motor O&A .-> AP
+
+    %% APPROVED → saída (MRO-122: aprovacao nao libera execucao)
+    AP -- btn_liberar_para_execucao<br/>(grid) --> H[RELEASED]
+
+    %% COMMERCIAL_REVIEW → saídas
+    I -. btn_enviar_cliente .-> G
+    I -. btn_enviar_prog .-> D
+    I -- btn_cancelar --> F
+
+    %% Estilo dos nós
+    style A fill:#e3f2fd,stroke:#1565c0,color:#000
+    style B fill:#fff3e0,stroke:#e65100,color:#000
+    style C fill:#fff3e0,stroke:#e65100,color:#000
+    style D fill:#fff3e0,stroke:#e65100,color:#000
+    style E fill:#fff3e0,stroke:#e65100,color:#000
+    style Z fill:#fff8e1,stroke:#f9a825,color:#000
+    style G fill:#e8f5e9,stroke:#2e7d32,color:#000
+    style AP fill:#e8f5e9,stroke:#2e7d32,color:#000
+    style H fill:#e8f5e9,stroke:#2e7d32,color:#000
+    style I fill:#fce4ec,stroke:#c62828,color:#000
+    style F fill:#fce4ec,stroke:#c62828,color:#000
+
+    %% Links de retorno com estilo tracejado e cor laranja
+    linkStyle 6 stroke:#ff6f00,stroke-width:2px,stroke-dasharray: 5 5
+    linkStyle 18 stroke:#ff6f00,stroke-width:2px,stroke-dasharray: 5 5
+    linkStyle 19 stroke:#ff6f00,stroke-width:2px,stroke-dasharray: 5 5
+
+    %% Auto-approve em verde
+    linkStyle 12 stroke:#2e7d32,stroke-width:2px
+    linkStyle 16 stroke:#2e7d32,stroke-width:2px,stroke-dasharray: 5 5
+
+    %% ================= FLUXO ROTINA PADRAO =================
+    A2(Importação P6 / Cadastro<br/>ctrl_import_excel / form_public_mro_tasks) --> B2[PLANNED]
+    B2 --> B3[NOT_STARTED]
+
+    %% Planejamento libera
+    B3 -- btn_liberar_para_execucao<br/>(grid) --> R1[RELEASED]
+    R1 -. cria assignments<br/>por skill (LABOR) .-> SV[Painel Supervisor]
+
+    %% Supervisor distribui
+    SV -- dispatch / alocação --> M[IN_PROGRESS]
+    M -- clock-in --> M
+
+    %% Mecânico executa
+    M -- concluído --> C2[COMPLETED]
+    M -- finalizar turno / repasse --> H2[PENDING_HANDOVER]
+    M -- pausa rotineira --> P[PAUSED]
+    P -- retomar --> M
+
+    %% Passagem de serviço → Programação (MRO-120)
+    H2 -- passagem de serviço --> PG[PENDING_PROG]
+
+    %% Programação valida a rotina
+    PG -- btn_validar_prog_rotina --> V{HH dentro do<br/>orçado?}
+    V -- Sim --> R2[RELEASED novamente<br/>atualiza/cria assignments]
+    R2 --> M
+    V -- Não (estouro HH) --> BL[BLOCKED<br/>is_blocked_labor]
+    BL -- ajusta orçamento / reprograma --> PG
+
+    %% Fim do ciclo
+    C2 --> Q[Assinatura Supervisor/Qualidade<br/>SUPSIG]
+    Q --> CL[CLOSED]
+
+    %% Estilo dos nós - Rotina
+    style A2 fill:#e3f2fd,stroke:#1565c0,color:#000
+    style B2 fill:#fff3e0,stroke:#e65100,color:#000
+    style B3 fill:#fff3e0,stroke:#e65100,color:#000
+    style R1 fill:#e8f5e9,stroke:#2e7d32,color:#000
+    style SV fill:#e8f5e9,stroke:#2e7d32,color:#000
+    style M fill:#e8f5e9,stroke:#2e7d32,color:#000
+    style C2 fill:#e8f5e9,stroke:#2e7d32,color:#000
+    style H2 fill:#fff3e0,stroke:#e65100,color:#000
+    style P fill:#fff3e0,stroke:#e65100,color:#000
+    style PG fill:#fff3e0,stroke:#e65100,color:#000
+    style V fill:#fff8e1,stroke:#f9a825,color:#000
+    style BL fill:#fce4ec,stroke:#c62828,color:#000
+    style Q fill:#e8f5e9,stroke:#2e7d32,color:#000
+    style CL fill:#e8f5e9,stroke:#2e7d32,color:#000
+
+    %% Setas de retorno tracejadas laranja
+    linkStyle 6 stroke:#ff6f00,stroke-width:2px,stroke-dasharray: 5 5
+    linkStyle 12 stroke:#ff6f00,stroke-width:2px,stroke-dasharray: 5 5
+    </div>
+</div>
+
+<script>
+    // Inicializa o Mermaid (nao renderiza automaticamente, via render manual)
+    mermaid.initialize({
+        startOnLoad: false,
+        theme: 'base',
+        themeVariables: {
+            fontFamily: 'Roboto, Segoe UI, Tahoma, sans-serif',
+            fontSize: '14px'
+        },
+        flowchart: {
+            curve: 'basis',
+            htmlLabels: true
+        }
+    });
+
+    // Renderiza quando o DOM estiver pronto
+    document.addEventListener('DOMContentLoaded', function () {
+        var el = document.querySelector('.mermaid');
+        if (el) {
+            var codigo = el.textContent.trim();
+            var tempId = 'mro_fluxo_' + Date.now();
+            mermaid.render(tempId, codigo).then(function (result) {
+                el.innerHTML = result.svg;
+            }).catch(function (err) {
+                el.innerHTML = '<p style="color:#c62828;font-weight:bold;">Erro ao renderizar o diagrama: ' + err.message + '</p>';
+            });
+        }
+    });
+</script>
