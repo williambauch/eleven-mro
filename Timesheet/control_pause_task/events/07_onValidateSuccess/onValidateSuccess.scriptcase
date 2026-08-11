@@ -103,6 +103,21 @@ sc_exec_sql("UPDATE mro_task_assignments
              )
              WHERE assignment_id = $v_ass_id");
 
+// MRO-123: Ao CONCLUIR a task (SUPSIG) e nao restar outro assignment ativo,
+// preenche actual_end se estiver vazio. Nao sobrescreve datas manuais (DIGEX).
+if ($status_code == 'SUPSIG') {
+    sc_exec_sql("UPDATE mro_tasks
+                 SET actual_end = COALESCE(actual_end, NOW())
+                 WHERE task_id = (SELECT task_id FROM mro_task_assignments WHERE assignment_id = $v_ass_id)
+                   AND actual_end IS NULL
+                   AND NOT EXISTS (
+                       SELECT 1 FROM mro_task_assignments
+                       WHERE task_id = (SELECT task_id FROM mro_task_assignments WHERE assignment_id = $v_ass_id)
+                         AND status_code IN ('IN_PROGRESS','PAUSED','BLOCKED','PENDING_HANDOVER','SUPSIG')
+                         AND assignment_id <> $v_ass_id
+                   )");
+}
+
 // 2. Registra o Evento de Auditoria
 $sql_ev = "INSERT INTO mro_assignment_events 
            (assignment_id, timesheet_id, event_type, performed_by_id, description) 

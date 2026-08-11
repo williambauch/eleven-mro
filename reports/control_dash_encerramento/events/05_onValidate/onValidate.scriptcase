@@ -1,0 +1,26 @@
+<?php
+
+// =========================================================================
+// CONTROL DASH ENCERRAMENTO - MRO-123
+// onValidate: valida o projeto e o periodo (inicial e final)
+// antes de redirecionar para o dashboard.
+// =========================================================================
+
+// 1. CAPTURA E VALIDA O PROJETO
+$var_projeto = (int){projeto_id};
+
+if ($var_projeto <= 0) {
+    sc_error_message("Selecione um projeto valido.");
+    sc_error_exit();
+}
+
+// 2. CAPTURA E CONVERTE AS DATAS PARA YYYY-MM-DD
+// O campo date do ScriptCase pode vir em DD/MM/YYYY (formato BR)
+$var_dt_inicial = {periodo_inicial};
+$var_dt_final   = {periodo_final};
+
+// Valida coerencia: final nao pode ser anterior ao inicial
+if ($var_dt_final < $var_dt_inicial) {
+    sc_error_message("O periodo final nao pode ser anterior ao periodo inicial.");
+    sc_error_exit();
+}

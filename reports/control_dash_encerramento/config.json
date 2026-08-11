@@ -1,0 +1,31 @@
+{
+  "nome": "control_dash_encerramento",
+  "tipo": "Control",
+  "nome_tabela": "control_dash_encerramento",
+  "campos": [
+    {
+      "nome": "projeto_id",
+      "tipo": "int4",
+      "required": true,
+      "pk": false
+    },
+    {
+      "nome": "periodo_inicial",
+      "tipo": "date",
+      "required": true,
+      "pk": false
+    },
+    {
+      "nome": "periodo_final",
+      "tipo": "date",
+      "required": true,
+      "pk": false
+    },
+    {
+      "nome": "label_filtro",
+      "tipo": "text",
+      "required": true,
+      "pk": false
+    }
+  ]
+}

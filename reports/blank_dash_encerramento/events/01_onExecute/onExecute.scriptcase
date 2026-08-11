@@ -1,0 +1,842 @@
+<?php
+
+// =========================================================================
+// BLANK DASH ENCERRAMENTO - MRO-123
+// Dashboard de metricas de encerramento e gargalos por projeto
+// Filtros: projeto + periodo (inicial e final)
+// =========================================================================
+
+// ---------------------------------------------------------
+$var_project_id = 0; // inicializa a variavel do projeto
+if (isset([glo_project_id]) && !empty([glo_project_id])) {
+    $var_project_id = (int)[glo_project_id];
+}
+
+$var_data_inicial = date('Y-m-d', strtotime('-30 days'));
+$var_data_final   = date('Y-m-d');
+
+if (isset([glo_periodo_inicial]) && !empty([glo_periodo_inicial])) {
+    $var_data_inicial = addslashes([glo_periodo_inicial]);
+    // Converte DDMMYYYY (8 digitos, formato do campo date do control) -> YYYY-MM-DD
+    if (preg_match('/^\d{8}$/', $var_data_inicial)) {
+        $var_data_inicial = substr($var_data_inicial, 4, 4) . '-' . substr($var_data_inicial, 2, 2) . '-' . substr($var_data_inicial, 0, 2);
+    }
+    // Converte DD/MM/YYYY -> YYYY-MM-DD
+    elseif (strpos($var_data_inicial, '/') !== false) {
+        $var_parts = explode('/', $var_data_inicial);
+        $var_data_inicial = $var_parts[2] . '-' . $var_parts[1] . '-' . $var_parts[0];
+    }
+}
+
+if (isset([glo_periodo_final]) && !empty([glo_periodo_final])) {
+    $var_data_final = addslashes([glo_periodo_final]);
+    // Converte DDMMYYYY (8 digitos, formato do campo date do control) -> YYYY-MM-DD
+    if (preg_match('/^\d{8}$/', $var_data_final)) {
+        $var_data_final = substr($var_data_final, 4, 4) . '-' . substr($var_data_final, 2, 2) . '-' . substr($var_data_final, 0, 2);
+    }
+    // Converte DD/MM/YYYY -> YYYY-MM-DD
+    elseif (strpos($var_data_final, '/') !== false) {
+        $var_parts = explode('/', $var_data_final);
+        $var_data_final = $var_parts[2] . '-' . $var_parts[1] . '-' . $var_parts[0];
+    }
+}
+
+// DEBUG: variaveis globais recebidas (projeto e periodo)
+$var_debug = "DEBUG globals -> glo_project_id: '" . (isset([glo_project_id]) ? [glo_project_id] : 'NAO SETADO') .
+    "' | glo_periodo_inicial: '" . (isset([glo_periodo_inicial]) ? [glo_periodo_inicial] : 'NAO SETADO') .
+    "' | glo_periodo_final: '" . (isset([glo_periodo_final]) ? [glo_periodo_final] : 'NAO SETADO') . "'";
+sc_log_add("dash_encerramento_debug", $var_debug);
+
+// Valida formato das datas (YYYY-MM-DD) para nao quebrar o SQL
+if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $var_data_inicial)) {
+    $var_data_inicial = date('Y-m-d', strtotime('-30 days'));
+}
+if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $var_data_final)) {
+    $var_data_final = date('Y-m-d');
+}
+
+$var_periodo_label = date('d/m/Y', strtotime($var_data_inicial)) . ' a ' . date('d/m/Y', strtotime($var_data_final));
+
+// ---------------------------------------------------------
+// 2. DADOS DO PROJETO (cabecalho)
+// ---------------------------------------------------------
+$var_sql_proj = "SELECT p6_proj_id, project_name, project_status,
+                        TO_CHAR(start_date, 'DD/MM/YYYY') AS dt_inicio,
+                        TO_CHAR(end_date, 'DD/MM/YYYY') AS dt_fim
+                 FROM mro_projects WHERE project_id = " . $var_project_id;
+sc_lookup(rs_proj, $var_sql_proj);
+
+$var_cod_projeto     = '';
+$var_nome_projeto    = 'Projeto ' . $var_project_id;
+$var_status_projeto  = '';
+$var_projeto_inicio  = '';
+$var_projeto_fim     = '';
+if ({rs_proj} !== false && is_array({rs_proj}) && count({rs_proj}) > 0) {
+    $var_cod_projeto     = isset({rs_proj[0][0]}) ? {rs_proj[0][0]} : '';
+    $var_nome_projeto    = isset({rs_proj[0][1]}) ? {rs_proj[0][1]} : $var_nome_projeto;
+    $var_status_projeto  = isset({rs_proj[0][2]}) ? {rs_proj[0][2]} : '';
+    $var_projeto_inicio  = isset({rs_proj[0][3]}) ? {rs_proj[0][3]} : '';
+    $var_projeto_fim     = isset({rs_proj[0][4]}) ? {rs_proj[0][4]} : '';
+}
+
+// Nome completo do projeto: "7 - TOT03/25 TOTAL LINHAS AEREAS - ..."
+$var_nome_projeto_completo = $var_project_id . ' - ' . $var_cod_projeto . ' ' . $var_nome_projeto;
+
+// Link para voltar ao filtro (control_dash_encerramento)
+$var_link_voltar_filtro = sc_make_link(control_dash_encerramento);
+
+// ---------------------------------------------------------
+// 3. CARDS KPI (totais do projeto)
+// Encerradas respeita o PERIODO analisado (mesma hierarquia de
+// fontes do grafico de data). Em execucao, bloqueadas e gargalos
+// permanecem no ESTADO ATUAL (definicao de gargalo).
+// ---------------------------------------------------------
+$var_sql_kpi = "WITH encerradas_periodo AS (
+    SELECT task_id FROM mro_tasks
+    WHERE project_id = " . $var_project_id . "
+      AND status_code = 'COMPLETED' AND actual_end IS NOT NULL
+      AND actual_end::date >= '" . $var_data_inicial . "' AND actual_end::date <= '" . $var_data_final . "'
+    UNION
+    SELECT t.task_id
+    FROM mro_tasks t
+    JOIN mro_task_assignments a ON t.task_id = a.task_id
+    JOIN mro_timesheet ts ON a.assignment_id = ts.assignment_id
+    WHERE t.project_id = " . $var_project_id . "
+    GROUP BY t.task_id
+    HAVING MAX(CASE WHEN ts.end_time IS NULL THEN 1 ELSE 0 END) = 0
+       AND MAX(ts.end_time) IS NOT NULL
+       AND MAX(ts.end_time)::date >= '" . $var_data_inicial . "'
+       AND MAX(ts.end_time)::date <= '" . $var_data_final . "'
+    UNION
+    SELECT task_id FROM mro_tasks
+    WHERE project_id = " . $var_project_id . "
+      AND status_code = 'COMPLETED' AND actual_end IS NULL
+      AND updated_at::date >= '" . $var_data_inicial . "' AND updated_at::date <= '" . $var_data_final . "'
+)
+SELECT
+    (SELECT COUNT(*) FROM mro_tasks WHERE project_id = " . $var_project_id . ") AS total_tarefas,
+    (SELECT COUNT(*) FROM mro_tasks WHERE project_id = " . $var_project_id . "
+        AND status_code IN ('IN_PROGRESS','RELEASED','PAUSED','BLOCKED')) AS em_execucao,
+    (SELECT COUNT(DISTINCT task_id) FROM encerradas_periodo) AS encerradas,
+    (SELECT COUNT(*) FROM mro_tasks WHERE project_id = " . $var_project_id . "
+        AND (status_code IN ('BLOCKED','PENDING','PENDING_OA','PENDING_ENG','PENDING_PROG','PENDING_COORD','COMMERCIAL_REVIEW','WAITING_CUSTOMER')
+            OR is_blocked_material OR is_blocked_tool OR is_blocked_labor OR is_blocked_predecessor OR is_predecessor_manual
+            OR pending_id IS NOT NULL)) AS bloqueadas";
+sc_lookup(rs_kpi, $var_sql_kpi);
+
+$var_total       = 0;
+$var_em_execucao = 0;
+$var_encerradas  = 0;
+$var_bloqueadas  = 0;
+if ({rs_kpi} !== false && is_array({rs_kpi}) && count({rs_kpi}) > 0) {
+    $var_total       = (int){rs_kpi[0][0]};
+    $var_em_execucao = (int){rs_kpi[0][1]};
+    $var_encerradas  = (int){rs_kpi[0][2]};
+    $var_bloqueadas  = (int){rs_kpi[0][3]};
+}
+
+// ---------------------------------------------------------
+// 3.1 LINKS DOS CARDS -> grid_public_mro_tasks com filtro de status
+// ---------------------------------------------------------
+$var_link_todas      = sc_make_link(grid_public_mro_tasks, var_project_id=$var_project_id);
+$var_link_execucao   = sc_make_link(grid_public_mro_tasks, var_project_id=$var_project_id;glo_filtro_status=EXECUCAO);
+$var_link_encerradas = sc_make_link(grid_public_mro_tasks, var_project_id=$var_project_id;glo_filtro_status=ENCERRADAS);
+$var_link_bloqueadas = sc_make_link(grid_public_mro_tasks, var_project_id=$var_project_id;glo_filtro_status=BLOQUEADAS);
+
+// ---------------------------------------------------------
+// 4. GRAFICO 1: Encerramento por DATA (Colunas)
+// Hierarquia de fontes (cada registro marcado com a origem):
+//   (1) Manual   -> mro_tasks.actual_end (DIGEX) - mais confiavel
+//   (2) Producao -> MAX(end_time) dos timesheets (assignment encerrado)
+//   (3) P6       -> mro_tasks.updated_at (fallback importacao P6)
+// ---------------------------------------------------------
+$var_sql_data = "SELECT TO_CHAR(d.data_base, 'DD/MM') AS data_label, d.fonte, COUNT(*) AS qtde
+FROM (
+    SELECT actual_end AS data_base, 'Manual' AS fonte
+    FROM mro_tasks
+    WHERE project_id = " . $var_project_id . "
+      AND status_code = 'COMPLETED' AND actual_end IS NOT NULL
+      AND actual_end::date >= '" . $var_data_inicial . "' AND actual_end::date <= '" . $var_data_final . "'
+    UNION ALL
+    SELECT MAX(ts.end_time) AS data_base, 'Producao' AS fonte
+    FROM mro_timesheet ts
+    JOIN mro_task_assignments a ON ts.assignment_id = a.assignment_id
+    WHERE a.project_id = " . $var_project_id . "
+    GROUP BY a.assignment_id
+    HAVING MAX(CASE WHEN ts.end_time IS NULL THEN 1 ELSE 0 END) = 0
+       AND MAX(ts.end_time) IS NOT NULL
+       AND MAX(ts.end_time)::date >= '" . $var_data_inicial . "'
+       AND MAX(ts.end_time)::date <= '" . $var_data_final . "'
+    UNION ALL
+    SELECT updated_at AS data_base, 'P6' AS fonte
+    FROM mro_tasks
+    WHERE project_id = " . $var_project_id . "
+      AND status_code = 'COMPLETED' AND actual_end IS NULL
+      AND updated_at::date >= '" . $var_data_inicial . "' AND updated_at::date <= '" . $var_data_final . "'
+) d
+GROUP BY d.data_base, d.fonte
+ORDER BY d.data_base ASC";
+sc_lookup(rs_data, $var_sql_data);
+
+$arr_data = array();
+if ({rs_data} !== false && is_array({rs_data})) {
+    foreach ({rs_data} as $row) {
+        $var_fonte = isset($row[1]) ? $row[1] : 'P6';
+        // Cor por fonte: Manual = verde (confiavel), Producao = azul, P6 = cinza (fallback)
+        $var_cor = '#a0aec0'; // P6 (fallback) - cinza
+        if ($var_fonte == 'Manual') {
+            $var_cor = '#48bb78'; // verde
+        } elseif ($var_fonte == 'Producao') {
+            $var_cor = '#4299e1'; // azul
+        }
+        $arr_data[] = array(
+            "Data"       => isset($row[0]) ? $row[0] : '',
+            "Encerradas" => isset($row[2]) ? (int)$row[2] : 0,
+            "Fonte"      => $var_fonte,
+            "Cor"        => $var_cor
+        );
+    }
+}
+if (empty($arr_data)) $arr_data[] = array("Data" => "Sem dados", "Encerradas" => 0, "Fonte" => "P6", "Cor" => '#a0aec0');
+$json_data = json_encode($arr_data) ?: '[]';
+
+// ---------------------------------------------------------
+// 5. GRAFICO 2: Conclusao por EQUIPE (Barras horizontais)
+// Total de tasks por skill (LABOR) x tasks COMPLETED NO PERIODO
+// Exibe o % de conclusao no periodo (tooltip)
+// ---------------------------------------------------------
+$var_sql_equipe = "WITH encerradas_periodo AS (
+    SELECT task_id FROM mro_tasks
+    WHERE project_id = " . $var_project_id . "
+      AND status_code = 'COMPLETED' AND actual_end IS NOT NULL
+      AND actual_end::date >= '" . $var_data_inicial . "' AND actual_end::date <= '" . $var_data_final . "'
+    UNION
+    SELECT t.task_id
+    FROM mro_tasks t
+    JOIN mro_task_assignments a ON t.task_id = a.task_id
+    JOIN mro_timesheet ts ON a.assignment_id = ts.assignment_id
+    WHERE t.project_id = " . $var_project_id . "
+    GROUP BY t.task_id
+    HAVING MAX(CASE WHEN ts.end_time IS NULL THEN 1 ELSE 0 END) = 0
+       AND MAX(ts.end_time) IS NOT NULL
+       AND MAX(ts.end_time)::date >= '" . $var_data_inicial . "'
+       AND MAX(ts.end_time)::date <= '" . $var_data_final . "'
+    UNION
+    SELECT task_id FROM mro_tasks
+    WHERE project_id = " . $var_project_id . "
+      AND status_code = 'COMPLETED' AND actual_end IS NULL
+      AND updated_at::date >= '" . $var_data_inicial . "' AND updated_at::date <= '" . $var_data_final . "'
+)
+SELECT COALESCE(r.resource_code, 'SEM SKILL') AS equipe,
+       COUNT(DISTINCT t.task_id) AS total_tarefas,
+       COUNT(DISTINCT ep.task_id) AS concluidas,
+       ROUND(100.0 * COUNT(DISTINCT ep.task_id) / NULLIF(COUNT(DISTINCT t.task_id), 0), 1) AS pct_concluido
+FROM mro_tasks t
+INNER JOIN mro_task_resources tr ON t.task_id = tr.task_id
+INNER JOIN mro_resources r ON tr.resource_code = r.resource_code
+LEFT JOIN encerradas_periodo ep ON t.task_id = ep.task_id
+WHERE t.project_id = " . $var_project_id . "
+  AND r.resource_type = 'LABOR'
+GROUP BY r.resource_code
+ORDER BY total_tarefas DESC";
+sc_lookup(rs_equipe, $var_sql_equipe);
+
+$arr_equipe = array();
+if ({rs_equipe} !== false && is_array({rs_equipe})) {
+    foreach ({rs_equipe} as $row) {
+        $arr_equipe[] = array(
+            "Equipe"     => isset($row[0]) ? $row[0] : 'SEM SKILL',
+            "Total"      => isset($row[1]) ? (int)$row[1] : 0,
+            "Concluidas" => isset($row[2]) ? (int)$row[2] : 0,
+            "Pct"        => isset($row[3]) ? (float)$row[3] : 0
+        );
+    }
+}
+if (empty($arr_equipe)) $arr_equipe[] = array("Equipe" => "Sem dados", "Total" => 0, "Concluidas" => 0, "Pct" => 0);
+$json_equipe = json_encode($arr_equipe) ?: '[]';
+
+// ---------------------------------------------------------
+// 6. GRAFICO 3: Gargalos por BLOQUEIOS (flags booleanas) - Rosca
+// ---------------------------------------------------------
+$var_link_mat      = sc_make_link(grid_public_mro_tasks, var_project_id=$var_project_id;glo_filtro_status=MATERIAL);
+$var_link_fer      = sc_make_link(grid_public_mro_tasks, var_project_id=$var_project_id;glo_filtro_status=FERRAMENTA);
+$var_link_mao      = sc_make_link(grid_public_mro_tasks, var_project_id=$var_project_id;glo_filtro_status=MAO_OBRA);
+$var_link_pred     = sc_make_link(grid_public_mro_tasks, var_project_id=$var_project_id;glo_filtro_status=PREDECESSORA);
+$var_link_pred_man = sc_make_link(grid_public_mro_tasks, var_project_id=$var_project_id;glo_filtro_status=PRED_MANUAL);
+
+$var_sql_garg1 = "SELECT
+    CASE
+        WHEN is_blocked_material THEN 'Retida por Material'
+        WHEN is_blocked_tool THEN 'Falta de Ferramenta'
+        WHEN is_blocked_labor THEN 'Falta de Mao de Obra'
+        WHEN is_blocked_predecessor THEN 'Aguardando Predecessora'
+        WHEN is_predecessor_manual THEN 'Predecessora Manual'
+        ELSE 'Outros'
+    END AS tipo_pendencia,
+    COUNT(*) AS qtde
+FROM mro_tasks
+WHERE project_id = " . $var_project_id . "
+  AND (is_blocked_material OR is_blocked_tool OR is_blocked_labor OR is_blocked_predecessor OR is_predecessor_manual)
+GROUP BY tipo_pendencia
+ORDER BY qtde DESC";
+sc_lookup(rs_garg1, $var_sql_garg1);
+
+$arr_garg1 = array();
+if ({rs_garg1} !== false && is_array({rs_garg1})) {
+    foreach ({rs_garg1} as $row) {
+        $var_tipo = isset($row[0]) ? $row[0] : 'Outros';
+        $var_qtde = isset($row[1]) ? (int)$row[1] : 0;
+
+        // Mapeia cada tipo de bloqueio para o link de filtro da grid
+        $var_link_tipo = '';
+        switch ($var_tipo) {
+            case 'Retida por Material':     $var_link_tipo = $var_link_mat; break;
+            case 'Falta de Ferramenta':     $var_link_tipo = $var_link_fer; break;
+            case 'Falta de Mao de Obra':    $var_link_tipo = $var_link_mao; break;
+            case 'Aguardando Predecessora': $var_link_tipo = $var_link_pred; break;
+            case 'Predecessora Manual':     $var_link_tipo = $var_link_pred_man; break;
+        }
+
+        $arr_garg1[] = array(
+            "Tipo" => $var_tipo,
+            "Qtde" => $var_qtde,
+            "text" => $var_tipo . ": " . $var_qtde,
+            "Link" => $var_link_tipo
+        );
+    }
+}
+if (empty($arr_garg1)) $arr_garg1[] = array("Tipo" => "Sem bloqueios", "Qtde" => 1, "text" => "Tudo OK", "Link" => '');
+$json_garg1 = json_encode($arr_garg1) ?: '[]';
+
+// ---------------------------------------------------------
+// 7. GRAFICO 4: Gargalos por PENDENCIA (pending_id) - Rosca
+// ---------------------------------------------------------
+$var_sql_garg2 = "SELECT p.pending_id, COALESCE(p.pending_description, 'Pendencia') AS descricao, COUNT(*) AS qtde
+FROM mro_tasks t
+JOIN mro_tasks_pending_status p ON t.pending_id = p.pending_id
+WHERE t.project_id = " . $var_project_id . "
+GROUP BY p.pending_id, p.pending_description
+ORDER BY qtde DESC";
+sc_lookup(rs_garg2, $var_sql_garg2);
+
+$arr_garg2 = array();
+if ({rs_garg2} !== false && is_array({rs_garg2})) {
+    foreach ({rs_garg2} as $row) {
+        $var_pend_id = isset($row[0]) ? (int)$row[0] : 0;
+        $var_desc = isset($row[1]) ? $row[1] : 'Pendencia';
+        $var_qtde = isset($row[2]) ? (int)$row[2] : 0;
+        // Link para a grid filtrada por essa pendencia especifica
+        // Macro chamada fora de ternario (parser ScriptCase nao lida com macro dentro de ?:)
+        $var_link_pend = '';
+        if ($var_pend_id > 0) {
+            $var_valor_filtro = 'PEND_' . $var_pend_id;
+            $var_link_pend = sc_make_link(grid_public_mro_tasks, var_project_id=$var_project_id;glo_filtro_status=$var_valor_filtro);
+        }
+        $arr_garg2[] = array(
+            "Tipo" => $var_desc,
+            "Qtde" => $var_qtde,
+            "text" => $var_desc . ": " . $var_qtde,
+            "Link" => $var_link_pend
+        );
+    }
+}
+if (empty($arr_garg2)) $arr_garg2[] = array("Tipo" => "Sem pendencias", "Qtde" => 1, "text" => "Tudo OK", "Link" => '');
+$json_garg2 = json_encode($arr_garg2) ?: '[]';
+
+?>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard de Encerramento e Gargalos - MRO</title>
+
+    <link href="/libs/syncfusion/styles/material3.css" rel="stylesheet">
+    <script src="/libs/syncfusion/scripts/ej2-syncfusion.js" type="text/javascript"></script>
+    <script src="/libs/syncfusion/mro_config.js" type="text/javascript"></script>
+
+    <style>
+        body {
+            font-family: 'Roboto', 'Segoe UI', Tahoma, sans-serif;
+            background-color: #f4f6f8;
+            margin: 0;
+            padding: 15px;
+            box-sizing: border-box;
+        }
+
+        .dashboard-header {
+            font-size: 20px;
+            color: #1a202c;
+            margin-bottom: 4px;
+            font-weight: 600;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-voltar-filtro {
+            margin-left: auto;
+            background: #edf2f7;
+            border: 1px solid #cbd5e0;
+            color: #2d3748;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 6px 14px;
+            border-radius: 4px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-voltar-filtro:hover {
+            background: #e2e8f0;
+            border-color: #a0aec0;
+        }
+
+        .badge-projeto {
+            background: #1a202c;
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        .dashboard-sub {
+            font-size: 13px;
+            color: #4a5568;
+            margin-bottom: 15px;
+        }
+
+        .sub-linha {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            line-height: 1.6;
+        }
+
+        .sub-linha.meta {
+            font-size: 12px;
+            color: #718096;
+            gap: 16px;
+        }
+
+        .meta-label {
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        .badge-status {
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+
+        .badge-status.status-active { background: #c6f6d5; color: #22543d; }
+        .badge-status.status-in-progress { background: #fefcbf; color: #744210; }
+        .badge-status.status-planning { background: #bee3f8; color: #2a4365; }
+        .badge-status.status-planned { background: #e9d8fd; color: #44337a; }
+        .badge-status.status-completed { background: #c6f6d5; color: #22543d; }
+        .badge-status.status-closed { background: #e2e8f0; color: #2d3748; }
+
+        /* Cards KPI */
+        .row-kpi {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .card-kpi {
+            flex: 1 1 calc(25% - 15px);
+            min-width: 180px;
+            background: #fff;
+            border-radius: 6px;
+            padding: 14px;
+            box-sizing: border-box;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            position: relative;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .card-kpi:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 14px rgba(0,0,0,0.10);
+            border-color: #b0bec5;
+        }
+
+        .card-kpi .kpi-link-icon {
+            position: absolute;
+            top: 8px;
+            right: 10px;
+            font-size: 13px;
+            color: #a0aec0;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .card-kpi:hover .kpi-link-icon {
+            opacity: 1;
+            color: #4a5568;
+        }
+
+        .card-kpi .kpi-hint {
+            font-size: 10px;
+            color: #a0aec0;
+            margin-top: 4px;
+            font-weight: normal;
+            letter-spacing: 0.2px;
+        }
+
+        .card-kpi .kpi-label {
+            font-size: 11px;
+            color: #718096;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+
+        .card-kpi .kpi-value {
+            font-size: 26px;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .card-kpi .kpi-value a {
+            color: #1a202c;
+            text-decoration: none;
+        }
+
+        .card-kpi .kpi-value a:hover {
+            text-decoration: underline;
+            opacity: 0.7;
+        }
+
+        .card-kpi.kpi-total { border-top: 4px solid #4299e1; }
+        .card-kpi.kpi-exec  { border-top: 4px solid #f6ad55; }
+        .card-kpi.kpi-block { border-top: 4px solid #fc8181; }
+        .card-kpi.kpi-done  { border-top: 4px solid #48bb78; }
+
+        /* Graficos */
+        .row-charts {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 15px;
+            width: 100%;
+        }
+
+        .card-chart {
+            background: #fff;
+            border-radius: 6px;
+            padding: 10px;
+            box-sizing: border-box;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            flex: 1 1 calc(50% - 15px);
+            min-width: 280px;
+        }
+
+        .card-title {
+            font-size: 12px;
+            color: #4a5568;
+            margin-bottom: 8px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid #edf2f7;
+            padding-bottom: 6px;
+        }
+
+        .chart-container {
+            width: 100%;
+            height: 230px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-header">
+        MRO System - Dashboard de Encerramento e Gargalos
+        <span class="badge-projeto"><?php echo $var_cod_projeto; ?></span>
+        <a class="btn-voltar-filtro" href="<?php echo $var_link_voltar_filtro; ?>" title="Voltar ao filtro do dashboard">&#8592; Voltar Filtro</a>
+    </div>
+    <div class="dashboard-sub">
+        <div class="sub-linha">
+            <strong><?php echo $var_nome_projeto_completo; ?></strong>
+            <?php if ($var_status_projeto != '') { ?>
+                <span class="badge-status status-<?php echo strtolower(str_replace(' ', '-', $var_status_projeto)); ?>"><?php echo $var_status_projeto; ?></span>
+            <?php } ?>
+        </div>
+        <div class="sub-linha meta">
+            <span><span class="meta-label">Periodo analisado:</span> <?php echo $var_periodo_label; ?></span>
+            <?php if ($var_projeto_inicio != '' && $var_projeto_fim != '') { ?>
+                <span><span class="meta-label">Periodo do Projeto:</span> <?php echo $var_projeto_inicio; ?> a <?php echo $var_projeto_fim; ?></span>
+            <?php } ?>
+        </div>
+    </div>
+
+    <div class="row-kpi">
+        <div class="card-kpi kpi-total" onclick="window.location.href='<?php echo $var_link_todas; ?>'" title="Ver todas as tarefas">
+            <div class="kpi-link-icon">&#8599;</div>
+            <div class="kpi-label">Total de Tarefas</div>
+            <div class="kpi-value"><a href="<?php echo $var_link_todas; ?>"><?php echo $var_total; ?></a></div>
+            <div class="kpi-hint">Clique para ver as tarefas</div>
+        </div>
+        <div class="card-kpi kpi-exec" onclick="window.location.href='<?php echo $var_link_execucao; ?>'" title="Ver tarefas em execucao">
+            <div class="kpi-link-icon">&#8599;</div>
+            <div class="kpi-label">Em Execucao</div>
+            <div class="kpi-value"><a href="<?php echo $var_link_execucao; ?>"><?php echo $var_em_execucao; ?></a></div>
+            <div class="kpi-hint">Clique para ver as tarefas</div>
+        </div>
+        <div class="card-kpi kpi-done" onclick="window.location.href='<?php echo $var_link_encerradas; ?>'" title="Ver tarefas encerradas no periodo">
+            <div class="kpi-link-icon">&#8599;</div>
+            <div class="kpi-label">Encerradas (Periodo)</div>
+            <div class="kpi-value"><a href="<?php echo $var_link_encerradas; ?>"><?php echo $var_encerradas; ?></a></div>
+            <div class="kpi-hint">Clique para ver as tarefas</div>
+        </div>
+        <div class="card-kpi kpi-block" onclick="window.location.href='<?php echo $var_link_bloqueadas; ?>'" title="Ver tarefas bloqueadas">
+            <div class="kpi-link-icon">&#8599;</div>
+            <div class="kpi-label">Bloqueadas</div>
+            <div class="kpi-value"><a href="<?php echo $var_link_bloqueadas; ?>"><?php echo $var_bloqueadas; ?></a></div>
+            <div class="kpi-hint">Clique para ver as tarefas</div>
+        </div>
+    </div>
+
+    <div class="row-charts">
+        <div class="card-chart">
+            <div class="card-title">
+                Encerramento por Data
+                <span style="font-weight:normal;text-transform:none;color:#a0aec0;font-size:10px;">
+                    &nbsp;| &nbsp;<span style="color:#48bb78;">&#9679;</span> Manual &nbsp;<span style="color:#4299e1;">&#9679;</span> Producao &nbsp;<span style="color:#a0aec0;">&#9679;</span> P6 (fallback)
+                </span>
+            </div>
+            <div id="chart-data" class="chart-container"></div>
+        </div>
+
+        <div class="card-chart">
+            <div class="card-title">Conclusao por Equipe (Total x Concluidas no periodo)</div>
+            <div id="chart-equipe" class="chart-container"></div>
+        </div>
+
+        <div class="card-chart">
+            <div class="card-title">Gargalos - Bloqueios (Flags) <span style="font-weight:normal;text-transform:none;color:#a0aec0;font-size:10px;">(clique na fatia p/ filtrar)</span></div>
+            <div id="chart-garg1" class="chart-container"></div>
+        </div>
+
+        <div class="card-chart">
+            <div class="card-title">Gargalos - Pendencias (pending status) <span style="font-weight:normal;text-transform:none;color:#a0aec0;font-size:10px;">(clique na fatia p/ filtrar)</span></div>
+            <div id="chart-garg2" class="chart-container"></div>
+        </div>
+    </div>
+
+<script>
+    // =========================================================================
+    // INJETANDO OS JSONs GERADOS PELO PHP NO JAVASCRIPT
+    // =========================================================================
+    var dataData   = <?php echo $json_data; ?>;
+    var equipeData = <?php echo $json_equipe; ?>;
+    var garg1Data  = <?php echo $json_garg1; ?>;
+    var garg2Data  = <?php echo $json_garg2; ?>;
+
+    // =========================================================================
+    // RENDERIZACAO DEFENSIVA (compativel com Blank ScriptCase)
+    // Nao depende de DOMContentLoaded (evento pode ja ter disparado).
+    // Se a biblioteca Syncfusion nao carregar, loga no console para diagnosticar.
+    // =========================================================================
+    function renderizarGraficos() {
+        if (!(window.ej && ej.charts)) {
+            console.error('[Dash Encerramento] Biblioteca Syncfusion (ej.charts) NAO carregou.');
+            console.error('Verifique se os assets existem no caminho: /libs/syncfusion/scripts/ej2-syncfusion.js');
+            // Aviso visual no lugar dos graficos
+            var ids = ['chart-data', 'chart-equipe', 'chart-garg1', 'chart-garg2'];
+            for (var i = 0; i < ids.length; i++) {
+                var el = document.getElementById(ids[i]);
+                if (el) {
+                    el.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#c05621;font-size:13px;font-family:Roboto,sans-serif;">Biblioteca Syncfusion nao carregou. Verifique /libs/syncfusion/ no console (F12).</div>';
+                }
+            }
+            return;
+        }
+        setTimeout(carregarGraficoData, 60);
+        setTimeout(carregarGraficoEquipe, 90);
+        setTimeout(carregarGraficoGarg1, 120);
+        setTimeout(carregarGraficoGarg2, 150);
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', renderizarGraficos);
+    } else {
+        renderizarGraficos();
+    }
+
+    // ==========================================
+    // GRAFICO 1: Encerramento por DATA (COLUNAS)
+    // Cor por fonte: verde=Manual (confiavel), azul=Producao, cinza=P6 (fallback)
+    // ==========================================
+    function carregarGraficoData() {
+        try {
+            if (window.ej && ej.charts && ej.charts.Chart) {
+                try { ej.charts.Chart.Inject(ej.charts.ColumnSeries, ej.charts.Category, ej.charts.Tooltip); } catch(e){}
+
+                var chart = new ej.charts.Chart({
+                    primaryXAxis: { valueType: 'Category', majorGridLines: { width: 0 } },
+                    series: [{
+                        dataSource: dataData,
+                        xName: 'Data',
+                        yName: 'Encerradas',
+                        name: 'Encerradas',
+                        type: 'Column',
+                        pointColorMapping: 'Cor'
+                    }],
+                    height: '100%',
+                    width: '100%',
+                    tooltip: {
+                        enable: true,
+                        format: '<b>${point.x}</b><br/>Encerradas: ${point.y}'
+                    },
+                    // Injeta a fonte da data no tooltip (Manual/Producao/P6)
+                    tooltipRender: function (args) {
+                        if (args.point && args.point.index >= 0 && dataData[args.point.index]) {
+                            args.content = '<b>' + (args.point.x || '') + '</b><br/>Encerradas: ' + (args.point.y || 0) +
+                                           '<br/>Fonte: <b>' + dataData[args.point.index].Fonte + '</b>';
+                        }
+                    }
+                });
+                chart.appendTo('#chart-data');
+            }
+        } catch (err) { console.error("Erro no grafico de data:", err); }
+    }
+
+    // ==========================================
+    // GRAFICO 2: Conclusao por EQUIPE (BARRAS)
+    // Total x Concluidas por skill, tooltip com %
+    // ==========================================
+    function carregarGraficoEquipe() {
+        try {
+            if (window.ej && ej.charts && ej.charts.Chart) {
+                try { ej.charts.Chart.Inject(ej.charts.BarSeries, ej.charts.Category, ej.charts.Tooltip); } catch(e){}
+
+                var chart = new ej.charts.Chart({
+                    primaryXAxis: { valueType: 'Category', majorGridLines: { width: 0 } },
+                    series: [
+                        {
+                            dataSource: equipeData,
+                            xName: 'Equipe',
+                            yName: 'Total',
+                            name: 'Total',
+                            type: 'Bar',
+                            fill: '#cbd5e0'
+                        },
+                        {
+                            dataSource: equipeData,
+                            xName: 'Equipe',
+                            yName: 'Concluidas',
+                            name: 'Concluidas',
+                            type: 'Bar',
+                            fill: '#48bb78'
+                        }
+                    ],
+                    height: '100%',
+                    width: '100%',
+                    tooltip: {
+                        enable: true,
+                        format: '<b>${point.x}</b><br/>${series.name}: ${point.y}'
+                    },
+                    tooltipRender: function (args) {
+                        var pct = 0;
+                        if (args.point && args.point.index >= 0 && equipeData[args.point.index]) {
+                            pct = equipeData[args.point.index].Pct;
+                        }
+                        if (args.series && args.series.index === 1) {
+                            args.content = '<b>' + (args.point.x || '') + '</b><br/>Concluidas no periodo: ' + (args.point.y || 0) + '<br/><b>' + pct + '% concluido</b>';
+                        }
+                    }
+                });
+                chart.appendTo('#chart-equipe');
+            }
+        } catch (err) { console.error("Erro no grafico de equipe:", err); }
+    }
+
+    // ==========================================
+    // GRAFICO 3: Gargalos por BLOQUEIOS (ROSca)
+    // ==========================================
+    function carregarGraficoGarg1() {
+        try {
+            if (window.ej && ej.charts && ej.charts.AccumulationChart) {
+                try { ej.charts.AccumulationChart.Inject(ej.charts.PieSeries, ej.charts.AccumulationDataLabel, ej.charts.AccumulationTooltip); } catch(e){}
+
+                var chart = new ej.charts.AccumulationChart({
+                    series: [{
+                        dataSource: garg1Data,
+                        xName: 'Tipo',
+                        yName: 'Qtde',
+                        innerRadius: '45%',
+                        dataLabel: { visible: true, name: 'text', position: 'Outside' }
+                    }],
+                    height: '100%',
+                    width: '100%',
+                    tooltip: { enable: true },
+                    // Clique na fatia -> abre a grid filtrada pelo tipo de bloqueio
+                    // Usa o index do ponto (ordem preservada do dataSource) - mais robusto que comparar string
+                    pointClick: function (args) {
+                        if (args.point && typeof args.point.index !== 'undefined') {
+                            var idx = args.point.index;
+                            var item = (idx >= 0) ? garg1Data[idx] : null;
+                            if (item && item.Link) { window.location.href = item.Link; }
+                        }
+                    }
+                });
+                chart.appendTo('#chart-garg1');
+            }
+        } catch (err) { console.error("Erro no grafico de bloqueios:", err); }
+    }
+
+    // ==========================================
+    // GRAFICO 4: Gargalos por PENDENCIA (Rosca)
+    // ==========================================
+    function carregarGraficoGarg2() {
+        try {
+            if (window.ej && ej.charts && ej.charts.AccumulationChart) {
+                try { ej.charts.AccumulationChart.Inject(ej.charts.PieSeries, ej.charts.AccumulationDataLabel, ej.charts.AccumulationTooltip); } catch(e){}
+
+                var chart = new ej.charts.AccumulationChart({
+                    series: [{
+                        dataSource: garg2Data,
+                        xName: 'Tipo',
+                        yName: 'Qtde',
+                        innerRadius: '45%',
+                        dataLabel: { visible: true, name: 'text', position: 'Outside' }
+                    }],
+                    height: '100%',
+                    width: '100%',
+                    tooltip: { enable: true },
+                    // Clique na fatia -> abre a grid filtrada pela pendencia
+                    // Usa o index do ponto (ordem preservada do dataSource) - mais robusto que comparar string
+                    pointClick: function (args) {
+                        if (args.point && typeof args.point.index !== 'undefined') {
+                            var idx = args.point.index;
+                            var item = (idx >= 0) ? garg2Data[idx] : null;
+                            if (item && item.Link) { window.location.href = item.Link; }
+                        }
+                    }
+                });
+                chart.appendTo('#chart-garg2');
+            }
+        } catch (err) { console.error("Erro no grafico de pendencias:", err); }
+    }
+</script>
+</body>
+</html>
+<?php

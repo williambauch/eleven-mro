@@ -1,0 +1,6 @@
+<?php
+
+
+
+// 4. REDIRECIONA PARA O DASHBOARD E PASSA AS GLOBAIS
+sc_redir('blank_dash_encerramento', glo_project_id={projeto_id};glo_periodo_inicial={periodo_inicial};glo_periodo_final={periodo_final});

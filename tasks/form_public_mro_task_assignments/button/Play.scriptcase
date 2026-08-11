@@ -68,6 +68,15 @@ sc_exec_sql("UPDATE mro_task_assignments SET status_code = 'IN_PROGRESS' WHERE a
 sc_exec_sql("INSERT INTO mro_assignment_events (assignment_id, timesheet_id, event_type, performed_by_id) 
              VALUES ({assignment_id}, $id_ts, '$tipo_evento', $emp_id)");
 
+// MRO-123: No PRIMEIRO START (inicio real da task), preenche actual_start se estiver vazio
+// Nao sobrescreve datas preenchidas manualmente (DIGEX) - so grava quando NULL
+if ($tipo_evento == 'START') {
+    sc_exec_sql("UPDATE mro_tasks
+                 SET actual_start = COALESCE(actual_start, NOW())
+                 WHERE task_id = (SELECT task_id FROM mro_task_assignments WHERE assignment_id = " . (int){assignment_id} . ")
+                   AND actual_start IS NULL");
+}
+
 // =================================================================================
 // CÁLCULO DE TEMPO ACUMULADO (Para mandar pro JavaScript)
 // =================================================================================

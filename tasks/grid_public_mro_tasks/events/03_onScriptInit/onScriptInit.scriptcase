@@ -42,6 +42,51 @@ if (!empty([var_project_id])) {
     }
 }
 
+// Filtro 3: se veio do dashboard com filtro de status, aplica (glo_filtro_status)
+// Valores (mesmos do dash MRO-123): EXECUCAO, ENCERRADAS, BLOQUEADAS ou vazio (todas)
+if (!empty([glo_filtro_status])) {
+    $var_status = trim([glo_filtro_status]);
+    $var_cond_status = "";
+
+    if ($var_status == 'EXECUCAO') {
+        $var_cond_status = "status_code IN ('IN_PROGRESS','RELEASED','PAUSED','BLOCKED')";
+    } elseif ($var_status == 'ENCERRADAS') {
+        $var_cond_status = "status_code = 'COMPLETED'";
+    } elseif ($var_status == 'BLOQUEADAS') {
+        $var_cond_status = "(status_code IN ('BLOCKED','PENDING','PENDING_OA','PENDING_ENG','PENDING_PROG','PENDING_COORD','COMMERCIAL_REVIEW','WAITING_CUSTOMER')
+            OR is_blocked_material OR is_blocked_tool OR is_blocked_labor OR is_blocked_predecessor OR is_predecessor_manual
+            OR pending_id IS NOT NULL)";
+    } elseif ($var_status == 'MATERIAL') {
+        // Prioridade 1 no CASE do dash: pega todas com material
+        $var_cond_status = "is_blocked_material";
+    } elseif ($var_status == 'FERRAMENTA') {
+        // Prioridade 2: exclui as que ja caem em material
+        $var_cond_status = "is_blocked_tool AND NOT is_blocked_material";
+    } elseif ($var_status == 'MAO_OBRA') {
+        // Prioridade 3: exclui as que ja caem em material/ferramenta
+        $var_cond_status = "is_blocked_labor AND NOT is_blocked_material AND NOT is_blocked_tool";
+    } elseif ($var_status == 'PREDECESSORA') {
+        // Prioridade 4: exclui as que ja caem em material/ferramenta/mao de obra
+        $var_cond_status = "is_blocked_predecessor AND NOT is_blocked_material AND NOT is_blocked_tool AND NOT is_blocked_labor";
+    } elseif ($var_status == 'PRED_MANUAL') {
+        // Prioridade 5 (ultima flag): exclui as que ja caem em qualquer flag anterior
+        $var_cond_status = "is_predecessor_manual AND NOT is_blocked_material AND NOT is_blocked_tool AND NOT is_blocked_labor AND NOT is_blocked_predecessor";
+    } elseif (strpos($var_status, 'PEND_') === 0) {
+        $var_pend_id = (int)substr($var_status, 5);
+        if ($var_pend_id > 0) {
+            $var_cond_status = "pending_id = " . $var_pend_id;
+        }
+    }
+
+    if ($var_cond_status != "") {
+        if ($var_cond != "") {
+            $var_cond .= " AND " . $var_cond_status;
+        } else {
+            $var_cond = $var_cond_status;
+        }
+    }
+}
+
 // Aplica o WHERE completo (respeita sc_where_atual se ja existir)
 if ($var_cond != "") {
     if (empty({sc_where_atual})) {
@@ -49,6 +94,10 @@ if ($var_cond != "") {
     } else {
         sc_select_where(add) = "AND $var_cond";
     }
+
+  // Limpa as globals de filtro para nao ficar com o filtro travado
+  [var_project_id] = '';
+  [glo_filtro_status] = '';
 }
 
 // ====================================================================
