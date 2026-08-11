@@ -181,13 +181,6 @@ function fn_calcular_oa_nrc($v_task_id, $v_projeto_atual, $debug = false) {
                          VALUES ($v_task_id, 'AUTO_APPROVE', 'mro_engine', '$msg')");
         }
 
-        // MRO-122: Ao liberar automaticamente (dentro do CAP), cria os assignments
-        // por skill (LABOR) antes de mudar para RELEASED. Sem isso, a NRC ficava
-        // RELEASED sem equipe alocada e ninguem conseguia criar os slots depois.
-        if ($novo_status == 'RELEASED') {
-            fn_criar_assignments_por_skill($v_task_id, $v_projeto_atual);
-        }
-
         sc_exec_sql("UPDATE mro_tasks 
                      SET oa_hours = 0, oa_material_cost = 0, oa_batch_id = NULL, 
                          status_code = '$novo_status', is_oa = false 
@@ -201,82 +194,4 @@ function fn_calcular_oa_nrc($v_task_id, $v_projeto_atual, $debug = false) {
 
     return true;
 }
-
-// ====================================================================
-// MRO-122: CRIA OS ASSIGNMENTS POR SKILL (LABOR) PARA UMA NRC/TASK
-// ====================================================================
-// Usado pelo motor O&A antes de liberar automaticamente (RELEASED).
-// Replica a logica do btn_liberar_para_execucao para que a NRC aprovada
-// automaticamente nao fique sem equipe alocada.
-// Protecao: ignora skills que ja possuem assignment (evita duplicidade).
-function fn_criar_assignments_por_skill($v_task_id, $v_projeto_atual)
-{
-    // 0. Busca estimated_hours e skill_code da task (usados como fallback
-    // de horas, identico ao btn_liberar_para_execucao)
-    sc_lookup(rs_tk, "SELECT COALESCE(estimated_hours, 0), skill_code 
-                      FROM mro_tasks WHERE task_id = " . (int)$v_task_id);
-    $var_horas_task = !empty({rs_tk}) ? (float){rs_tk[0][0]} : 0;
-    $var_skill_task = !empty({rs_tk}) ? {rs_tk[0][1]} : '';
-
-    // 1. Busca os recursos do tipo LABOR (Mao de Obra) alocados na tarefa
-    $sql_resources = "SELECT DISTINCT tr.resource_code, tr.budgeted_hours
-                      FROM mro_task_resources tr
-                      JOIN mro_resources r ON tr.resource_code = r.resource_code
-                      WHERE tr.task_id = " . (int)$v_task_id . "
-                      AND r.resource_type = 'LABOR'";
-    sc_lookup(rs_res, $sql_resources);
-
-    if (!empty({rs_res})) {
-
-        foreach ({rs_res} as $res) {
-            $v_res_code = addslashes($res[0]);
-            // Fallback de horas: usa o budgeted_hours ou o estimated_hours da task.
-            // Trata "0"/"0.00" como vazio (budgeted zerado cai no fallback),
-            // identico ao btn_liberar_para_execucao.
-            $v_hours    = (!empty($res[1]) && (float)$res[1] > 0) ? (float)$res[1] : $var_horas_task;
-
-            // Busca o skill_id da especialidade
-            sc_lookup(rs_sid, "SELECT skill_id FROM mro_skills WHERE skill_code = '$v_res_code'");
-            $v_skill_id = !empty({rs_sid}) ? (int){rs_sid[0][0]} : "NULL";
-
-            // Evita duplicidade: so cria o slot se ainda nao existir para a skill
-            $var_check = "SELECT 1 FROM mro_task_assignments 
-                          WHERE task_id = " . (int)$v_task_id . " AND skill_id = " . $v_skill_id;
-            sc_lookup(rs_dup, $var_check);
-
-            if (empty({rs_dup})) {
-                $sql_ins = "INSERT INTO mro_task_assignments 
-                            (task_id, skill_id, planned_skill_id, status_code, planned_qty_hours, project_id) 
-                            VALUES (" . (int)$v_task_id . ", " . $v_skill_id . ", " . $v_skill_id . ", 'NOT_STARTED', " . $v_hours . ", " . (int)$v_projeto_atual . ")";
-                sc_exec_sql($sql_ins);
-            }
-        }
-
-    } else {
-        // 2. Fallback: sem recursos LABOR, cria uma alocacao generica
-        // com o skill_code da propria task e o total de horas estimadas
-        $v_skill_code = addslashes($var_skill_task);
-
-        if (!empty($v_skill_code)) {
-            sc_lookup(rs_sid2, "SELECT skill_id FROM mro_skills WHERE skill_code = '$v_skill_code'");
-            $v_skill_id2 = !empty({rs_sid2}) ? (int){rs_sid2[0][0]} : "NULL";
-
-            $var_check2 = "SELECT 1 FROM mro_task_assignments 
-                           WHERE task_id = " . (int)$v_task_id . " AND skill_id = " . $v_skill_id2;
-            sc_lookup(rs_dup2, $var_check2);
-
-            if (empty({rs_dup2})) {
-                $sql_ins2 = "INSERT INTO mro_task_assignments 
-                             (task_id, skill_id, planned_skill_id, status_code, planned_qty_hours, project_id) 
-                             VALUES (" . (int)$v_task_id . ", " . $v_skill_id2 . ", " . $v_skill_id2 . ", 'NOT_STARTED', " . $var_horas_task . ", " . (int)$v_projeto_atual . ")";
-                sc_exec_sql($sql_ins2);
-            }
-        }
-    }
-
-    return true;
-}
-
-// FIM 
-
 ?>
