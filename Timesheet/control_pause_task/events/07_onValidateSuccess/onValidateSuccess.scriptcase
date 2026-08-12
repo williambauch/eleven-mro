@@ -66,7 +66,7 @@ if($v_motivo == 1) {
         if (!empty({rs_task})) {
             $var_tid = (int){rs_task[0][0]};
             sc_exec_sql("UPDATE mro_tasks SET status_code = 'PENDING_PROG', is_blocked_labor = FALSE WHERE task_id = $var_tid");
-            sc_exec_sql("INSERT INTO mro_nrc_approval_log (task_id, action_taken, user_login) 
+            sc_exec_sql("INSERT INTO mro_task_history (task_id, action_taken, user_login) 
                          VALUES ($var_tid, 'SENT_TO_PROG_VIA_HANDOVER', '[usr_login]')");
         }
     }
@@ -116,6 +116,30 @@ if ($status_code == 'SUPSIG') {
                          AND status_code IN ('IN_PROGRESS','PAUSED','BLOCKED','PENDING_HANDOVER','SUPSIG')
                          AND assignment_id <> $v_ass_id
                    )");
+}
+
+// MRO-126: Quando o ultimo assignment conclui (SUPSIG), a task tambem vai para SUPSIG
+if ($status_code == 'SUPSIG') {
+    sc_exec_sql("UPDATE mro_tasks
+                 SET status_code = 'SUPSIG',
+                     updated_at = CURRENT_TIMESTAMP
+                 WHERE task_id = (SELECT task_id FROM mro_task_assignments WHERE assignment_id = $v_ass_id)
+                   AND status_code IN ('IN_PROGRESS','PENDING_PROG','PAUSED')
+                   AND NOT EXISTS (
+                       SELECT 1 FROM mro_task_assignments
+                       WHERE task_id = (SELECT task_id FROM mro_task_assignments WHERE assignment_id = $v_ass_id)
+                         AND status_code IN ('IN_PROGRESS','PAUSED','BLOCKED','ASSIGNED','PENDING_HANDOVER')
+                         AND assignment_id <> $v_ass_id
+                   )");
+
+    // MRO-126: Registra a conclusao (SUPSIG) no historico da task
+    $var_tid_supsig = "SELECT task_id FROM mro_task_assignments WHERE assignment_id = " . (int)$v_ass_id;
+    sc_lookup(rs_tid_supsig, $var_tid_supsig);
+    if (!empty({rs_tid_supsig})) {
+        $var_task_supsig = (int){rs_tid_supsig[0][0]};
+        sc_exec_sql("INSERT INTO mro_task_history (task_id, action_taken, user_login, remarks)
+                     VALUES (" . $var_task_supsig . ", 'SUPSIG', '[usr_login]', 'Ultimo clock-out - tarefa 100% concluida pelo mecanico: IN_PROGRESS -> SUPSIG')");
+    }
 }
 
 // 2. Registra o Evento de Auditoria

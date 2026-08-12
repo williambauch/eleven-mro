@@ -37,6 +37,11 @@
       "blank_pdf_pack_jic",
       "ctrl_abertura_nrc",
       "form_public_mro_tasks"
+    ],
+    "MRO-126": [
+      "grid_public_mro_task_assignments_completed",
+      "grid_public_mro_task_assignments_insp",
+      "grid_public_mro_tasks_approval"
     ]
   }
 }

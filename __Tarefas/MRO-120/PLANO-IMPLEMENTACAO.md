@@ -45,7 +45,7 @@ A tarefa MRO-120 abrange 4 frentes independentes que visam ajustar o fluxo de ap
 | `form_public_mro_task_assignments_planned` | `tasks/form_public_mro_task_assignments_planned/` | EDITADO — Frente 4: ampliar query para N registros |
 | `form_public_mro_task_assignments_progress` | `tasks/form_public_mro_task_assignments_progress/` | EDITADO — Frente 4: ampliar query para N registros |
 | `form_public_mro_task_assignments_blocked` | `tasks/form_public_mro_task_assignments_blocked/` | EDITADO — Frente 4: ampliar query para N registros |
-| `form_public_mro_task_assignments_completed` | `tasks/form_public_mro_task_assignments_completed/` | EDITADO — Frente 4: ampliar query para N registros |
+| `grid_public_mro_task_assignments_completed` | `tasks/grid_public_mro_task_assignments_completed/` | EDITADO — Frente 4: ampliar query para N registros |
 
 ### Novas Apps Descobertas na Reimportacao
 
@@ -108,7 +108,7 @@ A tarefa MRO-120 abrange 4 frentes independentes que visam ajustar o fluxo de ap
 - `form_public_mro_task_assignments_planned` — assignments planejados
 - `form_public_mro_task_assignments_progress` — assignments em andamento
 - `form_public_mro_task_assignments_blocked` — assignments com impedimentos
-- `form_public_mro_task_assignments_completed` — assignments concluidos
+- `grid_public_mro_task_assignments_completed` — assignments concluidos
 
 **Schema Atual de `form_public_mro_task_assignments_planned`:**
 ```sql
@@ -410,7 +410,7 @@ As 4 apps do `tabs_supervisor` precisam de ajustes:
 | `form_public_mro_task_assignments_planned` | "A Distribuir" — assignments planejados |
 | `form_public_mro_task_assignments_progress` | "Em Andamento" — assignments em execucao |
 | `form_public_mro_task_assignments_blocked` | "Com Impedimentos" — assignments bloqueados |
-| `form_public_mro_task_assignments_completed` | "Concluidas" — assignments finalizados |
+| `grid_public_mro_task_assignments_completed` | "Concluidas" — assignments finalizados |
 
 ### 4.2 O que precisa mudar
 
@@ -527,7 +527,7 @@ Supervisor ve todos os assignments da sua skill
 | 4.1 | Remover filtro supervisor_id da query do planned | `tasks/form_public_mro_task_assignments_planned/sql/schema.sql` | Pendente |
 | 4.2 | Remover filtro supervisor_id da query do progress | `tasks/form_public_mro_task_assignments_progress/sql/schema.sql` | Pendente |
 | 4.3 | Remover filtro supervisor_id da query do blocked | `tasks/form_public_mro_task_assignments_blocked/sql/schema.sql` | Pendente |
-| 4.4 | Remover filtro supervisor_id da query do completed | `tasks/form_public_mro_task_assignments_completed/sql/schema.sql` | Pendente |
+| 4.4 | Remover filtro supervisor_id da query do completed | `tasks/grid_public_mro_task_assignments_completed/sql/schema.sql` | Pendente |
 | 4.5 | Adicionar badge de multi-atribuicao no onRecord das 4 apps | Cada app do supervisor | Pendente |
 | 4.6 | Verificar config do tabs_supervisor (ROOT/) | `ROOT/tabs_supervisor/config.json` | Pendente |
 | 4.7 | Testar: atribuir 2 mecanicos a mesma task e ver no painel | Homologacao | Pendente |
@@ -586,7 +586,7 @@ Supervisor ve todos os assignments da sua skill
 | `tasks/form_public_mro_task_assignments_planned/sql/schema.sql` | F4 | Remover filtro supervisor_id |
 | `tasks/form_public_mro_task_assignments_progress/sql/schema.sql` | F4 | Remover filtro supervisor_id |
 | `tasks/form_public_mro_task_assignments_blocked/sql/schema.sql` | F4 | Remover filtro supervisor_id |
-| `tasks/form_public_mro_task_assignments_completed/sql/schema.sql` | F4 | Remover filtro supervisor_id |
+| `tasks/grid_public_mro_task_assignments_completed/sql/schema.sql` | F4 | Remover filtro supervisor_id |
 
 ### Arquivos a VERIFICAR (podem precisar de ajuste)
 

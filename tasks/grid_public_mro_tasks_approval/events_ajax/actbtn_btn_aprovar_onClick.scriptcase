@@ -1,0 +1,97 @@
+<?php
+
+// ====================================================================
+// MRO-126: Aprovação da task pelo Supervisor (SUPSIG -> COMPLETED/PENDING_INSP1)
+// Botao AJAX da barra de acao com 2 estados:
+//   state1 -> "Aprovar"   (botao ativo)
+//   state2 -> "Aprovado"  (feedback visual apos aprovar)
+//
+// Fluxo:
+//  - Task sem RII (requires_rii=false E is_rii=false) -> COMPLETED
+//  - Task com RII (requires_rii=true OU is_rii=true)   -> PENDING_INSP1
+//
+// Idempotente: UPDATE com WHERE status_code = 'SUPSIG' garante que
+// a task so e aprovada uma unica vez (race condition segura).
+// ====================================================================
+
+// 1. Recupera o estado atual do botao no momento do clique
+$var_estado = sc_actionbar_clicked_state();
+
+// 2. Se ja estiver no estado "Aprovado" (state2), nao faz nada
+if ($var_estado == 'state2') {
+    sc_ajax_message("Esta tarefa já foi aprovada.", "Aprovação");
+    return;
+}
+
+$var_task_id = (int){task_id};
+
+if ($var_task_id <= 0) {
+    sc_ajax_message("Parâmetros inválidos para a aprovação.");
+    return;
+}
+
+// 3. Re-checa o status e as flags RII da task
+$var_sql = "SELECT status_code, requires_rii, is_rii
+            FROM mro_tasks
+            WHERE task_id = " . $var_task_id;
+sc_lookup(rs_task, $var_sql);
+
+if ({rs_task} === false) {
+    sc_ajax_message("Erro ao consultar a tarefa.", "Erro");
+    return;
+}
+
+if (empty({rs_task})) {
+    sc_ajax_message("Tarefa nao encontrada.", "Erro");
+    return;
+}
+
+// 4. So processa se a task ainda estiver SUPSIG (evita re-aprovacao)
+if ({rs_task[0][0]} != 'SUPSIG') {
+    sc_actionbar_state('btn_aprovar', 'state2');
+    sc_actionbar_disable('btn_aprovar');
+    sc_ajax_message("Esta tarefa ja foi processada (status atual: " . {rs_task[0][0]} . ").", "Aprovação");
+    return;
+}
+
+$var_req_rii = ({rs_task[0][1]} == 't' || {rs_task[0][1]} === true || {rs_task[0][1]} == 1);
+$var_is_rii  = ({rs_task[0][2]} == 't' || {rs_task[0][2]} === true || {rs_task[0][2]} == 1);
+
+$var_destino = ($var_req_rii || $var_is_rii) ? 'PENDING_INSP1' : 'COMPLETED';
+$var_acao    = ($var_req_rii || $var_is_rii) ? 'ROUTED_TO_INSP1' : 'APPROVED';
+
+// 5. Transacao atomica: atualiza a task + grava evento de auditoria
+sc_begin_trans();
+
+// Auditoria antes de executar (regra de ouro)
+$var_desc = "Task " . $var_task_id . " aprovada pelo supervisor: SUPSIG -> " . $var_destino .
+            " (requires_rii=" . ($var_req_rii ? 'true' : 'false') .
+            ", is_rii=" . ($var_is_rii ? 'true' : 'false') . ")";
+sc_log_add("task_approve", $var_desc);
+
+sc_exec_sql("UPDATE mro_tasks
+             SET status_code = '" . $var_destino . "',
+                 updated_at = CURRENT_TIMESTAMP
+             WHERE task_id = " . $var_task_id . "
+               AND status_code = 'SUPSIG'");
+
+// 6. Evento de auditoria (assignment_id e nulo - acao e sobre a task)
+sc_exec_sql("INSERT INTO mro_assignment_events
+             (assignment_id, event_type, performed_by_id, description, user_agent)
+             VALUES
+             (NULL, '" . $var_acao . "', [usr_employee_id], '" . addslashes($var_desc) . "', '[usr_login]')");
+
+// 7. Registra a transicao de status no historico da task
+sc_exec_sql("INSERT INTO mro_task_history (task_id, action_taken, user_login, remarks)
+             VALUES (" . $var_task_id . ", '" . $var_acao . "', '[usr_login]', '" . addslashes($var_desc) . "')");
+
+sc_commit_trans();
+
+// 8. Feedback visual: muda o botao para o estado "Aprovado" (state2)
+sc_actionbar_state('btn_aprovar', 'state2');
+sc_actionbar_disable('btn_aprovar');
+
+// 9. Recarrega a linha da grid para refletir o novo status
+sc_ajax_refresh();
+
+sc_ajax_message("Tarefa aprovada! Status alterado para: " . $var_destino, "Aprovação");

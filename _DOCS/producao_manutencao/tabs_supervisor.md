@@ -22,7 +22,7 @@ Painel gerencial do supervisor de produção. Organiza as alocações de tarefas
   - "A Distribuir" → `form_public_mro_task_assignments_planned`
   - "Em Andamento" → `form_public_mro_task_assignments_progress`
   - "Com Impedimentos" → `form_public_mro_task_assignments_blocked`
-  - "Concluídas" → `form_public_mro_task_assignments_completed`
+  - "Concluídas" → `grid_public_mro_task_assignments_completed`
 - Cada formulário recebe como parâmetros o `assignment_id`, `usr_skill_id` e `usr_employee_id` para contextualizar os dados.
 - A aba "Com Impedimentos" também recebe o `usr_login` como parâmetro adicional.
 

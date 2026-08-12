@@ -18,3 +18,42 @@ if (!empty({executed_by_employee_id}) && in_array({status_code}, ['PLANNED', 'NO
     
     sc_exec_sql($sql_log);
 }
+
+// MRO-126: Quando o primeiro mecanico e atribuido, a task sai de RELEASED e vai para IN_PROGRESS
+// Descobre a task deste assignment
+$var_sql_task = "SELECT task_id FROM mro_task_assignments WHERE assignment_id = " . (int){assignment_id};
+sc_lookup(rs_task, $var_sql_task);
+
+if (!empty({rs_task})) {
+    $var_task_id = (int){rs_task[0][0]};
+
+    // Verifica se ja existe outro mecanico atribuido a esta task (excluindo este assignment)
+    $var_sql_count = "SELECT COUNT(*) FROM mro_task_assignments
+                      WHERE task_id = " . $var_task_id . "
+                        AND assignment_id <> " . (int){assignment_id} . "
+                        AND executed_by_employee_id IS NOT NULL";
+    sc_lookup(rs_count, $var_sql_count);
+
+    $var_total_mec = !empty({rs_count}) ? (int){rs_count[0][0]} : 0;
+
+    // Se e o primeiro mecanico, verifica se a task ainda esta RELEASED para liberar a execucao
+    if ($var_total_mec == 0) {
+        $var_sql_status = "SELECT status_code FROM mro_tasks WHERE task_id = " . $var_task_id;
+        sc_lookup(rs_status, $var_sql_status);
+
+        if (!empty({rs_status}) && {rs_status[0][0]} == 'RELEASED') {
+            sc_exec_sql("UPDATE mro_tasks
+                         SET status_code = 'IN_PROGRESS',
+                             updated_at = CURRENT_TIMESTAMP,
+                             updated_by = '[usr_login]'
+                         WHERE task_id = " . $var_task_id . "
+                           AND status_code = 'RELEASED'");
+
+            sc_log_add("task_release", "Task " . $var_task_id . " liberada para execucao: RELEASED -> IN_PROGRESS (primeiro mecanico atribuido)");
+
+            // MRO-126: Registra a transicao no historico da task
+            sc_exec_sql("INSERT INTO mro_task_history (task_id, action_taken, user_login, remarks)
+                         VALUES (" . $var_task_id . ", 'IN_PROGRESS', '[usr_login]', 'Primeiro mecanico atribuido: RELEASED -> IN_PROGRESS (assignment " . (int){assignment_id} . "')");
+        }
+    }
+}

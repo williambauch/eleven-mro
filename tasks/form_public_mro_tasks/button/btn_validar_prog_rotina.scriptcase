@@ -193,7 +193,7 @@ if (!empty($var_skills_criar) || !empty($var_skills_atualizar)) {
     }
 
     // Log
-    sc_exec_sql("INSERT INTO mro_nrc_approval_log (task_id, action_taken, user_login)
+    sc_exec_sql("INSERT INTO mro_task_history (task_id, action_taken, user_login)
                  VALUES ($var_id, 'PROGRAMMING_OK', '" . addslashes($var_user) . "')");
     if (sc_error_insert) {
         sc_error_message("Erro ao registrar aprovacao.");

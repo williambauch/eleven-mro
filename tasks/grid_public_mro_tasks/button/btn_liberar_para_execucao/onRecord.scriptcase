@@ -22,6 +22,10 @@ if ($v_status == 'PLANNING' || $v_status == 'NOT_STARTED' || $v_status == 'PLANN
     // 1. Atualiza o status do documento da tarefa para RELEASED (Liberado)
     sc_exec_sql("UPDATE mro_tasks SET status_code = 'RELEASED' WHERE task_id = $v_task_id");
     
+    // 1.1 MRO-126: Registra a liberacao no historico da task
+    sc_exec_sql("INSERT INTO mro_task_history (task_id, action_taken, user_login, remarks)
+                 VALUES ($v_task_id, 'RELEASED', '[usr_login]', 'Task liberada para execucao (btn_liberar_para_execucao): " . $v_status . " -> RELEASED')");
+    
     // 2. Busca os recursos do tipo LABOR (Mão de Obra) importados do P6
     $sql_resources = "SELECT DISTINCT tr.resource_code, tr.budgeted_hours
                       FROM mro_task_resources tr

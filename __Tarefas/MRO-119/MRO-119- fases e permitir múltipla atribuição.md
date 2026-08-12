@@ -21,7 +21,7 @@ tabs_supervisor
 form_public_mro_task_assignments_planned
 form_public_mro_task_assignments_progress/
 form_public_mro_task_assignments_blocked
-form_public_mro_task_assignments_completed
+grid_public_mro_task_assignments_completed
 
 
 # Rodrigo Souza - Nova Demanda 28/07/2026

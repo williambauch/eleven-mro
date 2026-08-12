@@ -1,0 +1,5 @@
+<?php
+
+// MRO-126: Fila de aprovacao do supervisor (tasks em SUPSIG)
+// O botao de aprovacao (btn_aprovar) muda a task para
+// COMPLETED (sem RII) ou PENDING_INSP1 (com RII).

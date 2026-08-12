@@ -9,7 +9,7 @@ $user = [usr_login]; // Variável global de login do Scriptcase
 sc_exec_sql("UPDATE mro_tasks SET status_code = 'PENDING_COORD' WHERE task_id = $id");
 
 // 2. Grava o Audit Log (Assinatura Digital)
-sc_exec_sql("INSERT INTO mro_nrc_approval_log (task_id, action_taken, user_login) VALUES ($id, 'SENT_TO_CODRDINATOR', '$user')");
+sc_exec_sql("INSERT INTO mro_task_history (task_id, action_taken, user_login) VALUES ($id, 'SENT_TO_CODRDINATOR', '$user')");
 
 // 3. Commit e redireciona
 sc_commit_trans();

@@ -1,0 +1,21 @@
+<?php
+
+// ====================================================================
+// MRO-126: Estado do botao de aprovacao por linha
+// state1 -> "Aprovar"  (botao ativo quando a task esta em SUPSIG)
+// state2 -> "Aprovado" (feedback visual, desabilitado)
+//
+// O estado e definido para CADA linha (padrao ScriptCase por registro).
+// ====================================================================
+
+// Habilita o botao por padrao para a linha
+sc_actionbar_enable('btn_aprovar');
+
+// Task em SUPSIG pode ser aprovada (state1)
+if ({status_code} == 'SUPSIG') {
+    sc_actionbar_state('btn_aprovar', 'state1');
+} else {
+    // Task ja processada - mostra "Aprovado" desabilitado (state2)
+    sc_actionbar_state('btn_aprovar', 'state2');
+    sc_actionbar_disable('btn_aprovar');
+}

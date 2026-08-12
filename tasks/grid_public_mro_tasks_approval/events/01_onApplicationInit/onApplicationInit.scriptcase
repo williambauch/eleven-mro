@@ -1,0 +1,6 @@
+<?php
+
+// Grid de Aprovacao do Supervisor (tasks em SUPSIG) - somente leitura
+sc_apl_conf("grid_public_mro_tasks_approval", "insert", "off");
+sc_apl_conf("grid_public_mro_tasks_approval", "update", "off");
+sc_apl_conf("grid_public_mro_tasks_approval", "delete", "off");

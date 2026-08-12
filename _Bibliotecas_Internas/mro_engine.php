@@ -139,16 +139,16 @@ function fn_calcular_oa_nrc($v_task_id, $v_projeto_atual, $debug = false) {
         if (in_array($status_atual, ['RELEASED', 'APPROVED', 'COMPLETED'])) {
             $novo_status = 'PENDING_OA';
             $msg = "Revisão Automática: Custo atualizado excedeu o CAP do contrato. Tarefa bloqueada para re-aprovação do cliente.";
-            // MRO-117: Registra em mro_nrc_approval_log
-            sc_exec_sql("INSERT INTO mro_nrc_approval_log (task_id, action_taken, user_login, remarks) 
+            // MRO-117: Registra em mro_task_history
+            sc_exec_sql("INSERT INTO mro_task_history (task_id, action_taken, user_login, remarks) 
                          VALUES ($v_task_id, 'OA_REVISION', 'mro_engine', '$msg')");
         } elseif ($status_atual != 'DRAFT') {
             // Se estava em PENDING_ENG ou PENDING_PROG, pula pra PENDING_OA
             $novo_status = 'PENDING_OA'; 
             
-            // MRO-117: Adiciona log de auditoria no mro_nrc_approval_log
+            // MRO-117: Adiciona log de auditoria no mro_task_history
             $msg = "Revisao Automatica: Custo ultrapassou o limite do CAP do contrato. Encaminhado para aprovacao do cliente.";
-            sc_exec_sql("INSERT INTO mro_nrc_approval_log (task_id, action_taken, user_login, remarks)
+            sc_exec_sql("INSERT INTO mro_task_history (task_id, action_taken, user_login, remarks)
                          VALUES ($v_task_id, 'OA_REVISION', 'mro_engine', '$msg')");
         }
 
@@ -166,18 +166,18 @@ function fn_calcular_oa_nrc($v_task_id, $v_projeto_atual, $debug = false) {
         // A NRC vai direto pra RELEASED (aprovacao automatica).
         if ($status_atual == 'PENDING_PROG') {
             $novo_status = 'RELEASED';
-            // MRO-117: Registra aprovacao automatica em mro_nrc_approval_log
+            // MRO-117: Registra aprovacao automatica em mro_task_history
             $msg = "Aprovação Automática: Custo 100% coberto pelo CAP do contrato. NRC liberada.";
-            sc_exec_sql("INSERT INTO mro_nrc_approval_log (task_id, action_taken, user_login, remarks) 
+            sc_exec_sql("INSERT INTO mro_task_history (task_id, action_taken, user_login, remarks) 
                          VALUES ($v_task_id, 'AUTO_APPROVE', 'mro_engine', '$msg')");
         }
 
         // Se a tarefa estava bloqueada aguardando o cliente (PENDING_OA), e o custo baixou, aprova automático!
         if ($status_atual == 'PENDING_OA') {
             $novo_status = 'RELEASED';
-            // MRO-117: Registra aprovacao automatica em mro_nrc_approval_log
+            // MRO-117: Registra aprovacao automatica em mro_task_history
             $msg = "Aprovação Automática: Custo atualizado agora está 100% coberto pelo CAP do contrato.";
-            sc_exec_sql("INSERT INTO mro_nrc_approval_log (task_id, action_taken, user_login, remarks) 
+            sc_exec_sql("INSERT INTO mro_task_history (task_id, action_taken, user_login, remarks) 
                          VALUES ($v_task_id, 'AUTO_APPROVE', 'mro_engine', '$msg')");
         }
 

@@ -7,7 +7,7 @@ $user = [usr_login]; // Variável global de login do Scriptcase
 sc_exec_sql("UPDATE mro_tasks SET status_code = 'COMMERCIAL_REVIEW' WHERE task_id = $id");
 
 // 2. Grava o Audit Log (Assinatura Digital)
-sc_exec_sql("INSERT INTO mro_nrc_approval_log (task_id, action_taken, user_login) VALUES ($id, 'REJECTED_BY_CLIENT', '$user')");
+sc_exec_sql("INSERT INTO mro_task_history (task_id, action_taken, user_login) VALUES ($id, 'REJECTED_BY_CLIENT', '$user')");
 
 // 3. Alerta e recarrega
 //sc_alert("NR Reprovada!");

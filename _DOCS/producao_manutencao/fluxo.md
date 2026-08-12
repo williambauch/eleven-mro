@@ -11,7 +11,7 @@ Módulo responsável pela execução das tarefas no chão de fábrica. Abrange d
 - [Alocações — A Distribuir (form_public_mro_task_assignments_planned)](form_public_mro_task_assignments_planned.md) — tarefas planejadas aguardando alocação.
 - [Alocações — Em Andamento (form_public_mro_task_assignments_progress)](form_public_mro_task_assignments_progress.md) — tarefas em execução pelos mecânicos.
 - [Alocações — Bloqueadas (form_public_mro_task_assignments_blocked)](form_public_mro_task_assignments_blocked.md) — tarefas com impedimentos reportados.
-- [Alocações — Concluídas (form_public_mro_task_assignments_completed)](form_public_mro_task_assignments_completed.md) — tarefas finalizadas.
+- [Alocações — Concluídas (grid_public_mro_task_assignments_completed)](grid_public_mro_task_assignments_completed.md) — tarefas finalizadas.
 - [Alocações V2 (form_public_mro_task_assignments_1)](form_public_mro_task_assignments_1.md) — versão alternativa do formulário de alocações.
 - [Assinaturas (form_public_mro_task_signoffs)](form_public_mro_task_signoffs.md) — registro de assinaturas digitais de qualidade.
 - [Grid de Assinaturas (grid_public_mro_task_signoffs)](grid_public_mro_task_signoffs.md) — consulta de assinaturas registradas.

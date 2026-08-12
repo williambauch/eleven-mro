@@ -309,4 +309,35 @@ ON CONFLICT (app_name, group_id) DO UPDATE SET
 | `PENDING_PROG` + dentro do CAP | → `RELEASED` | `AUTO_APPROVE` |
 | `PENDING_OA` + dentro do CAP | → `RELEASED` | `AUTO_APPROVE` |
 
+---
+
+### Renomeação `mro_nrc_approval_log` → `mro_task_history` (MRO-126)
+
+**Data:** 12/08/2026
+
+**Motivo:** A tabela deixou de ser usada **somente** para Não-Rotinas — desde esta tarefa ela é o log único de auditoria de transições de status das tasks (rotinas e NRCs). O nome antigo ("nrc_approval") não refletia mais o propósito real.
+
+**Migration:** `__Tarefas/MRO-126/migrations/04_MRO-126_rename_mro_task_history.sql`
+```sql
+ALTER TABLE "public".mro_nrc_approval_log RENAME TO mro_task_history;
+ALTER SEQUENCE "public".mro_nrc_approval_log_log_id_seq RENAME TO mro_task_history_log_id_seq;
+COMMENT ON TABLE "public".mro_task_history IS 'Log de auditoria de transicoes de status das tasks (rotinas e NRCs). Substitui o antigo mro_nrc_approval_log.';
+```
+
+**Impacto:**
+- **1 FK** (`task_id → mro_tasks`) preservada automaticamente pelo `RENAME`
+- **0 views** e **0 apps ScriptCase** usavam a tabela como fonte
+- **92 registros** preservados
+
+**Arquivos de código atualizados (21):**
+- `_Bibliotecas_Internas/mro_engine.php` — 4 INSERTs (`OA_REVISION`, `AUTO_APPROVE`)
+- `tasks/form_public_mro_tasks/button/` — 9 botões (`btn_validar_prog`, `btn_validar_prog_rotina`, `btn_aprovar_cliente`, `btn_cancelar`, `btn_enviar_*`, `btn_reprovar_cliente`)
+- `tasks/form_public_mro_nrc/button/` — 9 botões (mesmos fluxos da app legada)
+- `Timesheet/control_pause_task/events/07_onValidateSuccess/` — `SENT_TO_PROG_VIA_HANDOVER`
+- `Over And Above/grid_mro_tasks_oa_details/button/` — 2 botões (Aprovar/Reprovar)
+
+**Documentação completa do antes/depois:** `__Tarefas/MRO-126/rename_mro_task_history.md`
+
+> ⚠️ **Nota:** o histórico desta tarefa (MRO-117) e o `backup_11082026_mro_engine.php` citam o nome antigo `mro_nrc_approval_log` — intencional, pois documentam o estado anterior.
+
 
