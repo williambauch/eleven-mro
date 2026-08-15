@@ -1,0 +1,30 @@
+<?php
+
+// MRO-126: formata o description do sc_log de forma legivel no grid.
+// O ScriptCase grava no formato:
+//   "--> keys <-- task_id : 28840||--> fields <-- campo (old) : X||campo (new) : Y||campo (label) : Nome"
+// Aqui transformamos em linhas com quebra para facilitar a leitura.
+// O resultado vai no campo virtual {description_formated} (nao altera o raw).
+
+$var_desc_raw = trim({description});
+
+if (empty($var_desc_raw)) {
+    {description_formated} = '-';
+} else {
+    // Substitui o separador || por quebra de linha + identacao
+    $var_desc_formatado = str_replace('||', "\n", $var_desc_raw);
+
+    // Troca "--> keys <--" por um marcador visual.
+    // ATENCAO: nao usar [CHAVE] (colchetes) — o ScriptCase interpreta [x] como
+    // variavel global. Usamos >>CHAVE<< e >>CAMPOS ALTERADOS<< (neutros).
+    $var_desc_formatado = str_replace('--> keys <--', '>>CHAVE<<', $var_desc_formatado);
+    // Troca "--> fields <--" por um marcador visual
+    $var_desc_formatado = str_replace('--> fields <--', '>>CAMPOS ALTERADOS<<', $var_desc_formatado);
+
+    // Marca old/new com cores para facilitar a leitura (via HTML simples)
+    // (old)  -> vermelho  | (new)  -> verde
+    $var_desc_formatado = str_replace('(old)', '<span style="color:#c62828;">(old)</span>', $var_desc_formatado);
+    $var_desc_formatado = str_replace('(new)', '<span style="color:#188038;">(new)</span>', $var_desc_formatado);
+
+    {description_formated} = nl2br($var_desc_formatado);
+}

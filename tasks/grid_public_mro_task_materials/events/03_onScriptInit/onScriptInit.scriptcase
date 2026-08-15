@@ -1,12 +1,4 @@
 <?php
-/*----------------------------------------------------
-  ScriptCase Event File
-  Application: grid_public_mro_task_materials
-  Type: Grid
-  Event: onScriptInit
-  Created: 05/08/2026
-  Author: WBAUCH
-----------------------------------------------------*/
 
 // MRO-121: Se a task esta em status final ou liberado (RELEASED),
 // desativa os botoes de edicao/exclusao — o trabalho ja foi distribuido.

@@ -10,19 +10,13 @@
       "pk": true
     },
     {
-      "nome": "budgeted_hours",
-      "tipo": "numeric",
-      "required": false,
-      "pk": false
-    },
-    {
-      "nome": "created_at",
-      "tipo": "datetime",
-      "required": false,
-      "pk": false
-    },
-    {
       "nome": "project_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "task_id",
       "tipo": "int4",
       "required": false,
       "pk": false
@@ -34,8 +28,14 @@
       "pk": false
     },
     {
-      "nome": "task_id",
-      "tipo": "int4",
+      "nome": "budgeted_hours",
+      "tipo": "numeric",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "created_at",
+      "tipo": "datetime",
       "required": false,
       "pk": false
     },

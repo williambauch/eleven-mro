@@ -114,12 +114,7 @@
         <span class="legend-item"><span style="display:inline-block;width:20px;border-top:2px dashed #c62828"></span> Reavaliar</span>
     </div>
 
-    <div style="margin: 0 15px 10px 15px; padding: 8px 12px; background: #fff5f5; border: 1px solid #feb2b2; border-radius: 6px; font-size: 12px; color: #742a2a;">
-        <strong>⚠️ Pontos a reavaliar:</strong>
-        <ol style="margin: 6px 0 0 16px; padding: 0;">
-            <li><strong>SUPSIG → PENDING_INSP1 → PENDING_INSP2 → COMPLETED não implementado:</strong>.</li>
-        </ol>
-    </div>
+
 
     <div class="zoom-toolbar">
         <button type="button" onclick="mroZoomOut()">−</button>
@@ -129,6 +124,9 @@
         <span class="separator"></span>
         <button type="button" onclick="mroZoomFit()">Ajustar</button>
         <button type="button" onclick="mroZoomReset()">100%</button>
+        <button type="button" onclick="mroZoomSet(2)">200%</button>
+        <button type="button" onclick="mroZoomSet(2.3)">230%</button>
+        <button type="button" onclick="mroZoomSet(2.5)">250%</button>
     </div>
 
     <div class="diagram-box">
@@ -140,7 +138,11 @@ flowchart LR
     B2 --> B3[NOT_STARTED<br/>Task]
 
     B3 -- btn_liberar_para_execucao<br/>(grid) --> R1[RELEASED<br/>Task]
-    R1 -. cria slots NOT_STARTED<br/>por skill (LABOR),<br/>sem mecânico .-> SV{Painel Supervisor<br/>decide alocação <br/>👤 Supervisor}
+    R1 -. cria slots NOT_STARTED<br/>por skill (LABOR),<br/>sem mecânico .-> SV{menu_supervisor<br/>A Distribuir<br/>👤 Supervisor}
+
+    %% Abas do menu_supervisor: Em Andamento (grid_public_mro_task_assignments_progress),
+    %% Com Impedimentos (grid_public_mro_task_assignments_blocked),
+    %% Concluídas (grid_public_mro_task_assignments_completed)
 
     %% MRO-126: ao atribuir o 1o mecanico, a task sai de RELEASED e vai para IN_PROGRESS
     SV -- atribui 1º mecânico --> TI[IN_PROGRESS<br/>Task]
@@ -150,8 +152,15 @@ flowchart LR
 
     M -- concluído --> Q([SUPSIG<br/>Assignment])
     %% MRO-126: quando o ultimo assignment conclui (SUPSIG) e nao restam outros ativos, a task tambem vai para SUPSIG
-    Q -- último assignment<br/>concluido, sem outros<br/> ativos --> QTS[SUPSIG<br/>Task<br/>👤 Supervisor]
-    QTS -. transição de<br/>assinatura não<br/>implementada .-> CM[COMPLETED<br/>③ só via P6<br/>Task]
+    Q -- último assignment<br/>concluido, sem outros<br/> ativos --> QTS[SUPSIG<br/>Task]
+    QTS -- Tarefa: Finalização<br/>(👤 Supervisor) --> RII{Exige inspeção<br/>RII?}
+    RII -- Não (requires_rii=false<br/>e is_rii=false) --> CM[COMPLETED<br/>Task]
+    RII -- Sim (requires_rii=true<br/>ou is_rii=true) --> INSP1[PENDING_INSP1<br/>Task]
+    INSP1 -- Tarefa: Inspeção <br/>(🕵️ Inspetor 1) --> DUP{Duplo check<br/>is_rii?}
+    DUP -- Não --> CM
+    DUP -- Sim --> INSP2[PENDING_INSP2<br/>Task]
+    INSP2 -- 🕵️ Inspetor 2<br/>(diferente do<br/>Inspetor 1) --> CM
+    CM --> REG[Todas Tasks COMPLETED<br/>Painel de Registros<br/> Time de Registro]
     M -- finalizar turno / repasse --> H2([PENDING_HANDOVER<br/>Assignment])
     M -- pausa rotineira --> P([PAUSED<br/>Assignment])
     M -- impedimento<br/>(material, ferramenta<br/>qualidade/eng) --> BL([BLOCKED<br/>Assignment])
@@ -181,11 +190,16 @@ flowchart LR
     style R2 fill:#e8f5e9,stroke:#2e7d32,color:#000
     style AJ fill:#fce4ec,stroke:#c62828,color:#000
     style Q fill:#e8f5e9,stroke:#2e7d32,color:#000
-    style QTS fill:#e8f5e9,stroke:#c62828,color:#000,stroke-width:2px
-    style CM fill:#e8f5e9,stroke:#2e7d32,color:#000,opacity:0.5,stroke-dasharray: 5 5
+    style QTS fill:#e8f5e9,stroke:#2e7d32,color:#000
+    style RII fill:#fff8e1,stroke:#f9a825,color:#000
+    style INSP1 fill:#fff3e0,stroke:#e65100,color:#000
+    style DUP fill:#fff8e1,stroke:#f9a825,color:#000
+    style INSP2 fill:#fff3e0,stroke:#e65100,color:#000
+    style CM fill:#e8f5e9,stroke:#2e7d32,color:#000
+    style REG fill:#f3e5f5,stroke:#6a1b9a,color:#000
 
-    %% Retorno tracejado laranja: AJ->PG(18)
-    linkStyle 18 stroke:#ff6f00,stroke-width:2px,stroke-dasharray: 5 5
+    %% Retorno tracejado laranja: AJ->PG(25)
+    linkStyle 25 stroke:#ff6f00,stroke-width:2px,stroke-dasharray: 5 5
             </div>
         </div>
     </div>
@@ -285,6 +299,7 @@ flowchart LR
         function mroZoomIn() { mroZoomAtual = Math.min(3, mroZoomAtual + 0.1); mroAplicarZoom(); }
         function mroZoomOut() { mroZoomAtual = Math.max(0.2, mroZoomAtual - 0.1); mroAplicarZoom(); }
         function mroZoomReset() { mroZoomAtual = 1; mroPanX = 0; mroPanY = 0; mroAplicarZoom(); }
+        function mroZoomSet(v) { mroZoomAtual = Math.min(3, Math.max(0.2, v)); mroPanX = 0; mroPanY = 0; mroAplicarZoom(); }
 
         function mroZoomFit() {
             var svg = document.querySelector('.mermaid svg');

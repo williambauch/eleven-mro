@@ -2,22 +2,49 @@
 
 // ====================================================================
 // MRO-126: Aprovação da task pelo Supervisor (SUPSIG -> COMPLETED/PENDING_INSP1)
-// Botao AJAX da barra de acao com 2 estados:
-//   state1 -> "Aprovar"   (botao ativo)
-//   state2 -> "Aprovado"  (feedback visual apos aprovar)
+// Botão AJAX da barra de ação com 2 estados:
+//   state1 -> "Aprovar"   (botão ativo)
+//   state2 -> "Aprovado"  (feedback visual após aprovar)
 //
 // Fluxo:
 //  - Task sem RII (requires_rii=false E is_rii=false) -> COMPLETED
 //  - Task com RII (requires_rii=true OU is_rii=true)   -> PENDING_INSP1
 //
 // Idempotente: UPDATE com WHERE status_code = 'SUPSIG' garante que
-// a task so e aprovada uma unica vez (race condition segura).
+// a task só é aprovada uma única vez (race condition segura).
+//
+// ====================================================================
+// DOCUMENTAÇÃO DOS CAMPOS RII 
+// ====================================================================
+// requires_rii e is_rii são DOIS conceitos distintos (NÃO são redundantes):
+//
+//   | Campo          | Significado                                                | Tipo de inspeção            |
+//   |----------------|------------------------------------------------------------|-----------------------------|
+//   | requires_rii   | "Esta task REQUER uma inspeção RII" (precisa passar por      | Inspeção Simples (1 inspetor)|
+//   |                |  inspeção antes da conclusão)                                |                             |
+//   | is_rii         | "Esta task É um item RII" (vem da lista de itens críticos     | Duplo Check (2 inspetores)  |
+//   |                |  RII/IIO)                                                   |                             |
+//
+//   | Combinação                          | Interpretação                     |
+//   |-------------------------------------|-----------------------------------|
+//   | requires_rii=false E is_rii=false   | Tarefa comum (sem inspeção)       |
+//   | requires_rii=false E is_rii=true    | Item RII — duplo check            |
+//   | requires_rii=true  E is_rii=true    | Requer + é RII                    |
+//   | requires_rii=true  E is_rii=false   | Requer inspeção simples           |
+//
+// No fluxo de aprovação:
+//   - Se requires_rii=true OU is_rii=true  -> a task vai para PENDING_INSP1 (fila de inspeção)
+//   - Se requires_rii=false E is_rii=false -> a task vai direto para COMPLETED
+//
+// O desdobramento (simples vs duplo check) acontece na assinatura do
+// Inspetor 1 (grid_public_mro_task_assignments_insp): is_rii=true leva a
+// task para PENDING_INSP2 (segundo inspetor); requires_rii apenas conclui.
 // ====================================================================
 
-// 1. Recupera o estado atual do botao no momento do clique
+// 1. Recupera o estado atual do botão no momento do clique
 $var_estado = sc_actionbar_clicked_state();
 
-// 2. Se ja estiver no estado "Aprovado" (state2), nao faz nada
+// 2. Se já estiver no estado "Aprovado" (state2), não faz nada
 if ($var_estado == 'state2') {
     sc_ajax_message("Esta tarefa já foi aprovada.", "Aprovação");
     return;
@@ -42,15 +69,15 @@ if ({rs_task} === false) {
 }
 
 if (empty({rs_task})) {
-    sc_ajax_message("Tarefa nao encontrada.", "Erro");
+    sc_ajax_message("Tarefa não encontrada.", "Erro");
     return;
 }
 
-// 4. So processa se a task ainda estiver SUPSIG (evita re-aprovacao)
+// 4. Só processa se a task ainda estiver SUPSIG (evita re-aprovação)
 if ({rs_task[0][0]} != 'SUPSIG') {
     sc_actionbar_state('btn_aprovar', 'state2');
     sc_actionbar_disable('btn_aprovar');
-    sc_ajax_message("Esta tarefa ja foi processada (status atual: " . {rs_task[0][0]} . ").", "Aprovação");
+    sc_ajax_message("Esta tarefa já foi processada (status atual: " . {rs_task[0][0]} . ").", "Aprovação");
     return;
 }
 
@@ -60,10 +87,10 @@ $var_is_rii  = ({rs_task[0][2]} == 't' || {rs_task[0][2]} === true || {rs_task[0
 $var_destino = ($var_req_rii || $var_is_rii) ? 'PENDING_INSP1' : 'COMPLETED';
 $var_acao    = ($var_req_rii || $var_is_rii) ? 'ROUTED_TO_INSP1' : 'APPROVED';
 
-// 5. Transacao atomica: atualiza a task + grava evento de auditoria
+// 5. Transação atômica: atualiza a task + grava evento de auditoria
 sc_begin_trans();
 
-// Auditoria antes de executar (regra de ouro)
+// Auditoria antes de executar  
 $var_desc = "Task " . $var_task_id . " aprovada pelo supervisor: SUPSIG -> " . $var_destino .
             " (requires_rii=" . ($var_req_rii ? 'true' : 'false') .
             ", is_rii=" . ($var_is_rii ? 'true' : 'false') . ")";
@@ -75,23 +102,17 @@ sc_exec_sql("UPDATE mro_tasks
              WHERE task_id = " . $var_task_id . "
                AND status_code = 'SUPSIG'");
 
-// 6. Evento de auditoria (assignment_id e nulo - acao e sobre a task)
-sc_exec_sql("INSERT INTO mro_assignment_events
-             (assignment_id, event_type, performed_by_id, description, user_agent)
-             VALUES
-             (NULL, '" . $var_acao . "', [usr_employee_id], '" . addslashes($var_desc) . "', '[usr_login]')");
-
-// 7. Registra a transicao de status no historico da task
+// 6. Registra a transição de status no histórico da task (auditoria exclusiva de task)
 sc_exec_sql("INSERT INTO mro_task_history (task_id, action_taken, user_login, remarks)
              VALUES (" . $var_task_id . ", '" . $var_acao . "', '[usr_login]', '" . addslashes($var_desc) . "')");
 
 sc_commit_trans();
 
-// 8. Feedback visual: muda o botao para o estado "Aprovado" (state2)
+// 7. Feedback visual: muda o botão para o estado "Aprovado" (state2)
 sc_actionbar_state('btn_aprovar', 'state2');
 sc_actionbar_disable('btn_aprovar');
 
-// 9. Recarrega a linha da grid para refletir o novo status
+// 8. Recarrega a linha da grid para refletir o novo status
 sc_ajax_refresh();
 
 sc_ajax_message("Tarefa aprovada! Status alterado para: " . $var_destino, "Aprovação");

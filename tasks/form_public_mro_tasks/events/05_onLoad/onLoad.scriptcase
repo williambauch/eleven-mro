@@ -94,12 +94,15 @@ if (!empty({is_nrc})) {
     // Avaliação de Status
     if ({status_code} == 'DRAFT') {
 
-        // FASE 1: DRAFT — somente quem criou pode alterar, independentemente do grupo
+        // FASE 1: DRAFT — MRO-126: qualquer mecanico habilitado pode editar a NRC
+        // (desvinculada a trava de proprietario do rascunho). O delete permanece
+        // restrito ao criador (operacao destrutiva).
+        sc_btn_display('btn_enviar_eng', 'on'); // btn_enviar_eng
+        sc_btn_display('btn_enviar_prog', 'on'); // btn_enviar_prog
+        sc_btn_display('update', 'on'); // update
+
         if ([usr_login] == {created_by}) {
-            sc_btn_display('btn_enviar_eng', 'on'); // btn_enviar_eng
-            sc_btn_display('btn_enviar_prog', 'on'); // btn_enviar_prog
-            sc_btn_display('delete', 'on'); // delete
-            sc_btn_display('update', 'on'); // update
+            sc_btn_display('delete', 'on'); // delete — somente o criador
         }
 
     } elseif ({status_code} == 'PENDING_ENG') {
@@ -209,6 +212,11 @@ if (!empty({task_id}) && {status_code} != 'DRAFT') {
     sc_field_readonly({baseline_phase_code}, 'on');
 } else {
     sc_field_readonly({baseline_phase_code}, 'off');
+}
+
+// Se estiver vazio abre para edição para resolver problema de tasks importadas
+if(empty({instruction_text})){
+	sc_field_readonly({instruction_text}, 'off');
 }
 
 // ====================================================================

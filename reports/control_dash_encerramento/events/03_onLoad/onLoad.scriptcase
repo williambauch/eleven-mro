@@ -1,0 +1,31 @@
+<?php
+
+// =========================================================================
+// CONTROL DASH ENCERRAMENTO - MRO-123
+// onLoad: preenche o campo label_filtro com texto explicativo sobre
+// o periodo e a origem das datas de encerramento das tasks.
+// =========================================================================
+
+{label_filtro} = "<div style='font-size:12px; line-height:1.6; color:#2a4365;'>" .
+    "<strong>&#9432; Sobre as datas de encerramento:</strong><br/>" .
+    "Informe as datas de <strong>início</strong> e <strong>fim</strong> do período para analisar o encerramento das tarefas. " .
+    "A data de encerramento considerada segue esta ordem de prioridade:<br/>" .
+    "&#8226; <strong>(1) Manual</strong> - <em>Actual End</em> preenchido manualmente (DIGEX) - fonte mais confiável;<br/>" .
+    "&#8226; <strong>(2) Produção</strong> - último <em>timesheet</em> encerrado da atribuição;<br/>" .
+    "&#8226; <strong>(3) P6</strong> - Usa a data de atualização da importação do Primavera P6." .
+    "</div>";
+
+// 2. PREENCHE OS CAMPOS ID Projeto se existir global (glo_project_id) - caso contrario, o usuario deve selecionar manualmente
+$var_projeto = (int)[glo_project_id];
+if ($var_projeto > 0) {
+    {projeto_id} = [glo_project_id];
+}
+
+ 
+// 3. SE AS DATAS ESTIVEREM VAZIAS, PREENCHE COM O PRIMEIRO E ULTIMO DIA DO MES CORRENTE
+if (empty({periodo_inicial})) {
+    {periodo_inicial} = date('Y-m-d', strtotime('first day of this month'));
+}
+if (empty({periodo_final})) {
+    {periodo_final} = date('Y-m-d', strtotime('last day of this month'));
+}

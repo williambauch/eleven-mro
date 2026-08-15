@@ -18,6 +18,7 @@
 | 10 | **COMERCIAL** | `comercial` | `Comercial@321` | Comercial / Vendas |
 | 11 | **COMPRAS** | `william` | `Eleven@2026` | Compras / Suprimentos |
 | 12 | **FERRAMENTARIA** | `ferramentaria` | `Ferramentaria@321` | Ferramentaria / Almoxarifado |
+| 13 | **REGISTRO** | `registro` | `Registro@321` | Time de Registros / Auditoria (ANAC) |
 
 ## Atuação de cada perfil no workflow de Não-Rotinas (NRC)
 
@@ -157,4 +158,18 @@ Perfil de **Compras / Suprimentos** — atua na aquisição de materiais e supri
 Perfil de **Ferramentaria / Almoxarifado** — gerencia ferramentas e movimentação de estoque.
 
 **No workflow NRC:** Não possui botões de ação específicos no workflow de NRC. Atua no controle de ferramentas e almoxarifado associado às tarefas.
+
+---
+
+### REGISTRO (`registro`)
+Perfil de **Time de Registros / Auditoria (ANAC)** — realiza a conferência final das tarefas concluídas.
+
+**Atuação (MRO-126):**
+- Acessa o **Painel de Registros** (`grid_public_mro_task_registro`) via menu **Auditoria**
+- Visualiza **exclusivamente** tarefas `COMPLETED` que passaram pelo **fluxo de inspeção RII** (possuem `INSPECTOR_1`/`INSPECTOR_2` no `mro_task_history`)
+- Realiza a conferência final dos metadados das assinaturas e gera o **Job Card eletrônico** ("Zero Papel"), arquivando o pacote de forma segura e auditável para a ANAC
+
+**Permissões:** Somente leitura (sem insert/update/delete), export e print liberados.
+
+**No workflow NRC:** Não participa do fluxo de aprovação — atua apenas na etapa final (auditoria e encerramento).
 

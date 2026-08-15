@@ -1,0 +1,6 @@
+<?php
+
+// Painel de Registros (Auditoria) - somente leitura
+sc_apl_conf("grid_public_mro_task_registro", "insert", "off");
+sc_apl_conf("grid_public_mro_task_registro", "update", "off");
+sc_apl_conf("grid_public_mro_task_registro", "delete", "off");

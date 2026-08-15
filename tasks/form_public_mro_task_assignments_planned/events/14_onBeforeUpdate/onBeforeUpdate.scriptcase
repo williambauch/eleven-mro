@@ -1,11 +1,14 @@
 <?php
 
 // MRO-120: Lógica para Atribuição de mecânico
-// Aceita PLANNED (criacao manual) e NOT_STARTED (criado pelo release)
+// Aceita PLANNED (criacao manual) e NOT_STARTED (criado pelo release/split)
+
+// O supervisor logado e SEMPRE o dono da atribuicao.
+// Aplicado fora do if para garantir que, em qualquer salvamento,
+// o supervisor_id reflita o supervisor atual logado.
+{supervisor_id} = [usr_employee_id];
+
 if (!empty({executed_by_employee_id}) && in_array({status_code}, ['PLANNED', 'NOT_STARTED'])) {
-    
-    // Define o supervisor logado como dono da tarefa
-    {supervisor_id} = [usr_employee_id];
     
     // Atualiza o status para Atribuído
     {status_code} = 'ASSIGNED';

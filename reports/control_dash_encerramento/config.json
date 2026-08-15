@@ -4,27 +4,27 @@
   "nome_tabela": "control_dash_encerramento",
   "campos": [
     {
-      "nome": "projeto_id",
-      "tipo": "int4",
-      "required": true,
-      "pk": false
-    },
-    {
-      "nome": "periodo_inicial",
-      "tipo": "date",
-      "required": true,
+      "nome": "label_filtro",
+      "tipo": "varchar",
+      "required": false,
       "pk": false
     },
     {
       "nome": "periodo_final",
       "tipo": "date",
-      "required": true,
+      "required": false,
       "pk": false
     },
     {
-      "nome": "label_filtro",
-      "tipo": "text",
-      "required": true,
+      "nome": "periodo_inicial",
+      "tipo": "date",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "projeto_id",
+      "tipo": "varchar",
+      "required": false,
       "pk": false
     }
   ]

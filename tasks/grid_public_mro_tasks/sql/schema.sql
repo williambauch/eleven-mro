@@ -58,5 +58,6 @@ SELECT
     corrective_action,
     is_milestone,
     is_blocked_predecessor,
-    is_predecessor_manual
+    is_predecessor_manual,
+    pending_id 
 FROM public.mro_tasks

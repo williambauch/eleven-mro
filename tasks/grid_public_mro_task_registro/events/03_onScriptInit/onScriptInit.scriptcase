@@ -1,0 +1,6 @@
+<?php
+
+// MRO-126: Painel do Time de Registros (Auditoria ANAC)
+// Exibe exclusivamente tasks COMPLETED para conferencia final
+// dos metadados das assinaturas (INSPECTOR_1/INSPECTOR_2 no mro_task_history)
+// e geracao do Job Card eletronico ("Zero Papel").

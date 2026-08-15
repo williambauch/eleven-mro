@@ -1,0 +1,14 @@
+<?php
+// ============================================================
+// BOTÃO DE BARRA DE AÇÃO: kanban
+// ============================================================
+// Tipo   : LINK
+// Label  : kanban
+// Ícone  : fas fa-table-columns
+// Estados:
+//   - state1 | fas fa-table-columns
+//
+// Liga para: blank_kanban_critical
+// Abertura  : Mesma janela
+// Parâmetros: C?#?project_id?#?var_project_id
+// ============================================================

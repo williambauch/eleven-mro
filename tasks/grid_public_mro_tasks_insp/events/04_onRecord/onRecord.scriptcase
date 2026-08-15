@@ -1,0 +1,56 @@
+<?php
+
+// ====================================================================
+// MRO-126: Estado do botão de assinatura do inspetor por linha
+// state1 -> "Assinar" (botão ativo para a fila de inspeção)
+// state2 -> "Assinado" (feedback visual, desabilitado)
+//
+// O estado é definido para CADA linha (padrão ScriptCase por registro).
+// ====================================================================
+
+// Habilita o botão por padrão para a linha
+sc_actionbar_enable('btn_assinar');
+
+// Variável de controle: só habilita se passar em todas as regras
+$var_pode_assinar = true;
+
+// 1. Regra: somente usuário marcado como inspetor pode assinar
+if (![usr_is_inspector]) {
+    $var_pode_assinar = false;
+}
+
+// 2. Regra: quem executou a task não pode inspecionar (segregação ANAC)
+if ($var_pode_assinar) {
+    $var_sql_exec = "SELECT COUNT(*) FROM mro_task_assignments
+                     WHERE task_id = " . (int){task_id} . "
+                       AND executed_by_employee_id = [usr_employee_id]";
+    sc_lookup(rs_exec, $var_sql_exec);
+    $var_executou = !empty({rs_exec}) ? (int){rs_exec[0][0]} : 0;
+
+    if ($var_executou > 0) {
+        $var_pode_assinar = false;
+    }
+}
+
+// 3. Regra: verifica se o inspetor logado já assinou esta task
+if ($var_pode_assinar) {
+    $var_sql_sign = "SELECT COUNT(*) FROM mro_task_history
+                     WHERE task_id = " . (int){task_id} . "
+                       AND action_taken IN ('INSPECTOR_1','INSPECTOR_2')
+                       AND user_login = '[usr_login]'";
+    sc_lookup(rs_sign, $var_sql_sign);
+    $var_ja_assinou = !empty({rs_sign}) ? (int){rs_sign[0][0]} : 0;
+
+    if ($var_ja_assinou > 0) {
+        $var_pode_assinar = false;
+    }
+}
+
+// Task na fila de inspeção e todas as regras ok -> state1
+if (in_array({status_code}, ['PENDING_INSP1','PENDING_INSP2']) && $var_pode_assinar) {
+    sc_actionbar_state('btn_assinar', 'state1');
+} else {
+    // Já assinou, não é inspetor, executou a task ou fora da fila -> desabilitado
+    sc_actionbar_state('btn_assinar', 'state2');
+    sc_actionbar_disable('btn_assinar');
+}

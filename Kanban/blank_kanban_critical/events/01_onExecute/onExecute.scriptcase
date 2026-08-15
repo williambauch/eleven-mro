@@ -1,111 +1,690 @@
 <?php
 
-/* * ============================================================================
- * MRO SYSTEM - KANBAN CLEAN INSTALL (NÚCLEO PURO)
+/* ============================================================================
+ * MRO SYSTEM - KANBAN POR FASE E STATUS DA TAREFA (MRO-126)
+ * Colunas por Status da TASK + swimlanes por Projeto > Fase Operacional.
+ * Badge vermelho no card quando a task possui flag de bloqueio.
+ * Suporte a 1 ou mais projetos (glo_project_ids / glo_project_id).
  * ============================================================================
  */
 
-// 1. FORÇAR EXIBIÇÃO DE ERROS PHP
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-// 2. BUSCA DE DADOS SUPER SIMPLIFICADA
-$project_filter = (isset([var_project_id]) && !empty([var_project_id])) ? [var_project_id] : 2; 
-$sql = "SELECT task_id, task_code, task_name, COALESCE(status_code, 'NOT_STARTED') as status_chave, COALESCE(phase_code, 'Sem Fase') as fase_nome FROM mro_tasks WHERE project_id = $project_filter";
+$var_usuario_logado = (isset([usr_login]) && !empty([usr_login])) ? trim([usr_login]) : 'SISTEMA_KANBAN';
 
-sc_select(rs, $sql);
+// ----------------------------------------------------------------------------
+// 1. CAPTURA DO FILTRO DE PROJETO (mesmo padrao do blank_gantt)
+// ----------------------------------------------------------------------------
+$var_project_ids = array();
+
+if (isset([glo_project_ids]) && !empty([glo_project_ids])) {
+    foreach (explode(',', (string)[glo_project_ids]) as $var_p) {
+        $var_p = trim($var_p);
+        if (preg_match('/^\d+$/', $var_p)) {
+            $var_project_ids[] = (int)$var_p;
+        }
+    }
+}
+
+if (empty($var_project_ids) && isset([glo_project_id]) && !empty([glo_project_id]) && preg_match('/^\d+$/', (string)[glo_project_id])) {
+    $var_project_ids[] = (int)[glo_project_id];
+}
+
+if (empty($var_project_ids)) {
+    echo "<html><body style='font-family:Roboto,Arial,sans-serif;background:#f4f6f8;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;'>"
+       . "<div style='background:#fff;border:1px solid #e2e8f0;border-left:4px solid #fc8181;border-radius:6px;padding:20px 24px;max-width:480px;box-shadow:0 2px 6px rgba(0,0,0,.05);'>"
+       . "<h3 style='margin:0 0 8px;color:#c53030;font-size:16px;'>Projeto nao informado</h3>"
+       . "<p style='margin:0;color:#4a5568;font-size:13px;line-height:1.5;'>A aplicacao de origem deve definir <strong>glo_project_ids</strong> (lista) ou <strong>glo_project_id</strong> antes de abrir o Kanban.</p>"
+       . "</div></body></html>";
+    exit;
+}
+
+$var_where = ' WHERE t.project_id IN (' . implode(', ', $var_project_ids) . ')';
+
+// Descricao dos projetos (p6_proj_id) para o cabecalho
+$var_sql_proj = "SELECT project_id, p6_proj_id
+                 FROM mro_projects
+                 WHERE project_id IN (" . implode(', ', $var_project_ids) . ")
+                 ORDER BY project_id";
+sc_lookup(rs_proj_desc, $var_sql_proj);
+
+$var_cods = array();
+if ({rs_proj_desc} !== false && is_array({rs_proj_desc}) && count({rs_proj_desc}) > 0) {
+    foreach ({rs_proj_desc} as $var_row) {
+        $var_cods[] = (!empty($var_row[1])) ? trim($var_row[1]) : ('Proj ' . (int)$var_row[0]);
+    }
+}
+$var_proj_descricao = empty($var_cods) ? ('Projetos ' . implode(', ', $var_project_ids)) : implode(', ', $var_cods);
+
+// DEBUG: filtros recebidos
+$var_debug = "DEBUG kanban -> glo_project_ids: '" . (isset([glo_project_ids]) ? [glo_project_ids] : 'NAO SETADO') .
+    "' | glo_project_id: '" . (isset([glo_project_id]) ? [glo_project_id] : 'NAO SETADO') .
+    "' | projetos: '" . implode(',', $var_project_ids) . "'";
+sc_log_add("kanban_critical_debug", $var_debug);
+
+// ----------------------------------------------------------------------------
+// 2. DADOS DO KANBAN (tasks por status + fase, com flags de bloqueio)
+// ----------------------------------------------------------------------------
+$var_sql = "SELECT
+                t.task_id,
+                t.task_code,
+                t.task_name,
+                COALESCE(t.status_code, 'NOT_STARTED') AS status_chave,
+                COALESCE(t.phase_code, 'Sem Fase') AS fase_nome,
+                COALESCE(p.p6_proj_id, 'Proj ' || t.project_id) AS projeto,
+                COALESCE(t.is_nrc, false) AS is_nrc,
+                COALESCE(t.is_blocked_material, false) AS blk_mat,
+                COALESCE(t.is_blocked_tool, false) AS blk_fer,
+                COALESCE(t.is_blocked_labor, false) AS blk_mao,
+                COALESCE(t.is_blocked_predecessor, false) AS blk_pred,
+                COALESCE(t.is_predecessor_manual, false) AS blk_pred_man
+            FROM mro_tasks t
+            JOIN mro_projects p ON p.project_id = t.project_id" . $var_where . "
+            ORDER BY p.p6_proj_id, t.phase_code, t.task_id";
+
+sc_select(rs, $var_sql);
+
 $data = array();
 
-if ({rs} !== false) {
-    while (!{rs}->EOF) {
+if (isset($rs->fields)) {
+    while (!$rs->EOF) {
+        $var_blk = '';
+        if ({rs}->fields['blk_pred_man'] == true)      { $var_blk = 'pred_manual'; }
+        elseif ({rs}->fields['blk_pred'] == true)       { $var_blk = 'pred'; }
+        elseif ({rs}->fields['blk_mat'] == true)        { $var_blk = 'mat'; }
+        elseif ({rs}->fields['blk_fer'] == true)        { $var_blk = 'fer'; }
+        elseif ({rs}->fields['blk_mao'] == true)        { $var_blk = 'mao'; }
+
+        // Swimlane: Projeto > Fase (agrupa por projeto no multi-projeto)
+        $var_swimlane = trim({rs}->fields['projeto']) . ' > ' . trim({rs}->fields['fase_nome']);
+
+        // Link do form por task (padrao do blank_gantt - sem placeholder no sc_make_link)
+        $var_url_edit = sc_make_link(form_public_mro_tasks, task_id={rs}->fields['task_id']);
+
         $data[] = array(
-            'Id'      => {rs}->fields['task_id'],
-            'Status'  => {rs}->fields['status_chave'],
-            'Summary' => utf8_encode({rs}->fields['task_name']),
-            'Code'    => utf8_encode({rs}->fields['task_code']),
-            'Phase'   => utf8_encode({rs}->fields['fase_nome'])
+            'Id'          => {rs}->fields['task_id'],
+            'Status'      => {rs}->fields['status_chave'],
+            'Summary'     => trim({rs}->fields['task_name']),
+            'Code'        => trim({rs}->fields['task_code']),
+            'ProjetoFase' => $var_swimlane,
+            'IsNrc'       => ({rs}->fields['is_nrc'] == true) ? 'NRC' : '',
+            'Bloqueio'    => $var_blk,
+            'FormTaskUrl' => $var_url_edit
         );
         {rs}->MoveNext();
     }
     {rs}->Close();
 }
 
-$json_datasource = json_encode($data, JSON_HEX_QUOT | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS);
+$json_datasource = json_encode($data) ?: '[]';
+$var_link_voltar = sc_make_link(grid_public_mro_projects);
 ?>
 
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Kanban Clean Install</title>
-    
+    <title>MRO System - Kanban por Fase e Status</title>
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="/libs/syncfusion/styles/material3.css" rel="stylesheet">
     <script src="/libs/syncfusion/scripts/ej2-syncfusion.js" type="text/javascript"></script>
     <script src="/libs/syncfusion/mro_config.js" type="text/javascript"></script>
-	<!--
-    <link href="https://cdn.syncfusion.com/ej2/24.1.41/material.css" rel="stylesheet">
-    <script src="https://cdn.syncfusion.com/ej2/24.1.41/dist/ej2.min.js" type="text/javascript"></script>
-    -->
+
     <style>
-        body, html { margin: 0; padding: 0; height: 100vh; background-color: #f4f6f9; }
-        #KanbanContainer { display: block; width: 100%; height: 100%; }
+        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: 'Roboto', 'Segoe UI', Tahoma, sans-serif; background-color: #f4f6f8; }
+
+        .dashboard-header {
+            font-size: 18px;
+            color: #1a202c;
+            margin-bottom: 4px;
+            font-weight: 600;
+            border-bottom: 2px solid #e2e8f0;
+            padding: 12px 15px 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-voltar-filtro {
+            margin-left: auto;
+            background: #edf2f7;
+            border: 1px solid #cbd5e0;
+            color: #2d3748;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 6px 14px;
+            border-radius: 4px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+        .btn-voltar-filtro:hover { background: #e2e8f0; border-color: #a0aec0; }
+
+        .badge-projeto {
+            background: #1a202c;
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        .dashboard-sub {
+            font-size: 13px;
+            color: #4a5568;
+            margin-bottom: 10px;
+            padding: 0 15px;
+        }
+        .sub-linha { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; line-height: 1.6; }
+
+        .badge-status {
+            font-size: 10px; font-weight: 700; padding: 2px 8px;
+            border-radius: 10px; text-transform: uppercase; letter-spacing: 0.4px;
+        }
+        .badge-status.status-in-progress { background: #fefcbf; color: #744210; }
+        .badge-status.status-hint { background: #bee3f8; color: #2a4365; }
+
+        /* Barra de ferramentas (expandir/recolher swimlanes) - mesmo visual da toolbar do Gantt */
+        .kanban-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 6px 12px;
+            margin: 0 15px 10px;
+            box-shadow: 0 1px 3px rgba(0,0,0,.04);
+        }
+        .kanban-toolbar .tb-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #4a5568;
+            margin-right: 4px;
+        }
+        .kanban-toolbar .tb-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #edf2f7;
+            border: 1px solid #cbd5e0;
+            color: #2d3748;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 5px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Roboto', 'Segoe UI', Tahoma, sans-serif;
+        }
+        .kanban-toolbar .tb-btn:hover { background: #e2e8f0; border-color: #a0aec0; }
+        .kanban-toolbar .tb-btn i { font-size: 11px; }
+
+        /* Tooltip estilo tippy dos headers de coluna (status agrupados) */
+        #kanbanTippy {
+            position: fixed;
+            z-index: 99999;
+            display: none;
+            background: #1a202c;
+            color: #fff;
+            font-family: 'Roboto', 'Segoe UI', Tahoma, sans-serif;
+            font-size: 11px;
+            line-height: 1.6;
+            padding: 8px 10px;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,.28);
+            max-width: 280px;
+            pointer-events: none;
+        }
+        #kanbanTippy .tt-titulo {
+            display: block;
+            margin-bottom: 4px;
+            color: #fbbf24;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+        }
+        #kanbanTippy .tt-status {
+            display: block;
+            padding-left: 2px;
+        }
+
+        /* Card do Kanban */
+        /* RESET GLOBAL: o .e-card do Syncfusion herda line-height: 36px e font-size: 15px,
+           inflando a altura de qualquer elemento com texto dentro do card (badge, NRC, avatar).
+           Normaliza o line-height de todo o template do card. */
+        .card-template,
+        .card-template * { line-height: normal; box-sizing: border-box; }
+
+        .card-template { display: flex; flex-direction: column; height: 100%; padding: 2px; }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+        .card-code {
+            font-weight: bold; color: #495057; font-size: 10px;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 65%;
+        }
+        .card-content {
+            font-size: 12px; color: #212529; line-height: 1.35; font-weight: 500;
+            overflow-wrap: break-word; word-break: break-word;
+            display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+        }
+        .card-footer { margin-top: 8px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #dee2e6; padding-top: 5px; }
+
+        .tag-nrc {
+            background-color: #ffebee;
+            color: #c62828;
+            border: 1px solid #ffcdd2;
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-size: 9px;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            height: 16px;
+            line-height: 1;
+        }
+
+        /* Badge de bloqueio (vermelho) */
+        .tag-bloqueio {
+            background-color: #dc3545;
+            color: #fff;
+            border-radius: 10px;
+            padding: 1px 6px;
+            font-size: 9px;
+            font-weight: bold;
+            line-height: 1.2;
+            height: 16px;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+        }
+        .tag-bloqueio i,
+        .tag-nrc i {
+            font-size: 8px;
+            line-height: 1;
+        }
+
+        /* Avatar do card: pilula (borda arredondada) sem herdar line-height do .e-card.
+           Exibe o task_id da tarefa para identificacao rapida no card. */
+        .e-card-avatar {
+            line-height: normal !important;
+            font-size: 10px;
+            font-weight: 600;
+            background: #e9ecef;
+            color: #495057;
+            min-width: 24px;
+            height: 16px;
+            padding: 0 6px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .e-card { border-left: 4px solid transparent; }
+
+        /* Drag desativado: mesmo com allowDragAndDrop: false, o Syncfusion cria
+           uma instancia Draggable por card (classe e-draggable) e aplica cursor
+           all-scroll. Forca cursor default para nenhum card parecer arrastavel. */
+        #KanbanContainer .e-card,
+        #KanbanContainer .e-card:hover {
+            cursor: default !important;
+        }
+
+        /* Alinhamento vertical do contador no cabecalho da coluna.
+           O .e-header-title e um flex container; o .e-item-count herda
+           margin-top: 2px e line-height 1.625 do Syncfusion, desalinhando
+           o numero em relacao ao titulo da coluna. */
+        #KanbanContainer .e-kanban-header .e-header-cells .e-header-title {
+            align-items: center;
+        }
+        #KanbanContainer .e-kanban-header .e-header-cells .e-item-count {
+            margin-top: 0;
+            line-height: normal;
+        }
+
+        /* Altura fixa do container com rolagem interna (vertical) do conteudo do board.
+           Subtrai tambem a altura da barra de ferramentas (kanban-toolbar). */
+        #KanbanContainer { height: calc(100vh - 140px); width: 100%; }
+        #KanbanContainer .e-kanban {
+            height: 100%;
+        }
+        #KanbanContainer .e-kanban-content {
+            overflow-y: auto !important;
+            overflow-x: hidden;
+            height: auto;
+            max-height: calc(100vh - 140px);
+        }
     </style>
 </head>
 <body>
 
+    <div class="dashboard-header">
+        MRO System - Kanban por Fase e Status
+        <span class="badge-projeto"><?php echo $var_proj_descricao; ?></span>
+        <a class="btn-voltar-filtro" href="<?php echo $var_link_voltar; ?>" title="Voltar aos projetos">&#8592; Voltar Projetos</a>
+    </div>
+    <div class="dashboard-sub">
+        <div class="sub-linha">
+            <strong>Kanban por fase e status da tarefa</strong>
+            <span class="badge-status status-in-progress">Bloqueios (material/ferramenta/predecessora) como badge vermelho</span>
+        </div>
+    </div>
+
+    <div class="kanban-toolbar">
+        <span class="tb-label">Phases</span>
+        <button type="button" class="tb-btn" id="btnExpandTudo" title="Expandir todas as fases">
+            <i class="fa-solid fa-angles-down"></i> Expandir tudo
+        </button>
+        <button type="button" class="tb-btn" id="btnRecolherTudo" title="Recolher todas as fases">
+            <i class="fa-solid fa-angles-up"></i> Recolher tudo
+        </button>
+    </div>
+
     <div id="KanbanContainer"></div>
 
-    <script>
-        console.log("1. Iniciando motor Javascript...");
+    <script id="cardTemplate" type="text/x-template">
+        <div class="card-template">
+            <div class="card-header">
+                <span class="card-code">${Code}</span>
+                ${if(IsNrc)}
+                    <span class="tag-nrc"><i class="fa-solid fa-triangle-exclamation"></i> NR</span>
+                ${/if}
+            </div>
 
-        // Recebe os dados do PHP
-        var kanbanData = <?php echo $json_datasource ?: '[]'; ?>;
-        
-        // TRAVA DE SEGURANÇA: Se o banco falhar, injeta dados falsos só para provar que a tela funciona
-        if (kanbanData.length === 0) {
-            console.warn("ALERTA: Array do PHP veio vazio. Injetando dados de Mockup para forçar a renderização.");
-            kanbanData = [
-                { Id: 1, Status: 'NOT_STARTED', Summary: 'Inspecionar trem de pouso LD', Code: 'NR-001', Phase: 'INSPEC' },
-                { Id: 2, Status: 'IN_PROGRESS', Summary: 'Substituir pneu do trem LD', Code: 'NR-002', Phase: 'INSPEC' },
-                { Id: 3, Status: 'COMPLETED', Summary: 'Testes de motor', Code: 'JIC-099', Phase: 'ENG RUN' }
-            ];
+            <div class="card-content">
+                ${Summary}
+            </div>
+
+            <div class="card-footer">
+                ${if(Bloqueio == 'mat')}
+                    <span class="tag-bloqueio"><i class="fa-solid fa-lock"></i> Material</span>
+                ${else if(Bloqueio == 'fer')}
+                    <span class="tag-bloqueio"><i class="fa-solid fa-lock"></i> Ferramenta</span>
+                ${else if(Bloqueio == 'mao')}
+                    <span class="tag-bloqueio"><i class="fa-solid fa-lock"></i> Mao de Obra</span>
+                ${else if(Bloqueio == 'pred')}
+                    <span class="tag-bloqueio"><i class="fa-solid fa-lock"></i> Predecessora</span>
+                ${else if(Bloqueio == 'pred_manual')}
+                    <span class="tag-bloqueio"><i class="fa-solid fa-lock"></i> Pred. Manual</span>
+                ${else}
+                    <span></span>
+                ${/if}
+
+                <div class="e-card-avatar">${Id}</div>
+            </div>
+        </div>
+    </script>
+
+    <script>
+        var kanbanData = <?php echo $json_datasource; ?>;
+        var kanbanObj = null;
+
+        // =========================================================================
+        // MODAL DO FORM DA TAREFA (mesmo padrao do blank_gantt)
+        // =========================================================================
+        var modalTask = null;
+
+        function abrirModalTask(url) {
+            if (modalTask) { fecharModalTask(); }
+
+            modalTask = document.createElement('div');
+            modalTask.id = 'ganttModalTask';
+            modalTask.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:center;justify-content:center;';
+
+            var box = document.createElement('div');
+            box.style.cssText = 'background:#fff;width:1400px;max-width:95%;height:90%;border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,.3);display:flex;flex-direction:column;overflow:hidden;';
+
+            var bar = document.createElement('div');
+            bar.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:8px 14px;background:#1a202c;color:#fff;font-size:13px;font-weight:600;font-family:Roboto,sans-serif;';
+            bar.innerHTML = '<span>Edicao da Tarefa</span>';
+            var btnClose = document.createElement('button');
+            btnClose.textContent = 'Fechar';
+            btnClose.style.cssText = 'background:#e53e3e;border:none;color:#fff;font-size:12px;font-weight:600;padding:5px 12px;border-radius:4px;cursor:pointer;';
+            btnClose.onclick = fecharModalTask;
+            bar.appendChild(btnClose);
+
+            var iframe = document.createElement('iframe');
+            iframe.src = url;
+            iframe.style.cssText = 'flex:1;width:100%;border:none;';
+
+            box.appendChild(bar);
+            box.appendChild(iframe);
+            modalTask.appendChild(box);
+            document.body.appendChild(modalTask);
         }
 
-        console.log("2. Dados carregados:", kanbanData);
+        function fecharModalTask() {
+            if (modalTask) {
+                document.body.removeChild(modalTask);
+                modalTask = null;
+                location.reload();
+            }
+        }
 
-        try {
-            console.log("3. Montando Kanban nativo...");
-            
-            // KANBAN NATIVO: Sem template HTML customizado, sem ordenação complexa, sem lógicas if/else.
-            var kanbanObj = new ej.kanban.Kanban({
+        // RENDERIZACAO DEFENSIVA (padrao blank_dash_encerramento)
+        function renderizarKanban() {
+            if (!(window.ej && ej.kanban)) {
+                console.error('[Kanban] Biblioteca Syncfusion (ej.kanban) NAO carregou.');
+                var el = document.getElementById('KanbanContainer');
+                if (el) {
+                    el.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#c05621;font-size:13px;font-family:Roboto,sans-serif;">Biblioteca Syncfusion nao carregou. Verifique /libs/syncfusion/ no console (F12).</div>';
+                }
+                return;
+            }
+
+            kanbanObj = new ej.kanban.Kanban({
                 dataSource: kanbanData,
+                locale: 'pt-BR',
                 keyField: 'Status',
+
                 columns: [
-                    { headerText: 'A Fazer', keyField: 'NOT_STARTED' },
-                    { headerText: 'Aguard. Aprov.', keyField: 'WAITING_APPROVAL, PENDING_OA' },
-                    { headerText: 'Em Execução', keyField: 'IN_PROGRESS' },
-                    { headerText: 'Finalizado', keyField: 'COMPLETED' }
+                    { headerText: 'A Fazer', keyField: 'NOT_STARTED, PLANNED, PLANNING, APPROVED, PENDING_PLANNING', allowToggle: true },
+                    { headerText: 'Aguard. Aprovacao NRC', keyField: 'PENDING_ENG, PENDING_COORD, PENDING_PROG', allowToggle: true },
+                    { headerText: 'Liberada', keyField: 'RELEASED', allowToggle: true },
+                    { headerText: 'Em Execucao', keyField: 'IN_PROGRESS', allowToggle: true },
+                    { headerText: 'Aguard. Supervisor / OA', keyField: 'SUPSIG, PENDING_OA, COMMERCIAL_REVIEW', allowToggle: true },
+                    { headerText: 'Inspecao RII', keyField: 'PENDING_INSP1, PENDING_INSP2', allowToggle: true },
+                    { headerText: 'Finalizado', keyField: 'COMPLETED', allowToggle: true }
                 ],
+
                 cardSettings: {
+                    headerField: 'Code',
                     contentField: 'Summary',
-                    headerField: 'Code'
+                    template: '#cardTemplate',
+                    allowDragAndDrop: false,   // desativa o drag dos cards
+                    allowToggle: false
                 },
+
                 swimlaneSettings: {
-                    keyField: 'Phase'
+                    keyField: 'ProjetoFase',
+                    textField: 'ProjetoFase',
+                    allowDragAndDrop: false,   // desativa o drag nas swimlanes
+                    sortDirection: 'Ascending'
+                },
+
+                // Duplo clique no card -> cancela o dialogo padrao do Kanban e
+                // abre o form_public_mro_tasks em modal (padrao do Gantt)
+                cardDoubleClick: function(args) {
+                    args.cancel = true; // bloqueia o dialogo nativo "Edit Card Details"
+                    var dados = args.data;
+                    if (dados && dados.FormTaskUrl) {
+                        abrirModalTask(dados.FormTaskUrl);
+                    }
+                },
+
+                // Apos cada render, remove os draggables nativos dos cards
+                dataBound: function() {
+                    desativarDragCards();
+                    configurarTippyHeaders();
+                },
+
+                dialogSettings: {
+                    fields: [
+                        { key: 'Code', type: 'TextBox', text: 'Codigo' },
+                        { key: 'Status', type: 'DropDown', text: 'Status' },
+                        { key: 'Summary', type: 'TextArea', text: 'Descricao' }
+                    ]
                 }
             });
-            
+
             kanbanObj.appendTo('#KanbanContainer');
-            console.log("4. SUCESSO! Kanban renderizado na tela.");
-            
-        } catch (e) {
-            console.error("ERRO CRÍTICO NO SYNCFUSION:", e);
-            document.body.innerHTML = "<h2 style='color:red; font-family:sans-serif; padding:20px;'>Falha no Syncfusion: " + e.message + "</h2>";
+            configurarToolbar();
+
+            // Contadores: reaplica o formato so-numero sempre que o Syncfusion re-renderizar
+            var timerContador = null;
+            var observerContador = new MutationObserver(function() {
+                if (timerContador) { clearTimeout(timerContador); }
+                timerContador = setTimeout(function() {
+                    ajustarContadores();
+                    desativarDragCards();
+                    configurarTippyHeaders();
+                }, 80);
+            });
+            observerContador.observe(document.getElementById('KanbanContainer'), { childList: true, subtree: true });
+            ajustarContadores();
+            configurarTippyHeaders();
+        }
+
+        // Contador de itens: exibe somente o numero (remove o sufixo " items")
+        function ajustarContadores() {
+            var contadores = document.querySelectorAll('#KanbanContainer .e-item-count');
+            for (var i = 0; i < contadores.length; i++) {
+                var txt = (contadores[i].textContent || '').trim();
+                var soNumeros = txt.replace(/[^0-9]/g, '');
+                if (soNumeros !== txt) {
+                    contadores[i].textContent = soNumeros;
+                }
+            }
+        }
+
+        // Remove o draggable nativo de cada card. Mesmo com allowDragAndDrop: false,
+        // o Syncfusion inicializa uma instancia Draggable por card (classe e-draggable
+        // + cursor all-scroll), permitindo arrastar visualmente. Aqui destruimos essas
+        // instancias; o dataBound + MutationObserver reaplicam apos cada re-render.
+        function desativarDragCards() {
+            var cards = document.querySelectorAll('#KanbanContainer .e-card.e-draggable');
+            for (var i = 0; i < cards.length; i++) {
+                var instancias = cards[i].ej2_instances || [];
+                for (var j = 0; j < instancias.length; j++) {
+                    var inst = instancias[j];
+                    if (inst && inst.getModuleName && inst.getModuleName() === 'draggable') {
+                        try { inst.destroy(); } catch (e) {}
+                    }
+                }
+            }
+        }
+
+        // Tooltip estilo tippy nos headers das colunas: mostra os status agrupados
+        // ao passar o mouse. Usa event delegation (listener unico no container), entao
+        // continua funcionando mesmo quando o Syncfusion re-renderiza os headers.
+        function configurarTippyHeaders() {
+            var container = document.getElementById('KanbanContainer');
+            if (!container || container.getAttribute('data-tippy-ok') === '1') { return; }
+            container.setAttribute('data-tippy-ok', '1');
+
+            var tippy = document.createElement('div');
+            tippy.id = 'kanbanTippy';
+            document.body.appendChild(tippy);
+
+            var thAtual = null;
+
+            function esconder() {
+                tippy.style.display = 'none';
+                thAtual = null;
+            }
+
+            function mostrar(alvo) {
+                var th = alvo.closest('th.e-header-cells');
+                if (!th) { esconder(); return; }
+                if (th === thAtual) { return; }
+
+                var statusLista = (th.getAttribute('data-key') || '').trim();
+                if (!statusLista) { esconder(); return; }
+
+                var html = '<span class="tt-titulo">Status agrupados</span>';
+                var partes = statusLista.split(',');
+                for (var i = 0; i < partes.length; i++) {
+                    html += '<span class="tt-status">' + partes[i].trim() + '</span>';
+                }
+                tippy.innerHTML = html;
+
+                // Posiciona abaixo do texto do header, dentro da viewport
+                var rect = alvo.getBoundingClientRect();
+                tippy.style.display = 'block';
+                var tRect = tippy.getBoundingClientRect();
+                var top = rect.bottom + 8;
+                var left = rect.left;
+                if (left + tRect.width > window.innerWidth - 8) {
+                    left = Math.max(8, window.innerWidth - tRect.width - 8);
+                }
+                tippy.style.top = top + 'px';
+                tippy.style.left = left + 'px';
+                thAtual = th;
+            }
+
+            // Delegacao: um unico listener para todos os headers (novos ou antigos)
+            container.addEventListener('mouseover', function(e) {
+                var alvo = e.target && e.target.closest ? e.target.closest('.e-header-text') : null;
+                if (alvo) { mostrar(alvo); }
+            });
+            container.addEventListener('mouseout', function(e) {
+                var novo = e.relatedTarget;
+                var dentro = novo && novo.closest && novo.closest('th.e-header-cells');
+                if (!dentro) { esconder(); }
+            });
+        }
+
+        // Toolbar: expandir/recolher todas as swimlanes de uma vez.
+        // A build do Syncfusion usada nao expoe expandAll()/collapseAll(), entao
+        // clicamos nos toggles nativos de cada swimlane (mesmo efeito).
+        function configurarToolbar() {
+            var btnExpandir = document.getElementById('btnExpandTudo');
+            var btnRecolher = document.getElementById('btnRecolherTudo');
+            if (!btnExpandir || !btnRecolher) { return; }
+
+            btnExpandir.addEventListener('click', function() {
+                alternarSwimlanes(true);
+            });
+            btnRecolher.addEventListener('click', function() {
+                alternarSwimlanes(false);
+            });
+        }
+
+        // expandir=true -> clica nos toggles de swimlane RECOLHIDA (e-swimlane-row-collapse)
+        // expandir=false -> clica nos toggles de swimlane EXPANDIDA (e-swimlane-row-expand)
+        function alternarSwimlanes(expandir) {
+            var classeAlvo = expandir ? 'e-swimlane-row-collapse' : 'e-swimlane-row-expand';
+            var toggles = Array.prototype.slice.call(document.querySelectorAll('#KanbanContainer .' + classeAlvo));
+            if (toggles.length === 0) { return; }
+
+            // Clica um por vez com intervalo: o Syncfusion re-renderiza a cada
+            // toggle e invalida os elementos consultados anteriormente.
+            var i = 0;
+            function proximo() {
+                if (i >= toggles.length) { return; }
+                var t = toggles[i];
+                i++;
+                if (document.contains(t)) { t.click(); }
+                setTimeout(proximo, 150);
+            }
+            proximo();
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', renderizarKanban);
+        } else {
+            renderizarKanban();
         }
     </script>
 </body>
 </html>
-<?php 
-// Força o Scriptcase a parar o processamento aqui, evitando que ele injete tags HTML extras que quebram o código
-exit;
+<?php

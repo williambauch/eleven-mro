@@ -22,6 +22,12 @@
       "pk": false
     },
     {
+      "nome": "detalhe_attachments",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
       "nome": "model",
       "tipo": "varchar",
       "required": false,

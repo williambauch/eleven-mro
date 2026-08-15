@@ -35,5 +35,28 @@ if (!sc_btn_delete) {
         sc_error_message("O campo Skill Code e obrigatÓrio. Ele e utilizado na geração do código de barras do Pack JIC.");
         sc_error_exit();
     }
-    
+
+    // ====================================================================
+    // MRO-126 VALIDACAO DE DATAS DE PLANEJAMENTO (apenas rotinas)
+    // ====================================================================
+    // Se a ROTINA tiver fase definida (phase_code preenchido no select),
+    // exige target_start e target_end - evita task com fase mas sem datas,
+    // que fica sem barra no Gantt. NRCs seguem a fase da rotina de origem.
+
+
+    if (empty({is_nrc}) && !empty({phase_code})) {
+        // target_start/end podem vir como string 'null' quando nao preenchidos
+        $var_ts_vazio = (empty({target_start}) || {target_start} == 'null' || {target_start} == 'NULL');
+        $var_te_vazio = (empty({target_end})   || {target_end} == 'null' || {target_end} == 'NULL');
+
+        if ($var_ts_vazio) {
+            sc_error_message("Fase definida: o campo Inicio (target_start) e obrigatorio para o planejamento no Gantt.");
+            sc_error_exit();
+        }
+        if ($var_te_vazio) {
+            sc_error_message("Fase definida: o campo Fim (target_end) e obrigatorio para o planejamento no Gantt.");
+            sc_error_exit();
+        }
+    }
+
 }

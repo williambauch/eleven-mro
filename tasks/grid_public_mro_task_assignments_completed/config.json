@@ -1,13 +1,13 @@
 {
   "nome": "grid_public_mro_task_assignments_completed",
   "tipo": "Grid",
-  "nome_tabela": "\"public\".mro_task_assignments",
+  "nome_tabela": "grid_public_mro_task_assignments_completed",
   "campos": [
     {
       "nome": "assignment_id",
       "tipo": "int4",
       "required": false,
-      "pk": true
+      "pk": false
     },
     {
       "nome": "task_id",
@@ -17,7 +17,7 @@
     },
     {
       "nome": "task_desc",
-      "tipo": "varchar",
+      "tipo": "text",
       "required": false,
       "pk": false
     },
@@ -94,7 +94,13 @@
       "pk": false
     },
     {
-      "nome": "status_code",
+      "nome": "assignments_status_code",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "task_status_code",
       "tipo": "varchar",
       "required": false,
       "pk": false

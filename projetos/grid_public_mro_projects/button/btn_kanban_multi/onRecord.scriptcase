@@ -1,0 +1,25 @@
+<?php
+
+// ====================================================================
+// MRO-126 - BOTÃO RUN: GERAR KANBAN MULTI-PROJETO
+// ====================================================================
+// Tipo   : RUN (executa por registro selecionado no grid)
+// Funcao : Acumula os project_id dos registros selecionados e, no final
+//          (onFinish), redireciona para a blank_kanban_critical com
+//          glo_project_ids.
+//
+// onRecord: roda para CADA linha selecionada e acumula o project_id.
+// onFinish: roda UMA vez no final - monta a lista e redireciona.
+// ====================================================================
+
+// Acumula o project_id da linha selecionada (vetor em variavel global)
+// Atribuicao direta de global no ScriptCase ([glo_x] = valor)
+if (!isset([glo_kanban_ids])) {
+    [glo_kanban_ids] = "";
+}
+
+$var_kanban_id = (int){project_id};
+if ($var_kanban_id > 0) {
+    $var_atual = [glo_kanban_ids] != '' ? [glo_kanban_ids] . ',' : '';
+    [glo_kanban_ids] = $var_atual . $var_kanban_id;
+}

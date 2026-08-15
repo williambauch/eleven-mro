@@ -1,10 +1,7 @@
 <?php
-/*----------------------------------------------------
-  ScriptCase Event File
-  Application: grid_public_mro_attachments
-  Type: Grid
-  Event: onRecord
-  Created: 03/08/2026
-  Author: WBAUCH
-----------------------------------------------------*/
 
+// onLoadRecord da form_public_mro_attachments
+// Monta o subdiretorio a partir dos campos do registro carregado,
+// garantindo a pasta correta ao trocar o arquivo em edicao.
+
+mMontarSubdirAnexos();

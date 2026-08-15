@@ -1,0 +1,10 @@
+<?php
+// ============================================================
+// BOTÃO DE BARRA DE AÇÃO: ver_historico
+// ============================================================
+// Tipo   : LINK
+// Label  : ver_historico
+// Ícone  : fas fa-clock-rotate-left
+// Estados:
+//   - state1 | fas fa-clock-rotate-left
+// ============================================================

@@ -1,6 +1,0 @@
-<?php
-
-// MRO-126: Fila de Inspecao (PENDING_INSP1 / PENDING_INSP2)
-// O inspetor visualiza apenas as tasks do seu skill.
-// A acao de assinar (Inspetor 1 / Inspetor 2) sera implementada
-// via botao de barra de acao no ScriptCase, validando [usr_is_inspector].

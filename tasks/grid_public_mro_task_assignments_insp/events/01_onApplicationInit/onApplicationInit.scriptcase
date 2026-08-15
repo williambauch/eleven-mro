@@ -1,6 +1,0 @@
-<?php
-
-// Aba Inspecao do Painel do Supervisor - somente leitura
-sc_apl_conf("grid_public_mro_task_assignments_insp", "insert", "off");
-sc_apl_conf("grid_public_mro_task_assignments_insp", "update", "off");
-sc_apl_conf("grid_public_mro_task_assignments_insp", "delete", "off");

@@ -1,0 +1,14 @@
+<?php
+// ============================================================
+// BOTÃO DE BARRA DE AÇÃO: dashboard
+// ============================================================
+// Tipo   : LINK
+// Label  : dashboard
+// Ícone  : fas fa-chart-pie
+// Estados:
+//   - state1 | fas fa-chart-pie
+//
+// Liga para: control_dash_encerramento
+// Abertura  : Nova janela
+// Parâmetros: C?#?project_id?#?glo_project_id
+// ============================================================

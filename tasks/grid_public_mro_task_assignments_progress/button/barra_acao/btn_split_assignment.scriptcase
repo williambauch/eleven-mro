@@ -1,0 +1,14 @@
+<?php
+// ============================================================
+// BOTÃO DE BARRA DE AÇÃO: btn_split_assignment
+// ============================================================
+// Tipo   : LINK
+// Label  : Dividir
+// Ícone  : fas fa-user-plus
+// Estados:
+//   - state1 | Dividir | fas fa-user-plus
+//
+// Liga para: control_split_assignment
+// Abertura  : Nova janela
+// Parâmetros: C?#?assignment_id?#?glo_assignment_id_split?@?N?#??#?glo_split_original_hours?@?N?#??#?usr_employee_id?@?N?#??#?usr_login?@?V?#?grid_public_mro_task_assignments_blocked?#?glo_split_voltar
+// ============================================================

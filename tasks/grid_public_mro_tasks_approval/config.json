@@ -1,13 +1,13 @@
 {
   "nome": "grid_public_mro_tasks_approval",
   "tipo": "Grid",
-  "nome_tabela": "\"public\".mro_tasks",
+  "nome_tabela": "grid_public_mro_tasks_approval",
   "campos": [
     {
       "nome": "task_id",
       "tipo": "int4",
       "required": false,
-      "pk": true
+      "pk": false
     },
     {
       "nome": "task_code",
@@ -17,7 +17,7 @@
     },
     {
       "nome": "task_desc",
-      "tipo": "varchar",
+      "tipo": "text",
       "required": false,
       "pk": false
     },

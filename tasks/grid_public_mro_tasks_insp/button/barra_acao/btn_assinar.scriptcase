@@ -1,0 +1,13 @@
+<?php
+// ============================================================
+// BOTÃO DE BARRA DE AÇÃO: btn_assinar
+// ============================================================
+// Tipo   : AJAX
+// Label  : Assinar
+// Ícone  : fas fa-file-signature
+// Estados:
+//   - state1 | Assinar | fas fa-file-signature
+//   - state2 | Assinado | fas fa-signature
+//
+// Ação: evento Ajax "actbtn_btn_assinar_onClick" (events_ajax/)
+// ============================================================

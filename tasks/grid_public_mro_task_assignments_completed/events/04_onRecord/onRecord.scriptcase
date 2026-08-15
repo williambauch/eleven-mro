@@ -1,4 +1,0 @@
-<?php
-
-// O historico da atribuicao sera acessado via botao de barra de acao
-// configurado no proprio ScriptCase (abre a blank_mro_timeline)

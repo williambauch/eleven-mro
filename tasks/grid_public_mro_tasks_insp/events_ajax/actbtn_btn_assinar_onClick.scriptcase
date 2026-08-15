@@ -1,0 +1,143 @@
+<?php
+
+// ====================================================================
+// MRO-126: Assinatura do Inspetor (PENDING_INSP1 -> PENDING_INSP2/COMPLETED)
+// Botão AJAX da barra de ação com 2 estados:
+//   state1 -> "Assinar"   (botão ativo)
+//   state2 -> "Assinado"  (feedback visual após assinar)
+//
+// Fluxo:
+//  - Task em PENDING_INSP1:
+//      - is_rii=true  -> PENDING_INSP2 (assinatura INSPECTOR_1)
+//      - is_rii=false -> COMPLETED (assinatura INSPECTOR_1)
+//  - Task em PENDING_INSP2:
+//      - Valida segregação (inspetor 2 != inspetor 1) -> COMPLETED (INSPECTOR_2)
+//
+// Idempotente: UPDATE com WHERE status_code na fila de inspeção.
+// ====================================================================
+
+// 1. Recupera o estado atual do botão no momento do clique
+$var_estado = sc_actionbar_clicked_state();
+
+// 2. Se já estiver no estado "Assinado" (state2), não faz nada
+if ($var_estado == 'state2') {
+    sc_ajax_message("Esta tarefa já foi assinada por você.", "Assinatura");
+    return;
+}
+
+$var_task_id = (int){task_id};
+
+if ($var_task_id <= 0) {
+    sc_ajax_message("Parâmetros inválidos para a assinatura.");
+    return;
+}
+
+// 3.1 MRO-126: Somente usuário marcado como inspetor pode assinar
+if (![usr_is_inspector]) {
+    sc_ajax_message("Acesso negado: somente inspetores podem assinar a inspeção.", "Segregação de Funções");
+    return;
+}
+
+// 3.2 MRO-126: Quem executou a task não pode inspecionar (segregação ANAC)
+$var_sql_exec = "SELECT COUNT(*) FROM mro_task_assignments
+                 WHERE task_id = " . $var_task_id . "
+                   AND executed_by_employee_id = [usr_employee_id]";
+sc_lookup(rs_exec, $var_sql_exec);
+$var_executou = !empty({rs_exec}) ? (int){rs_exec[0][0]} : 0;
+
+if ($var_executou > 0) {
+    sc_ajax_message("Acesso negado: o executor da tarefa não pode assinar a própria inspeção.", "Segregação de Funções");
+    return;
+}
+
+// 3. Re-checa o status da task e as flags RII
+$var_sql = "SELECT status_code, requires_rii, is_rii
+            FROM mro_tasks
+            WHERE task_id = " . $var_task_id;
+sc_lookup(rs_task, $var_sql);
+
+if ({rs_task} === false) {
+    sc_ajax_message("Erro ao consultar a tarefa.", "Erro");
+    return;
+}
+
+if (empty({rs_task})) {
+    sc_ajax_message("Tarefa não encontrada.", "Erro");
+    return;
+}
+
+$var_status_task = {rs_task[0][0]};
+$var_req_rii = ({rs_task[0][1]} == 't' || {rs_task[0][1]} === true || {rs_task[0][1]} == 1);
+$var_is_rii  = ({rs_task[0][2]} == 't' || {rs_task[0][2]} === true || {rs_task[0][2]} == 1);
+
+// 4. Só processa se a task estiver na fila de inspeção
+if (!in_array($var_status_task, ['PENDING_INSP1','PENDING_INSP2'])) {
+    sc_actionbar_state('btn_assinar', 'state2');
+    sc_actionbar_disable('btn_assinar');
+    sc_ajax_message("Esta tarefa já foi processada (status atual: " . $var_status_task . ").", "Assinatura");
+    return;
+}
+
+// 5. Verifica se o inspetor logado já assinou esta task
+$var_sql_sign = "SELECT COUNT(*) FROM mro_task_history
+                 WHERE task_id = " . $var_task_id . "
+                   AND action_taken IN ('INSPECTOR_1','INSPECTOR_2')
+                   AND user_login = '[usr_login]'";
+sc_lookup(rs_sign, $var_sql_sign);
+$var_ja_assinou = !empty({rs_sign}) ? (int){rs_sign[0][0]} : 0;
+
+if ($var_ja_assinou > 0) {
+    sc_ajax_message("Você já assinou esta tarefa (segregação de funções).", "Assinatura");
+    return;
+}
+
+// 6. Decide a transição
+if ($var_status_task == 'PENDING_INSP1') {
+    // Inspetor 1: duplo check (is_rii) vai para INSP2, senão conclui
+    $var_destino = $var_is_rii ? 'PENDING_INSP2' : 'COMPLETED';
+    $var_acao    = 'INSPECTOR_1';
+} else {
+    // PENDING_INSP2: verifica quem foi o Inspetor 1 (segregação)
+    $var_sql_i1 = "SELECT user_login FROM mro_task_history
+                   WHERE task_id = " . $var_task_id . "
+                     AND action_taken = 'INSPECTOR_1'
+                   ORDER BY log_id DESC LIMIT 1";
+    sc_lookup(rs_i1, $var_sql_i1);
+
+    if (!empty({rs_i1}) && {rs_i1[0][0]} == '[usr_login]') {
+        sc_ajax_message("O Inspetor 2 não pode ser a mesma pessoa que assinou como Inspetor 1.", "Segregação de Funções");
+        return;
+    }
+
+    $var_destino = 'COMPLETED';
+    $var_acao    = 'INSPECTOR_2';
+}
+
+// 7. Transação atômica: atualiza a task + grava auditoria no histórico
+sc_begin_trans();
+
+$var_desc = "Task " . $var_task_id . " assinada pelo inspetor: " . $var_status_task . " -> " . $var_destino .
+            " (requires_rii=" . ($var_req_rii ? 'true' : 'false') .
+            ", is_rii=" . ($var_is_rii ? 'true' : 'false') . ")";
+sc_log_add("task_inspector", $var_desc);
+
+sc_exec_sql("UPDATE mro_tasks
+             SET status_code = '" . $var_destino . "',
+                 updated_at = CURRENT_TIMESTAMP
+             WHERE task_id = " . $var_task_id . "
+               AND status_code IN ('PENDING_INSP1','PENDING_INSP2')");
+
+// 7.1 Registra a assinatura no histórico da task (auditoria exclusiva de task)
+sc_exec_sql("INSERT INTO mro_task_history (task_id, action_taken, user_login, remarks)
+             VALUES (" . $var_task_id . ", '" . $var_acao . "', '[usr_login]', '" . addslashes($var_desc) . "')");
+
+sc_commit_trans();
+
+// 8. Feedback visual: muda o botão para o estado "Assinado" (state2)
+sc_actionbar_state('btn_assinar', 'state2');
+sc_actionbar_disable('btn_assinar');
+
+// 9. Recarrega a linha da grid para refletir o novo status
+sc_ajax_refresh();
+
+sc_ajax_message("Assinatura registrada! Status alterado para: " . $var_destino, "Assinatura");

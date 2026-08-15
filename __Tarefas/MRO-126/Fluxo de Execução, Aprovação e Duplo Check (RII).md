@@ -57,7 +57,7 @@ Assim que a tarefa é concluída pelo último mecânico e entra no status DA TAS
          │
          ▼
  ┌──────────────┐
- │  SUPERVISOR  │ ──► ¿A tarefa exige inspeção?
+ │  SUPERVISOR  │ ──► A tarefa exige inspeção?
  └──────────────┘
          │
          ├── NÃO (Tarefa Comum) ──────────────────────────────────┐
@@ -69,7 +69,7 @@ Assim que a tarefa é concluída pelo último mecânico e entra no status DA TAS
                  │                                                │
                  ▼                                                │
           ┌────────────┐                                          │
-          │ INSPETOR 1 │ ──► ¿Exige Duplo Check (Is Rii / RII)?   │
+          │ INSPETOR 1 │ ──► Exige Duplo Check (Is Rii / RII)?   │
           └────────────┘                                          │
                  │                                                │
                  ├── NÃO (Inspeção Simples / Requires Rii) ──┐    │
@@ -121,10 +121,16 @@ Assim que a tarefa é concluída pelo último mecânico e entra no status DA TAS
 
   * Após a assinatura eletrônica do Inspetor 2, o status da tarefa é atualizado para **`COMPLETED`** (Tarefa encerrada e liberada para o Time de Registros).
 
+> 📌 **Decisão do Gerente de Projeto (13/08/2026):** a **assinatura digital** (tokens/hash criptográfico) fica **para o futuro**. Hoje o sistema deve apenas **registrar quem aprovou** (Inspetor 1/2) — isso já é feito gravando `INSPECTOR_1`/`INSPECTOR_2` no `mro_task_history` com `user_login` + `action_date`. Quando a assinatura digital for implementada, ela complementará esse registro (sem alterar a estrutura de log atual).
+
 ### Etapa 4: Auditoria e Encerramento (Time de Registros)
 
 * **Acesso Restrito:** O painel do Time de Registros exibe **exclusivamente** tarefas que atingiram o status **`COMPLETED`**.
 * **Ação:** O time realiza a conferência final dos metadados das assinaturas digitais e gera o Job Card eletrônico ("Zero Papel"), arquivando o pacote de forma segura e auditável para a ANAC.
+
+> 📌 **Decisão do Gerente de Projeto (13/08/2026):** o painel do Time de Registros será **separado do menu do supervisor** (não fica nas abas do `menu_supervisor`). Será criado um **novo perfil (grupo) chamado "Registro"** com acesso exclusivo a essa tela. A implementação fica **para o futuro** — hoje o foco é o fluxo de aprovação/inspeção (SUPSIG → PENDING_INSP1 → PENDING_INSP2 → COMPLETED).
+
+> ✅ **IMPLANTADO (13/08/2026):** perfil **REGISTRO** criado (grupo 13, usuário `registro`/`Registro@321`) com o painel `grid_public_mro_task_registro`. O painel exibe **TODAS as tasks `COMPLETED`** (auditoria geral do encerramento — o filtro por histórico de inspeção RII foi descartado após revisão). Item de menu **Auditoria > Painel de Registros** no `sec_menu`. Detalhes na migration `06_MRO-126_perfil_registro.sql`.
 
 ---
 
@@ -133,9 +139,9 @@ Assim que a tarefa é concluída pelo último mecânico e entra no status DA TAS
 |Status Origem|Ação Gatilho|Responsável|Condição de Negócio|Status Destino|
 |-|-|-|-|-|
 |**Em Execução**|Último Clock-Out|Último Mecânico|Marcou como "Incompleto"|**`PENDING_PROG`**|
-|**Em Execução**|Último Clock-Out|Último Mecânico|Marcou como "Finalizado"|**`COMPLETED`**|
-|**`COMPLETED`**|Aprovar Tarefa|Supervisor|Sem inspeções requeridas|**`COMPLETED`**|
-|**`COMPLETED`**|Aprovar Tarefa|Supervisor|Exige Inspeção (`Requires Rii` ou `Is Rii`)|**`PENDING_INSP1`**|
+|**Em Execução**|Último Clock-Out|Último Mecânico|Marcou como "Finalizado"|**`SUPSIG`**|
+|**`SUPSIG`**|Aprovar Tarefa|Supervisor|Sem inspeções requeridas|**`COMPLETED`**|
+|**`SUPSIG`**|Aprovar Tarefa|Supervisor|Exige Inspeção (`Requires Rii` ou `Is Rii`)|**`PENDING_INSP1`**|
 |**`PENDING_INSP1`**|Assinatura Técnica|Inspetor 1|Inspeção Simples (`Requires Rii` apenas)|**`COMPLETED`**|
 |**`PENDING_INSP1`**|Assinatura Técnica|Inspetor 1|Duplo Check Requerido (`Is Rii`)|**`PENDING_INSP2`**|
 |**`PENDING_INSP2`**|Assinatura Técnica|Inspetor 2|Usuário diferente do Inspetor 1|**`COMPLETED`**|

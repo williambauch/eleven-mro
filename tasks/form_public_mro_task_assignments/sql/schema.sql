@@ -1,1 +1,1 @@
-SELECT * FROM "public".mro_task_assignments
+SELECT * FROM "public".mro_task_assignments WHERE assignment_id = [glo_assignment_id]

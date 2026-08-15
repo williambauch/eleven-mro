@@ -73,10 +73,11 @@ if($v_motivo == 1) {
 	
 } elseif ($v_motivo == 6) { 
     // ROTA 4: CONCLUSÃO (Vai para o Inspetor/Supervisor assinar)
+    // MRO-126: nome do encerramento alterado para "Timesheet Finalizado/Tarefa Concluida"
     $motivo_txt = '';
     $status_code = 'SUPSIG';
     $status_ts = 'COMPLETED';
-    $status_type = "Tarefa 100% Concluída.";
+    $status_type = "Timesheet Finalizado/Tarefa Concluída.";
 } else {
 	// SEGURANÇA: Se o motivo vier vazio ou não mapeado, cancela a operação
 	sc_error_message("Motivo de ação não identificado.");
@@ -138,7 +139,7 @@ if ($status_code == 'SUPSIG') {
     if (!empty({rs_tid_supsig})) {
         $var_task_supsig = (int){rs_tid_supsig[0][0]};
         sc_exec_sql("INSERT INTO mro_task_history (task_id, action_taken, user_login, remarks)
-                     VALUES (" . $var_task_supsig . ", 'SUPSIG', '[usr_login]', 'Ultimo clock-out - tarefa 100% concluida pelo mecanico: IN_PROGRESS -> SUPSIG')");
+                     VALUES (" . $var_task_supsig . ", 'SUPSIG', '[usr_login]', 'Ultimo clock-out - Timesheet Finalizado/Tarefa Concluida: IN_PROGRESS -> SUPSIG')");
     }
 }
 

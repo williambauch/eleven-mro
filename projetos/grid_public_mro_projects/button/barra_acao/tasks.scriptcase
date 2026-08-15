@@ -1,0 +1,14 @@
+<?php
+// ============================================================
+// BOTÃO DE BARRA DE AÇÃO: tasks
+// ============================================================
+// Tipo   : LINK
+// Label  : tasks
+// Ícone  : fas fa-list-check
+// Estados:
+//   - task | fas fa-list-check
+//
+// Liga para: grid_public_mro_tasks
+// Abertura  : Nova janela
+// Parâmetros: C?#?project_id?#?var_project_id?@?N?#??#?glo_aviso_run
+// ============================================================

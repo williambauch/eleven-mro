@@ -1,0 +1,13 @@
+<?php
+// ============================================================
+// BOTÃO DE BARRA DE AÇÃO: btn_aprovar
+// ============================================================
+// Tipo   : AJAX
+// Label  : Aprovar
+// Ícone  : fas fa-plane-circle-check
+// Estados:
+//   - state1 | Aprovar | fas fa-plane-circle-check
+//   - state2 | Aprovado | fas fa-check-double
+//
+// Ação: evento Ajax "actbtn_btn_aprovar_onClick" (events_ajax/)
+// ============================================================

@@ -12,13 +12,16 @@ if (!empty({ds_ativa})) {
     $tarefa_aberta_id = {ds_ativa[0][0]};
     $id_ts = {ds_ativa[0][1]};
     
-    // Proteção: Só exige pausa se a tarefa rodando for DIFERENTE da que ele clicou
-    if ($tarefa_aberta_id != {assignment_id}) {
-        sc_ajax_message("Você já possui a tarefa ID $tarefa_aberta_id em andamento. É obrigatório pausá-la antes de iniciar uma nova.", "Conflito de Atividades", "timeout=3000");
-        
-        // Abre o controle de pausa passando o ID da tarefa que precisa ser interrompida
-        sc_redir('control_pause_task', glo_timesheet_id=$id_ts;glo_assignment_id=$tarefa_aberta_id;glo_assignment_id_sel={assignment_id}, 'modal','', '600', '500');
-        
+    // Proteção: se ha outra tarefa em andamento, redireciona para o form da
+    // tarefa ABERTA (onde o mecanico ve o cronometro rodando e pode pausar).
+    // Normaliza com (int) para garantir comparacao de numeros identicos.
+    // Sem mensagem aqui: o card APONTAMENTO DUPLICADO ja foi exibido no onLoad
+    // do form; este redirecionamento e apenas a trava de seguranca do Play.
+    if ((int)$tarefa_aberta_id != (int){assignment_id}) {
+        // O schema do form filtra por glo_assignment_id (seguranca), entao
+        // passamos a global alem do assignment_id.
+        [glo_assignment_id] = $tarefa_aberta_id;
+        sc_redir('form_public_mro_task_assignments', glo_assignment_id=$tarefa_aberta_id;assignment_id=$tarefa_aberta_id);
         return; // IMPORTANTE: Interrompe o script para não iniciar a nova tarefa por baixo do pano
     }
 }

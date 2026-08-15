@@ -1,0 +1,31 @@
+<?php
+
+// MRO-126: Se o usuario nao for inspetor, remove as apps de Finalizacao e Inspecao do menu
+// O fluxo de aprovacao (SUPSIG -> PENDING_INSP1 -> PENDING_INSP2 -> COMPLETED)
+// e acessivel apenas para supervisores marcados como inspetores.
+
+// ============================================================
+// DEBUG 
+// ============================================================
+/*
+$var_insp_label = ([usr_is_inspector]) ? 'true' : 'false';
+$var_sup_label  = ([usr_is_supervisor]) ? 'true' : 'false';
+
+echo "<div style='font-family:monospace; font-size:12px; background:#f5f5f5; border:1px solid #ddd; padding:8px 12px; margin:6px 0;'>";
+echo "<b>DEBUG menu_supervisor</b><br>";
+echo "Usuario: <b>" . [usr_login] . "</b> | Employee ID: <b>" . [usr_employee_id] . "</b><br>";
+echo "is_inspector: <b style='color:" . ([usr_is_inspector] ? '#188038' : '#d93025') . "'>" . $var_insp_label . "</b> | ";
+echo "is_supervisor: <b>" . $var_sup_label . "</b> | ";
+echo "skill_id: <b>" . [usr_skill_id] . "</b><br>";
+echo "Removendo Finalizacao (item_5) e Inspecao (item_6)? <b>" . ([usr_is_inspector] ? 'NAO' : 'SIM') . "</b>";
+echo "</div>";
+// ============================================================
+*/
+if ([usr_is_inspector]) {
+    //Esta macro tem por objetivo restaurar os ítens do menu, deletados através da macro "sc_menu_delete".
+    sc_reset_menu_delete();
+} else {
+	// sc_menu_delete remove os itens do menu estatico (nao requer sc_appmenu_create)
+    sc_menu_delete("item_5"); // Finalizacao (grid_public_mro_tasks_approval)
+    sc_menu_delete("item_6"); // Inspecao (grid_public_mro_tasks_insp)
+}	

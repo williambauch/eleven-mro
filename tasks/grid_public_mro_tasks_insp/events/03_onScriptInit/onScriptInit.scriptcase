@@ -1,0 +1,8 @@
+<?php
+
+// MRO-126: A fila de inspecao so e acessivel para usuarios marcados como inspetor
+if (![usr_is_inspector]) {
+    sc_alert("Acesso negado: somente inspetores podem acessar a fila de inspecao.");
+    sc_exit(ok);
+    // o botão de assinatura não habilita para usuários não inspetores
+}

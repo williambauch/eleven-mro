@@ -1,0 +1,67 @@
+{
+  "nome": "grid_mro_task_log",
+  "tipo": "Grid",
+  "nome_tabela": "grid_mro_task_log",
+  "campos": [
+    {
+      "nome": "id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "inserted_date",
+      "tipo": "datetime",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "username_login",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "application",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "application_name",
+      "tipo": "text",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "action_name",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "ip_user",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "description",
+      "tipo": "text",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "task_id_log",
+      "tipo": "text",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "description_formated",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    }
+  ]
+}

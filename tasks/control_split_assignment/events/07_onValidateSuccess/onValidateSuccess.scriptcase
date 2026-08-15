@@ -39,7 +39,11 @@ $var_task_id          = (int){rs_orig[0][0]};
 $var_skill_id         = !empty({rs_orig[0][1]}) ? (int){rs_orig[0][1]} : "NULL";
 $var_planned_skill_id = !empty({rs_orig[0][2]}) ? (int){rs_orig[0][2]} : "NULL";
 $var_project_id       = !empty({rs_orig[0][3]}) ? (int){rs_orig[0][3]} : "NULL";
-$var_supervisor_id    = !empty({rs_orig[0][4]}) ? (int){rs_orig[0][4]} : "[usr_employee_id]";
+// Todo novo assignment de SPLIT nasce SEM supervisor (NULL),
+// sempre, mesmo que o assignment original tenha um supervisor.
+// O dono (supervisor) sera definido na tela de atribuicao (onBeforeUpdate),
+// quando o mecanico for atribuido ao novo assignment.
+$var_supervisor_id    = "NULL";
 $var_resource_id      = !empty({rs_orig[0][5]}) ? (int){rs_orig[0][5]} : "NULL";
 $var_role_id          = addslashes({rs_orig[0][6]});
 
@@ -101,6 +105,8 @@ sc_exec_sql($var_sql_event);
 // 5. Commit final
 sc_commit_trans();
 
+sc_btn_disabled("ok", "on");
+
 // 6. Card de sucesso
 echo "<div style='max-width: 480px; margin: 20px auto; background: linear-gradient(135deg, #d4edda, #c3e6cb); 
             border: 1px solid #b8daff; color: #155724; padding: 20px 24px; border-radius: 8px; 
@@ -109,8 +115,10 @@ echo "<div style='max-width: 480px; margin: 20px auto; background: linear-gradie
         Assignment dividido com sucesso!
     </div>";
 
+
 // 8. Botao Voltar para o Painel do Supervisor
-$var_link_supervisor = sc_make_link('tabs_supervisor');
+/*
+$var_link_supervisor = sc_make_link([glo_split_voltar]);
 
 echo <<<HTML
 <script>
@@ -127,3 +135,4 @@ function scBtnFn_btn_voltar_tabs_supervisor() {
 HTML;
 
 exit();
+*/

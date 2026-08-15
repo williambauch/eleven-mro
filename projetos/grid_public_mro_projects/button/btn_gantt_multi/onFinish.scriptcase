@@ -1,0 +1,39 @@
+<?php
+
+// ====================================================================
+// MRO-126 - BOTÃO RUN: GERAR GANTT MULTI-PROJETO (ONFINISH)
+// ====================================================================
+// Executa UMA vez ao final do RUN (apos processar todos os registros
+// selecionados). Monta a lista de project_id acumulada no onRecord
+// e redireciona para a blank_gantt com glo_project_ids.
+// ====================================================================
+
+$var_gantt_ids = (isset([glo_gantt_ids])) ? trim([glo_gantt_ids]) : '';
+
+// Limpa a global usada como acumulador (nao deixar lixo na sessao)
+sc_reset_global(glo_gantt_ids);
+
+if (empty($var_gantt_ids)) {
+    sc_error_message("Selecione ao menos um projeto para gerar o Gantt.");
+    sc_error_exit();
+}
+
+// Sanitiza: mantem apenas numeros separados por virgula
+$var_partes = explode(',', $var_gantt_ids);
+$var_limpos = array();
+foreach ($var_partes as $var_p) {
+    $var_p = trim($var_p);
+    if (preg_match('/^\d+$/', $var_p)) {
+        $var_limpos[] = (int)$var_p;
+    }
+}
+$var_limpos = array_unique($var_limpos);
+
+if (empty($var_limpos)) {
+    sc_error_message("Projetos selecionados invalidos.");
+    sc_error_exit();
+}
+
+$var_multi_project_id = implode(',', $var_limpos);
+// Redireciona para a blank_gantt com a lista de projetos passando multiplo project_id (glo_project_ids) e limpando glo_project_id
+sc_redir('blank_gantt', glo_project_ids=$var_multi_project_id,glo_project_id='','_blank');

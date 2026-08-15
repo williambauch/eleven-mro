@@ -39,9 +39,23 @@
       "form_public_mro_tasks"
     ],
     "MRO-126": [
+      "blank_gantt",
+      "blank_kanban_critical",
+      "form_public_mro_tasks",
+      "grid_public_mro_projects",
+      "grid_public_mro_task_assignments_blocked",
       "grid_public_mro_task_assignments_completed",
-      "grid_public_mro_task_assignments_insp",
-      "grid_public_mro_tasks_approval"
+      "grid_public_mro_task_assignments_progress",
+      "grid_public_mro_task_registro",
+      "grid_public_mro_tasks_approval",
+      "grid_public_mro_tasks_insp",
+      "menu_supervisor"
     ]
+  },
+  "shortcuts": {
+    "MRO-126": "__Tarefas\\MRO-126",
+    "MCP": ".vscode",
+    "_DOCS": "_DOCS",
+    "_SKILL": ".github\\_SKILL"
   }
 }

@@ -1,0 +1,14 @@
+<?php
+// ============================================================
+// BOTÃO DE BARRA DE AÇÃO: exec
+// ============================================================
+// Tipo   : LINK
+// Label  : exec
+// Ícone  : fas fa-bullseye
+// Estados:
+//   - state1 | fas fa-bullseye
+//
+// Liga para: form_public_mro_task_assignments
+// Abertura  : Nova janela
+// Parâmetros: C?#?assignment_id?#?assignment_id?@?N?#??#?usr_employee_id?@?N?#??#?glo_timesheet_id?@?C?#?assignment_id?#?glo_assignment_id
+// ============================================================

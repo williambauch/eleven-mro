@@ -1,154 +1,767 @@
 <?php
 
-/* * ============================================================================
- * MRO SYSTEM - DYNAMIC GANTT CHART (PHASE_CODE HIERARCHY)
- * Hierarquia: PROJETO > FASE OPERACIONAL > TAREFA MÃE > NRC
+/* ============================================================================
+ * MRO SYSTEM - DYNAMIC GANTT CHART (MRO-126)
+ * Hierarquia: PROJETO > FASE OPERACIONAL > TAREFA MAE > NRC
+ *
+ * Refatorado seguindo o padrao do blank_dash_encerramento (MRO-123):
+ *   - captura de filtros com validacao e debug via sc_log_add
+ *   - renderizacao defensiva do Syncfusion
+ *
+ * Edicao direta pelo Gantt RESTRITA a campos de planejamento:
+ *   - target_start / target_end (arrastar a barra na timeline)
+ *   - task_name (edicao na celula)
+ *   - phase_code (arrastar para outra fase - apenas rotinas)
+ * Add e Delete DESABILITADOS (CRUD proprio: form_public_mro_tasks)
+ * parent_task_id NAO e alterado pelo Gantt (rastreabilidade da NRC e regra do form)
+ * Duplo clique na task abre o form completo (form_public_mro_tasks)
+ *
+ * Filtro de projeto (outra aplicacao direciona para esta blank):
+ *   - [glo_project_id] (obrigatorio) - projeto unico exibido no Gantt
+ * A aplicacao de origem deve usar sc_set_global(glo_project_id=...) + sc_redir('blank_gantt').
  * ============================================================================
  */
 
-// 1. CONEXÃO E CAPTURA DE PARÂMETROS
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+$var_usuario_logado = (isset([usr_login]) && !empty([usr_login])) ? trim([usr_login]) : 'SISTEMA_GANTT';
+
 // ----------------------------------------------------------------------------
-$project_filter = (isset([var_project_id]) && !empty([var_project_id])) ? [var_project_id] : 0; 
+// 1. PROCESSAMENTO AJAX (BACKEND) - mesmo padrao das blanks do projeto
+// ----------------------------------------------------------------------------
+if (isset($_POST['action_gantt'])) {
+    header('Content-Type: application/json');
+    $var_action = $_POST['action_gantt'];
 
-$sql = "SELECT 
-            id_unico, 
-            id_pai, 
-            codigo_atividade,
-            nome_tarefa, 
-            to_char(data_inicio, 'YYYY-MM-DD') as data_inicio, 
-            to_char(data_fim, 'YYYY-MM-DD') as data_fim, 
-            progresso, 
-            tipo, 
-            predecessores 
-        FROM view_gantt_datasource 
-        WHERE project_id = $project_filter
-        ORDER BY phase_sort ASC, task_sort_date ASC";
+    // ========================================================================
+    // ACAO: SAVE_TASK - edicao de planejamento (datas, nome, codigo, hierarquia)
+    // ========================================================================
+    if ($var_action == 'SAVE_TASK') {
+        // Recebe o id bruto (pode vir como F{projeto}_{fase} ou P{projeto} de linha virtual)
+        $var_task_id_raw = isset($_POST['task_id']) ? trim($_POST['task_id']) : '';
 
-sc_select(rs, $sql);
+        // Fase (F..) ou Projeto (P..) sao linhas virtuais de agrupamento - nao editaveis
+        if (preg_match('/^[FP]\d/', $var_task_id_raw)) {
+            echo json_encode(array('status' => 'error', 'msg' => 'Fase ou Projeto nao pode ser editado pelo Gantt - edite as tarefas dentro da fase.'));
+            die();
+        }
+
+        $var_task_id = (int)$var_task_id_raw;
+        if ($var_task_id <= 0) {
+            echo json_encode(array('status' => 'error', 'msg' => 'Tarefa invalida para edicao.'));
+            die();
+        }
+
+        // Consulta a tarefa para saber se e NRC e qual o parent atual
+        // (parent_task_id preserva a origem da NRC na rotina-mae)
+        $var_sql_task = "SELECT is_nrc, parent_task_id, phase_code
+                         FROM mro_tasks
+                         WHERE task_id = " . $var_task_id;
+        sc_lookup(rs_task_atual, $var_sql_task);
+
+        $var_task_eh_nrc = false;
+        if ({rs_task_atual} !== false && is_array({rs_task_atual}) && count({rs_task_atual}) > 0) {
+            $var_task_eh_nrc = (!empty({rs_task_atual[0][0]}) && {rs_task_atual[0][0]} == true) ? true : false;
+        }
+
+        $var_task_name = isset($_POST['task_name']) ? addslashes(trim($_POST['task_name'])) : '';
+        $var_start     = isset($_POST['target_start']) ? trim($_POST['target_start']) : '';
+        $var_end       = isset($_POST['target_end']) ? trim($_POST['target_end']) : '';
+        $var_parent    = isset($_POST['parent_task_id']) ? trim($_POST['parent_task_id']) : '';
+
+        // Valida formato das datas (YYYY-MM-DD)
+        if ($var_start != '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $var_start)) {
+            echo json_encode(array('status' => 'error', 'msg' => 'Data de inicio invalida.'));
+            die();
+        }
+        if ($var_end != '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $var_end)) {
+            echo json_encode(array('status' => 'error', 'msg' => 'Data de fim invalida.'));
+            die();
+        }
+
+        // Whitelist: grava somente campos de planejamento que vieram preenchidos
+        // task_code nao e editado pelo Gantt (regra do form_public_mro_tasks: readonly se NRC,
+        // bloqueado em RELEASED/COMPLETED/CANCELLED) - edicao apenas por datas e hierarquia
+        $var_sets = array();
+        $var_campos_alterados = array();
+
+        if ($var_task_name != '') { $var_sets[] = "task_name = '" . $var_task_name . "'"; $var_campos_alterados[] = 'nome'; }
+        if ($var_start != '') { $var_sets[] = "target_start = '" . $var_start . "'"; $var_campos_alterados[] = 'inicio'; }
+        if ($var_end != '') { $var_sets[] = "target_end = '" . $var_end . "'"; $var_campos_alterados[] = 'fim'; }
+
+        // Hierarquia: o Gantt NAO altera parent_task_id (rastreabilidade da NRC e regra do form).
+        // Apenas o arrasto para uma FASE (F{projeto}_{fase}) atualiza o phase_code da task,
+        // validando o codigo no mro_project_phases (mesma regra do select do form).
+        // O id de fase chega SANITIZADO (espaco/barra -> '_'), entao restaura as variacoes
+        // possiveis e valida se ALGUMA existe na tabela de fases.
+        if ($var_parent != '') {
+            if (preg_match('/^F\d+_(.+)$/', $var_parent, $var_m)) {
+                // NRC nao pode mudar de fase pelo arrasto: segue a fase da rotina-mae
+                if ($var_task_eh_nrc) {
+                    echo json_encode(array('status' => 'error', 'msg' => 'Nao rotina nao pode ser movida de fase pelo Gantt - ela segue a fase da rotina de origem.'));
+                    die();
+                }
+
+                // Variacoes possiveis do phase_code (o id chegou com '_' no lugar de espaco/barra)
+                $var_fase_raw = $var_m[1];
+                $var_fase_candidatos = array(
+                    $var_fase_raw,
+                    str_replace('_', ' ', $var_fase_raw),
+                    str_replace('_', '/', $var_fase_raw)
+                );
+                $var_fase_candidatos_esc = array_map('addslashes', $var_fase_candidatos);
+
+                // Valida contra a tabela de fases (mesmo lookup do form)
+                $var_sql_fase = "SELECT phase_code
+                                 FROM mro_project_phases
+                                 WHERE phase_code IN ('" . implode("','", $var_fase_candidatos_esc) . "')
+                                 LIMIT 1";
+                sc_lookup(rs_fase, $var_sql_fase);
+
+                if ({rs_fase} === false) {
+                    echo json_encode(array('status' => 'error', 'msg' => 'Erro ao validar a fase da tarefa.'));
+                    die();
+                }
+
+                if (empty({rs_fase})) {
+                    echo json_encode(array('status' => 'error', 'msg' => 'Fase invalida para a tarefa.'));
+                    die();
+                }
+
+                // Usa o phase_code REAL existente na tabela de fases
+                $var_phase_code = addslashes({rs_fase[0][0]});
+                $var_sets[] = "phase_code = '" . $var_phase_code . "'";
+                $var_campos_alterados[] = 'fase';
+            }
+        }
+
+        if (empty($var_sets)) {
+            echo json_encode(array('status' => 'error', 'msg' => 'Nenhum campo de planejamento alterado.'));
+            die();
+        }
+
+        $var_sets[] = "updated_at = CURRENT_TIMESTAMP";
+
+        $var_sql = "UPDATE mro_tasks SET " . implode(', ', $var_sets) . " WHERE task_id = " . $var_task_id;
+        sc_exec_sql($var_sql);
+
+        // Auditoria no log unico de transicoes (mro_task_history)
+        $var_rem = 'GANTT_EDIT: ' . implode(', ', $var_campos_alterados) . ' (planejamento)';
+        $var_sql_hist = "INSERT INTO mro_task_history (task_id, action_taken, user_login, remarks)
+                         VALUES (" . $var_task_id . ", 'GANTT_EDIT', '" . $var_usuario_logado . "', '" . $var_rem . "')";
+        sc_exec_sql($var_sql_hist);
+        sc_log_add("gantt_save", "Edicao de planejamento da task " . $var_task_id . " por " . $var_usuario_logado);
+
+        echo json_encode(array('status' => 'success', 'msg' => 'Planejamento atualizado com sucesso.', 'task_id' => $var_task_id));
+        die();
+    }
+
+    echo json_encode(array('status' => 'error', 'msg' => 'Acao nao reconhecida.'));
+    die();
+}
+
+// ----------------------------------------------------------------------------
+// 2. CAPTURA DO FILTRO DE PROJETO (vindo de outra aplicacao)
+// ----------------------------------------------------------------------------
+// Prioridade 1: [glo_project_ids] - lista separada por virgula (multi-projeto)
+// Prioridade 2: [glo_project_id]  - projeto unico (compatibilidade)
+$var_project_ids = array();
+
+if (isset([glo_project_ids]) && !empty([glo_project_ids])) {
+    foreach (explode(',', (string)[glo_project_ids]) as $var_p) {
+        $var_p = trim($var_p);
+        if (preg_match('/^\d+$/', $var_p)) {
+            $var_project_ids[] = (int)$var_p;
+        }
+    }
+}
+
+if (empty($var_project_ids) && isset([glo_project_id]) && !empty([glo_project_id]) && preg_match('/^\d+$/', (string)[glo_project_id])) {
+    $var_project_ids[] = (int)[glo_project_id];
+}
+
+// Validacao: exige ao menos um projeto
+if (empty($var_project_ids)) {
+    echo "<html><body style='font-family:Roboto,Arial,sans-serif;background:#f4f6f8;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;'>"
+       . "<div style='background:#fff;border:1px solid #e2e8f0;border-left:4px solid #fc8181;border-radius:6px;padding:20px 24px;max-width:480px;box-shadow:0 2px 6px rgba(0,0,0,.05);'>"
+       . "<h3 style='margin:0 0 8px;color:#c53030;font-size:16px;'>Projeto nao informado</h3>"
+       . "<p style='margin:0;color:#4a5568;font-size:13px;line-height:1.5;'>A aplicacao de origem deve definir <strong>glo_project_ids</strong> (lista) ou <strong>glo_project_id</strong> antes de abrir o Gantt (sc_set_global + sc_redir).</p>"
+       . "</div></body></html>";
+    exit;
+}
+
+$var_where = '';
+$var_proj_descricao = '';
+if (count($var_project_ids) == 1) {
+    // Projeto unico: mantem o comportamento atual (WHERE = e descricao do p6_proj_id)
+    $var_project_id = $var_project_ids[0];
+    $var_where = ' WHERE project_id = ' . $var_project_id;
+
+    $var_sql_proj = "SELECT project_id, p6_proj_id
+                     FROM mro_projects
+                     WHERE project_id = " . $var_project_id;
+    sc_lookup(rs_proj_desc, $var_sql_proj);
+
+    if ({rs_proj_desc} !== false && is_array({rs_proj_desc}) && count({rs_proj_desc}) > 0) {
+        $var_proj_descricao = (!empty({rs_proj_desc[0][1]})) ? trim({rs_proj_desc[0][1]}) : ('Projeto ' . $var_project_id);
+    } else {
+        $var_proj_descricao = 'Projeto ' . $var_project_id;
+    }
+} else {
+    // Multi-projeto: WHERE IN e descricao com todos os p6_proj_id
+    $var_where = ' WHERE project_id IN (' . implode(', ', $var_project_ids) . ')';
+
+    $var_sql_proj = "SELECT project_id, p6_proj_id
+                     FROM mro_projects
+                     WHERE project_id IN (" . implode(', ', $var_project_ids) . ")
+                     ORDER BY project_id";
+    sc_lookup(rs_proj_desc, $var_sql_proj);
+
+    $var_cods = array();
+    if ({rs_proj_desc} !== false && is_array({rs_proj_desc}) && count({rs_proj_desc}) > 0) {
+        foreach ({rs_proj_desc} as $var_row) {
+            $var_cods[] = (!empty($var_row[1])) ? trim($var_row[1]) : ('Proj ' . (int)$var_row[0]);
+        }
+    }
+    if (empty($var_cods)) {
+        $var_cods[] = 'Projetos ' . implode(', ', $var_project_ids);
+    }
+    $var_proj_descricao = implode(', ', $var_cods);
+}
+
+// DEBUG: filtros recebidos (padrao blank_dash_encerramento)
+$var_debug = "DEBUG gantt -> glo_project_ids: '" . (isset([glo_project_ids]) ? [glo_project_ids] : 'NAO SETADO') .
+    "' | glo_project_id: '" . (isset([glo_project_id]) ? [glo_project_id] : 'NAO SETADO') .
+    "' | projetos aplicados: '" . implode(',', $var_project_ids) . "' | usuario: '" . $var_usuario_logado . "'";
+sc_log_add("gantt_debug", $var_debug);
+
+// Link para voltar ao grid de projetos
+$var_link_voltar = sc_make_link(grid_public_mro_projects);
+
+// O link do form_public_mro_tasks e montado por task dentro do loop do datasource
+// (campo FormTaskUrl no array) - evita placeholder que o ScriptCase interpreta como constante.
+
+// ----------------------------------------------------------------------------
+// 4. DADOS DO GANTT (view_gantt_datasource)
+// ----------------------------------------------------------------------------
+$var_sql = "SELECT 
+                id_unico, 
+                id_pai, 
+                codigo_atividade,
+                nome_tarefa, 
+                to_char(data_inicio, 'YYYY-MM-DD') as data_inicio, 
+                to_char(data_fim, 'YYYY-MM-DD') as data_fim, 
+                progresso, 
+                tipo, 
+                predecessores 
+            FROM view_gantt_datasource" . $var_where . "
+            ORDER BY phase_sort ASC, task_sort_date ASC";
+
+sc_select(rs, $var_sql);
 
 $data = array();
 
 if (isset($rs->fields)) {
     while (!$rs->EOF) {
-        // TRATAMENTO CRÍTICO: Se id_pai for vazio, o Syncfusion exige que seja 'null' puro, não string vazia
-        $pai = trim($rs->fields['id_pai']);
-        $parent_id = ($pai === '') ? null : $pai;
-        
+        // TRATAMENTO CRITICO: Se id_pai for vazio, o Syncfusion exige 'null' puro
+        $var_pai = trim($rs->fields['id_pai']);
+        $var_parent_id = ($var_pai === '') ? null : $var_pai;
+
+        // Apenas TASK/NRC (id numerico) sao editaveis; PROJECT (P..) e PHASE (F..) nao
+        $var_id_unico = (string)$rs->fields['id_unico'];
+        $var_editavel = (preg_match('/^\d+$/', $var_id_unico)) ? true : false;
+
+        // SANITIZACAO DE IDS: phase_code pode ter espaco ou barra (ex: 'A OPEN', 'OP/FUNC')
+        // que geram classes CSS invalidas no Syncfusion (gridrowtaskIdF2_A OPEN...) e quebram
+        // a renderizacao da timeline. Substitui espaco e barra por '_' nos ids/hierarquia.
+        $var_id_unico_san = str_replace(array(' ', '/'), '_', $var_id_unico);
+        $var_id_pai_san   = ($var_parent_id === null) ? null : str_replace(array(' ', '/'), '_', $var_parent_id);
+
+        // Tratamento de data fim: se vazia ou igual a data de inicio (mesmo dia),
+        // o Syncfusion trata como milestone (hexagono). Para tasks/NRC de 1 dia,
+        // soma 1 dia no fim para exibir como barra normal.
+        $var_data_inicio = $rs->fields['data_inicio'];
+        $var_data_fim    = $rs->fields['data_fim'];
+
+        if ($var_data_fim === null || $var_data_fim === '') {
+            $var_data_fim = $var_data_inicio;
+        }
+
+        if ($var_editavel && $var_data_inicio != '' && $var_data_fim == $var_data_inicio) {
+            $var_data_fim = date('Y-m-d', strtotime($var_data_inicio . ' +1 day'));
+        }
+
+        // Link do form por task (apenas tasks editaveis) - montado com o task_id real.
+        // Padrao do projeto (mesmo do blank_dash_encerramento): sc_make_link(app, nome=$var)
+        // SEM aspas no parametro - com aspas/concat o parser da macro cola o texto literal.
+        $var_url_edit = '';
+        if ($var_editavel) {
+            $var_url_edit = sc_make_link(form_public_mro_tasks, task_id=$var_id_unico);
+        }
+
         $data[] = array(
-            'TaskId'      => $rs->fields['id_unico'],
+            'TaskId'      => $var_id_unico_san,
             'TaskCode'    => $rs->fields['codigo_atividade'],
             'TaskName'    => $rs->fields['nome_tarefa'],
-            'StartDate'   => $rs->fields['data_inicio'],
-            'EndDate'     => $rs->fields['data_fim'],
+            'StartDate'   => $var_data_inicio,
+            'EndDate'     => $var_data_fim,
             'Progress'    => (int)$rs->fields['progresso'],
-            'ParentId'    => $parent_id,
+            'ParentId'    => $var_id_pai_san,
             'Predecessor' => $rs->fields['predecessores'],
-            'Type'        => $rs->fields['tipo']
+            'Type'        => $rs->fields['tipo'],
+            'IsEditable'  => $var_editavel,
+            'FormTaskUrl' => $var_url_edit
         );
         $rs->MoveNext();
     }
     $rs->Close();
 }
 
-$json_datasource = json_encode($data);
+$json_datasource = json_encode($data) ?: '[]';
 ?>
 
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>MRO System - Gantt Fases</title>
-    
+    <title>MRO System - Gantt de Fases</title>
+
     <link href="/libs/syncfusion/styles/material3.css" rel="stylesheet">
     <script src="/libs/syncfusion/scripts/ej2-syncfusion.js" type="text/javascript"></script>
     <script src="/libs/syncfusion/mro_config.js" type="text/javascript"></script>
-    
+
     <style>
-        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: 'Roboto', sans-serif; }
-        #GanttContainer { height: 100%; width: 100%; }
+        body, html {
+            margin: 0; padding: 0; height: 100%; overflow: hidden;
+            font-family: 'Roboto', 'Segoe UI', Tahoma, sans-serif;
+            background-color: #f4f6f8;
+        }
+
+        .dashboard-header {
+            font-size: 18px;
+            color: #1a202c;
+            margin-bottom: 4px;
+            font-weight: 600;
+            border-bottom: 2px solid #e2e8f0;
+            padding: 12px 15px 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-voltar-filtro {
+            margin-left: auto;
+            background: #edf2f7;
+            border: 1px solid #cbd5e0;
+            color: #2d3748;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 6px 14px;
+            border-radius: 4px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+        .btn-voltar-filtro:hover { background: #e2e8f0; border-color: #a0aec0; }
+
+        .badge-projeto {
+            background: #1a202c;
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        .dashboard-sub {
+            font-size: 13px;
+            color: #4a5568;
+            margin-bottom: 10px;
+            padding: 0 15px;
+        }
+        .sub-linha { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; line-height: 1.6; }
+        .sub-linha.meta { font-size: 12px; color: #718096; gap: 16px; }
+        .meta-label { font-weight: 600; color: #4a5568; }
+        .badge-status {
+            font-size: 10px; font-weight: 700; padding: 2px 8px;
+            border-radius: 10px; text-transform: uppercase; letter-spacing: 0.4px;
+        }
+        .badge-status.status-in-progress { background: #fefcbf; color: #744210; }
+        .badge-status.status-hint { background: #bee3f8; color: #2a4365; }
+
+        #GanttContainer { height: calc(100vh - 140px); width: 100%; }
     </style>
 </head>
 <body>
 
+    <div class="dashboard-header">
+        MRO System - Gantt de Fases
+        <span class="badge-projeto"><?php echo $var_proj_descricao; ?></span>
+        <a class="btn-voltar-filtro" href="<?php echo $var_link_voltar; ?>" title="Voltar aos projetos">&#8592; Voltar Projetos</a>
+    </div>
+    <div class="dashboard-sub">
+        <div class="sub-linha">
+            <strong>Planejamento de tarefas por fase operacional</strong>
+            <span class="badge-status status-in-progress">Edicao: arraste a barra ou edite a celula</span>
+        </div>
+    </div>
+
     <div id="GanttContainer"></div>
 
     <script>
-        // 2. INICIALIZAÇÃO DO COMPONENTE GANTT
+        // =========================================================================
+        // INJETANDO OS JSONS GERADOS PELO PHP NO JAVASCRIPT
+        // =========================================================================
         var ganttData = <?php echo $json_datasource; ?>;
 
-        var ganttChart = new ej.gantt.Gantt({
-            dataSource: ganttData,
-            locale: 'pt-BR', 
-            
-            height: '100%',
-            width: '100%',
-            allowResizing: true,
-            rowHeight: 40,
-            taskbarHeight: 25,
-            
-            // O Segredo da Hierarquia Visual:
-            treeColumnIndex: 1, // <--- Isso força as setinhas a aparecerem na coluna 'TaskName'
-            
-            taskFields: {
-                id: 'TaskId',
-                code: 'TaskCode',
-                name: 'TaskName',
-                startDate: 'StartDate',
-                endDate: 'EndDate',
-                progress: 'Progress',
-                parentID: 'ParentId',     
-                dependency: 'Predecessor' 
-            },
-            
-            timelineSettings: {
-                timelineUnitSize: 60,
-                topTier: { unit: 'Week', format: 'dd/MM/yyyy' },
-                bottomTier: { unit: 'Day' }
-            },
-            
-            toolbar: ['Add', 'Edit', 'Update', 'Delete', 'Cancel', 'ExpandAll', 'CollapseAll', 'ZoomIn', 'ZoomOut'],
-            
-            editSettings: {
-                allowAdding: true,
-                allowEditing: true,
-                allowDeleting: true,
-                allowTaskbarEditing: true,
-                showDeleteConfirmDialog: true,
-                mode: 'Auto'
-            },
-            
-            // Repare que mudei a ordem para o TaskName ficar no índice 1 (onde as setinhas vão morar)
-            columns: [
-                { field: 'TaskId', isPrimaryKey: true, visible: false }, 
-                { field: 'TaskName', headerText: 'Descrição do Work Scope', width: '300'},
-                { field: 'TaskCode', headerText: 'Código / Fase', width: '130', textAlign: 'Left' },
-                { field: 'StartDate', headerText: 'Início', width: '100', format: 'dd/MM/yyyy' },
-                { field: 'EndDate', headerText: 'Fim', width: '100', format: 'dd/MM/yyyy' },
-                { field: 'Progress', headerText: '%', width: '70', textAlign: 'Center' }
-            ],
-            
-            // 3. COLORIZAÇÃO DA HIERARQUIA DINÂMICA
-            queryTaskbarInfo: function(args) {
-                if (args.data.Type === 'PROJECT') {
-                    args.taskbarBgColor = '#212529'; 
-                    args.progressBarBgColor = '#000000';
-                } 
-                else if (args.data.Type === 'PHASE') {
-                    args.taskbarBgColor = '#6c757d'; 
-                    args.progressBarBgColor = '#495057';
-                } 
-                else if (args.data.Type === 'NRC') {
-                    args.taskbarBgColor = '#fd7e14'; 
-                    args.progressBarBgColor = '#d35400';
-                } 
-                else {
-                    args.taskbarBgColor = '#007bff';
-                    args.progressBarBgColor = '#0056b3';
-                }
+        // =========================================================================
+        // UTILITARIOS
+        // =========================================================================
+        function formatarDataGantt(dt) {
+            if (!dt) return '';
+            var d = new Date(dt);
+            if (isNaN(d.getTime())) return '';
+            var mes = ('0' + (d.getMonth() + 1)).slice(-2);
+            var dia = ('0' + d.getDate()).slice(-2);
+            return d.getFullYear() + '-' + mes + '-' + dia;
+        }
+
+        // Aviso discreto (toast) para nao recarregar a pagina a cada edicao
+        function avisarGantt(msg) {
+            var el = document.getElementById('ganttToast');
+            if (!el) {
+                el = document.createElement('div');
+                el.id = 'ganttToast';
+                el.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#1a202c;color:#fff;padding:10px 16px;border-radius:6px;font-size:13px;font-family:Roboto,sans-serif;z-index:9999;opacity:0;transition:opacity .3s;box-shadow:0 2px 8px rgba(0,0,0,.2);';
+                document.body.appendChild(el);
             }
-        });
-        
-        ganttChart.appendTo('#GanttContainer');
+            el.textContent = msg;
+            el.style.opacity = '1';
+            setTimeout(function(){ el.style.opacity = '0'; }, 2500);
+        }
+
+        // =========================================================================
+        // MODAL DO FORM DA TAREFA (form_public_mro_tasks)
+        // Abre o form completo em um modal simples (iframe) e, ao fechar,
+        // recarrega o Gantt para refletir as alteracoes feitas no form.
+        // =========================================================================
+        var modalTask = null;
+
+        function abrirModalTask(url) {
+            if (modalTask) { fecharModalTask(); }
+
+            modalTask = document.createElement('div');
+            modalTask.id = 'ganttModalTask';
+            modalTask.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:center;justify-content:center;';
+
+            var box = document.createElement('div');
+            box.style.cssText = 'background:#fff;width:1400px;max-width:95%;height:90%;border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,.3);display:flex;flex-direction:column;overflow:hidden;';
+
+            // Barra do modal com botao fechar
+            var bar = document.createElement('div');
+            bar.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:8px 14px;background:#1a202c;color:#fff;font-size:13px;font-weight:600;font-family:Roboto,sans-serif;';
+            bar.innerHTML = '<span>Edicao da Tarefa</span>';
+            var btnClose = document.createElement('button');
+            btnClose.textContent = 'Fechar';
+            btnClose.style.cssText = 'background:#e53e3e;border:none;color:#fff;font-size:12px;font-weight:600;padding:5px 12px;border-radius:4px;cursor:pointer;';
+            btnClose.onclick = fecharModalTask;
+            bar.appendChild(btnClose);
+
+            var iframe = document.createElement('iframe');
+            iframe.src = url;
+            iframe.style.cssText = 'flex:1;width:100%;border:none;';
+
+            box.appendChild(bar);
+            box.appendChild(iframe);
+            modalTask.appendChild(box);
+            document.body.appendChild(modalTask);
+        }
+
+        function fecharModalTask() {
+            if (modalTask) {
+                document.body.removeChild(modalTask);
+                modalTask = null;
+                // Ao fechar, recarrega o Gantt para refletir as alteracoes
+                location.reload();
+            }
+        }
+
+        // =========================================================================
+        // DUPLO CLIQUE NA TASKBAR -> ABRE O FORM EM MODAL
+        // O Syncfusion abre o dialogo nativo de edicao ao dar duplo clique na barra,
+        // e seus eventos (actionBegin/dialogOpen/recordDoubleClick) nao disparam de
+        // forma confiavel nesta versao. A solucao robusta e interceptar o dblclick
+        // no DOM (fase de CAPTURA, roda antes do handler do Syncfusion), ler o
+        // atributo rowuniqueid (task_id) da taskbar e abrir o form_public_mro_tasks.
+        // =========================================================================
+        function configurarDuploCliqueModal() {
+            var container = document.getElementById('GanttContainer');
+            if (!container) return;
+
+            container.addEventListener('dblclick', function(e) {
+                // Soh intercepta se o clique foi em uma taskbar (barra da task)
+                var taskbarMain = e.target.closest('.e-taskbar-main-container');
+                if (!taskbarMain) return;
+
+                var taskId = taskbarMain.getAttribute('rowuniqueid');
+                if (!taskId || !/^\d+$/.test(taskId)) return; // apenas tasks numericas (nao fase/projeto)
+
+                // Bloqueia o comportamento nativo do Syncfusion (dialogo de edicao)
+                e.preventDefault();
+                e.stopPropagation();
+
+                // Busca o link do form montado no PHP (FormTaskUrl) pelo task_id
+                var url = null;
+                for (var i = 0; i < ganttData.length; i++) {
+                    if (String(ganttData[i].TaskId) === taskId) {
+                        url = ganttData[i].FormTaskUrl || null;
+                        break;
+                    }
+                }
+                if (!url) return;
+                abrirModalTask(url);
+            }, true); // capture: executa ANTES do handler interno do Syncfusion
+        }
+
+        // O Syncfusion adiciona o campo Progress (e % e editavel) automaticamente ao dialogo
+        // de edicao mesmo com editDialogFields. Como os eventos do Gantt (dialogOpen/actionBegin)
+        // nao disparam de forma confiavel nesta versao, usa um MutationObserver no body que
+        // esconde a coluna do Progress SEMPRE que ela aparecer no DOM (independe do evento).
+        function configurarOcultarProgress() {
+            var timer = null;
+
+            function esconderProgress() {
+                var escondeu = false;
+                // Label com id terminando em Progress
+                var lbls = document.querySelectorAll('label[id$="Progress"]');
+                for (var i = 0; i < lbls.length; i++) {
+                    var col = lbls[i].closest('.e-edit-form-column');
+                    if (col) { col.style.display = 'none'; escondeu = true; }
+                }
+                // Fallback: coluna com label '%'
+                var colunas = document.querySelectorAll('.e-edit-form-column');
+                for (var j = 0; j < colunas.length; j++) {
+                    var lbl = colunas[j].querySelector('label');
+                    if (lbl && lbl.textContent.trim() === '%') {
+                        colunas[j].style.display = 'none';
+                        escondeu = true;
+                    }
+                }
+                return escondeu;
+            }
+
+            // Observa o body: qualquer adicao de no pode conter o dialogo com o campo Progress
+            var observer = new MutationObserver(function() {
+                // Debounce: processa apos o DOM estabilizar
+                if (timer) { clearTimeout(timer); }
+                timer = setTimeout(function() {
+                    if (esconderProgress()) {
+                        // Se o dialogo do Gantt estiver aberto, para; senao continua observando
+                        // (mantem o observer ativo pois o dialogo pode abrir depois)
+                    }
+                }, 100);
+            });
+            observer.observe(document.body, { childList: true, subtree: true });
+
+            // Executa uma vez no carregamento
+            esconderProgress();
+        }
+
+        // =========================================================================
+        // RENDERIZACAO DEFENSIVA (padrao blank_dash_encerramento)
+        // =========================================================================
+        function renderizarGantt() {
+            if (!(window.ej && ej.gantt)) {
+                console.error('[Gantt] Biblioteca Syncfusion (ej.gantt) NAO carregou.');
+                var el = document.getElementById('GanttContainer');
+                if (el) {
+                    el.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#c05621;font-size:13px;font-family:Roboto,sans-serif;">Biblioteca Syncfusion nao carregou. Verifique /libs/syncfusion/ no console (F12).</div>';
+                }
+                return;
+            }
+
+            var ganttChart = new ej.gantt.Gantt({
+                dataSource: ganttData,
+                locale: 'pt-BR',
+
+                height: '100%',
+                width: '100%',
+                allowResizing: true,
+                rowHeight: 40,
+                taskbarHeight: 25,
+
+                // Forca as setinhas da hierarquia na coluna 'TaskName'
+                treeColumnIndex: 1,
+
+                taskFields: {
+                    id: 'TaskId',
+                    code: 'TaskCode',
+                    name: 'TaskName',
+                    startDate: 'StartDate',
+                    endDate: 'EndDate',
+                    progress: 'Progress',
+                    parentID: 'ParentId',
+                    dependency: 'Predecessor'
+                },
+
+                timelineSettings: {
+                    timelineUnitSize: 60,
+                    topTier: { unit: 'Week', format: 'dd/MM/yyyy' },
+                    bottomTier: { unit: 'Day' }
+                },
+
+                // Sem Add/Delete: CRUD proprio e form_public_mro_tasks
+                toolbar: ['Edit', 'Update', 'Cancel', 'ExpandAll', 'CollapseAll', 'ZoomIn', 'ZoomOut'],
+
+                editSettings: {
+                    allowAdding: false,
+                    allowEditing: true,
+                    allowDeleting: false,
+                    allowTaskbarEditing: true,
+                    showDeleteConfirmDialog: false,
+                    mode: 'Auto'
+                },
+
+                // Dialogo de edicao (duplo clique na barra) - controlado por editDialogFields,
+                // NAO pelas colunas. Exibe somente os campos de planejamento editaveis.
+                editDialogFields: [
+                    { type: 'General', headerText: 'Edicao de Planejamento' },
+                    { field: 'TaskName', headerText: 'Descricao do Work Scope', type: 'TextBox' },
+                    { field: 'StartDate', headerText: 'Inicio', type: 'DatePicker', format: 'dd/MM/yyyy' },
+                    { field: 'EndDate', headerText: 'Fim', type: 'DatePicker', format: 'dd/MM/yyyy' }
+                ],
+
+                columns: [
+                    { field: 'TaskId', isPrimaryKey: true, visible: false },
+                    { field: 'TaskName', headerText: 'Descricao do Work Scope', width: '300'},
+                    // task_code nao e editavel pelo Gantt (regra do form_public_mro_tasks)
+                    { field: 'TaskCode', headerText: 'Codigo / Fase', width: '130', textAlign: 'Left', allowEditing: false },
+                    { field: 'StartDate', headerText: 'Inicio', width: '100', format: 'dd/MM/yyyy' },
+                    { field: 'EndDate', headerText: 'Fim', width: '100', format: 'dd/MM/yyyy' },
+                    // Progresso e derivado do status (COMPLETED=100, IN_PROGRESS=50) - nao editavel
+                    { field: 'Progress', headerText: '%', width: '70', textAlign: 'Center', allowEditing: false }
+                ],
+
+                // Colorizacao da hierarquia dinamica
+                queryTaskbarInfo: function(args) {
+                    if (args.data.Type === 'PROJECT') {
+                        args.taskbarBgColor = '#212529';
+                        args.progressBarBgColor = '#000000';
+                    }
+                    else if (args.data.Type === 'PHASE') {
+                        args.taskbarBgColor = '#6c757d';
+                        args.progressBarBgColor = '#495057';
+                    }
+                    else if (args.data.Type === 'NRC') {
+                        args.taskbarBgColor = '#fd7e14';
+                        args.progressBarBgColor = '#d35400';
+                    }
+                    else {
+                        args.taskbarBgColor = '#007bff';
+                        args.progressBarBgColor = '#0056b3';
+                    }
+                },
+
+                // Bloqueia edicao/add/delete de linhas PROJECT e PHASE (nao persistiveis)
+                // Duplo clique que abriria o dialogo nativo (rowEditing) -> abre o form em modal
+                actionBegin: function(args) {
+                    // Duplo clique na taskbar/linha (abriria o dialogo nativo do Gantt)
+                    // -> cancela o dialogo e abre o form_public_mro_tasks em modal
+                    if (args.requestType === 'rowEditing') {
+                        var dadosRow = args.data || args.rowData;
+                        if (Array.isArray(dadosRow)) { dadosRow = dadosRow[0]; }
+                        if (dadosRow && dadosRow.IsEditable === true) {
+                            args.cancel = true; // cancela o dialogo nativo
+                            if (dadosRow.FormTaskUrl) { abrirModalTask(dadosRow.FormTaskUrl); }
+                            return;
+                        }
+                    }
+
+                    // Bloqueia edicao/add/delete de linhas PROJECT e PHASE (nao persistiveis)
+                    if (args.requestType === 'save' || args.requestType === 'delete' || args.requestType === 'add'
+                        || args.requestType === 'cellEditing' || args.requestType === 'rowEditing') {
+                        var dados = args.data || args.rowData || args.rowData;
+                        if (Array.isArray(dados)) { dados = dados[0]; }
+                        if (dados && dados.IsEditable === false) {
+                            args.cancel = true;
+                            alert('Esta linha (Projeto/Fase) nao e editavel pelo Gantt.');
+                        }
+                    }
+                },
+
+                // Salvamento via AJAX (mesmo padrao das blanks: POST para a propria app)
+                actionComplete: function(args) {
+                    if (args.requestType === 'save') {
+                        var dados = args.data;
+                        if (Array.isArray(dados)) { dados = dados[0]; }
+                        if (!dados || dados.IsEditable === false) { return; }
+
+                        var payload = {
+                            action_gantt: 'SAVE_TASK',
+                            task_id: dados.TaskId,
+                            task_name: dados.TaskName,
+                            target_start: formatarDataGantt(dados.StartDate),
+                            target_end: formatarDataGantt(dados.EndDate),
+                            // parent_task_id e enviado apenas para o backend detectar o arrasto
+                            // para FASE (F{projeto}_{fase}); hierarquia entre tasks nao e alterada
+                            parent_task_id: (dados.ParentId === null || dados.ParentId === undefined) ? '' : dados.ParentId
+                        };
+
+                        // fetch nativo (a blank nao carrega jQuery)
+                        // envia como form-urlencoded para preencher o $_POST no PHP
+                        var params = Object.keys(payload).map(function(k) {
+                            return encodeURIComponent(k) + '=' + encodeURIComponent(payload[k]);
+                        }).join('&');
+
+                        fetch('', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+                            body: params
+                        })
+                        .then(function(resp) { return resp.json(); })
+                        .then(function(resp) {
+                            if (resp.status === 'success') {
+                                // Sem reload: o Gantt ja refletiu a edicao localmente
+                                avisarGantt('Planejamento salvo.');
+                            } else {
+                                alert('Erro: ' + resp.msg);
+                            }
+                        })
+                        .catch(function() {
+                            alert('Erro de comunicacao ao salvar o planejamento.');
+                        });
+                    }
+                },
+
+                // Duplo clique na task -> abre o form completo em modal (padrao do projeto)
+                // Fallback caso o actionBegin rowEditing nao dispare em alguma versao
+                recordDoubleClick: function(args) {
+                    if (args.rowData && args.rowData.IsEditable === true && args.rowData.FormTaskUrl
+                        && !document.getElementById('ganttModalTask')) {
+                        abrirModalTask(args.rowData.FormTaskUrl);
+                    }
+                }
+            });
+
+            ganttChart.appendTo('#GanttContainer');
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function() {
+                renderizarGantt();
+                configurarOcultarProgress();
+                configurarDuploCliqueModal();
+            });
+        } else {
+            renderizarGantt();
+            configurarOcultarProgress();
+            configurarDuploCliqueModal();
+        }
     </script>
 </body>
 </html>

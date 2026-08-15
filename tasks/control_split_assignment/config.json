@@ -4,7 +4,13 @@
   "nome_tabela": "control_split_assignment",
   "campos": [
     {
-      "nome": "assignment_id",
+      "nome": "task_info",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "skill_info",
       "tipo": "varchar",
       "required": false,
       "pk": false
@@ -22,25 +28,19 @@
       "pk": false
     },
     {
-      "nome": "hours_split",
-      "tipo": "varchar",
-      "required": false,
-      "pk": false
-    },
-    {
-      "nome": "skill_info",
-      "tipo": "varchar",
-      "required": false,
-      "pk": false
-    },
-    {
       "nome": "status_info",
       "tipo": "varchar",
       "required": false,
       "pk": false
     },
     {
-      "nome": "task_info",
+      "nome": "hours_split",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "assignment_id",
       "tipo": "varchar",
       "required": false,
       "pk": false

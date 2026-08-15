@@ -1,4 +1,0 @@
--- MRO-122 - blank_abertura_nrc (app Blank - nao possui tabela propria)
--- A app executa INSERT em public.mro_tasks (is_nrc = true), mesma
--- tabela utilizada pelo ctrl_abertura_nrc.
--- Referencia: public.mro_tasks

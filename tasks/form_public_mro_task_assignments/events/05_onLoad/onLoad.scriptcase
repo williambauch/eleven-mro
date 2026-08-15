@@ -5,6 +5,56 @@ sc_btn_display('Pause', 'off');
 sc_btn_display('Play', 'on');
 
 // =================================================================================
+// MRO-126: BLOQUEIO DE DUPLICIDADE (outra task do mecanico em andamento)
+// =================================================================================
+// Se o mecanico ja possui outro timesheet IN_PROGRESS (em outra assignment),
+// oculta/desabilita o Play e mostra um card com a mensagem de erro + link
+// para pausar a tarefa em andamento. Assim ninguem consegue dar Play.
+$var_emp_id = [usr_employee_id];
+$sql_concorrencia = "SELECT ts.assignment_id, ts.timesheet_id, p.p6_proj_id, t.task_code, e.full_name
+                     FROM mro_timesheet ts
+                     JOIN mro_task_assignments a ON a.assignment_id = ts.assignment_id
+                     JOIN mro_tasks t ON t.task_id = a.task_id
+                     JOIN mro_projects p ON p.project_id = a.project_id
+                     JOIN mro_employees e ON e.employee_id = ts.employee_id
+                     WHERE ts.employee_id = " . (int)$var_emp_id . "
+                       AND ts.status = 'IN_PROGRESS'
+                       AND ts.assignment_id <> " . (int){assignment_id} . "
+                     LIMIT 1";
+sc_lookup(ds_concorrencia, $sql_concorrencia);
+
+if (!empty({ds_concorrencia})) {
+    $var_ass_bloqueio = (int){ds_concorrencia[0][0]};
+    $var_ts_bloqueio  = (int){ds_concorrencia[0][1]};
+    $var_projeto      = {ds_concorrencia[0][2]};
+    $var_jic          = {ds_concorrencia[0][3]};
+    $var_mecanico     = {ds_concorrencia[0][4]};
+
+    sc_btn_display('Play', 'off');
+    sc_btn_disabled('Play', 'on');
+
+    // MRO-126: link leva para o form da task que esta com o timesheet aberto
+    // (ali o mecanico ve o cronometro rodando e o botao Pause disponivel).
+    // Passa glo_assignment_id (o schema do form filtra por ele - seguranca).
+    $var_link_pause = sc_make_link(form_public_mro_task_assignments, glo_assignment_id=$var_ass_bloqueio;assignment_id=$var_ass_bloqueio);
+
+    {display_tempo} = "
+        <div style='font-size: 15px; font-weight: 800; color: #d93025; font-family: Roboto, sans-serif; text-align: center; padding: 20px; background: #fce8e6; border-radius: 8px; border: 2px solid #d93025; width: 360px; margin: 0 auto;'>
+            <i class='fas fa-exclamation-triangle'></i> APONTAMENTO DUPLICADO<br>
+            <span style='font-size: 13px; font-weight: 400; display: block; margin-top: 8px; line-height: 1.5;'>
+                Erro: Apontamento duplicado para o Projeto $var_projeto - JIC $var_jic - Mecânico $var_mecanico.<br>
+                <strong>Assignment Id: $var_ass_bloqueio</strong>
+            </span>
+            <a href='$var_link_pause' style='display: inline-block; margin-top: 12px; padding: 8px 16px; background: #d93025; color: #fff; text-decoration: none; border-radius: 4px; font-size: 13px; font-weight: 600;'>
+                <i class='fas fa-stopwatch'></i> Ir para a tarefa em andamento
+            </a>
+        </div>
+    ";
+
+    return;
+}
+
+// =================================================================================
 // 2. A QUERY MESTRA (Soma o passado e o presente)
 // =================================================================================
 // Se end_time existe, ele pega a diferença exata (sessão pausada do passado).
@@ -55,19 +105,45 @@ $var_hh_texto = $var_planned > 0 ? "<div style='font-size:16px;font-weight:bold;
 // =================================================================================
 // 3. LÓGICA DE EXIBIÇÃO
 // =================================================================================
+// MRO-126: status finalizados nao permitem mais Clock-In (Play)
+$var_status_final = in_array({status_code}, array('SUPSIG', 'COMPLETED', 'CANCELLED', 'PENDING_HANDOVER', 'PENDING_INSP1', 'PENDING_INSP2'));
+
 if ({status_code} == 'IN_PROGRESS') {
     
     sc_btn_display('Play', 'off'); // Esconde o Play
     sc_btn_display('Pause', 'on'); // Mostra o Pause
     //sc_btn_display('Stop', 'on');  // Mostra o Stop
     
-    // O TRUQUE: O 'data-sec' guarda o tempo TOTAL acumulado. A img aciona o JS.
+    // O relogio NAO inicia mais aqui. O disparo do cronometro foi movido para o
+    // Javascript Geral Form > Onload na IDE do Scriptcase.
+    // Caminho na IDE: no menu lateral esquerdo, no grupo "Formulario", abaixo
+    // de sql tem um local chamado "Javascript" -> em Selecione o objeto escolha
+    // "Geral Form" -> em Selecione o evento escolha "Onload" -> por ultimo
+    // clique em editar.
+    // A div #mro_timer abaixo so carrega os dados (data-sec / data-planned)
+    // e o flag data-mro-ready='true' que o JS do Onload usa para disparar o
+    // cronometro. A mudanca de local foi feita porque a imagem <img src='x'>
+    // usada como gatilho nao existia e o carregamento dela deixava o load
+    // lento e as vezes travava o navegador.
+    // o data-sec  quarda o total acumado
+    {display_tempo} = "<div id='mro_timer' data-mro-ready='true' data-sec='$segundos_totais' data-planned='$var_planned' style='font-size: 38px; font-weight: 800; color: $var_hh_color; font-family: monospace; text-align: center; padding: 15px; background: $var_hh_bg; border-radius: 8px; border: 2px solid $var_hh_border; width: 250px; margin: 0 auto;'><i class='fas fa-stopwatch'></i> Carregando...<br><div style='margin-top: 4px;'>$var_hh_texto</div></div>";
+    
+} elseif ($var_status_final) {
+    // MRO-126: task finalizada (SUPSIG/COMPLETED/etc) — nao pode dar Clock-In
+    sc_btn_display('Play', 'off'); // Esconde o Play
+    sc_btn_disabled('Play', 'on');
+    sc_btn_display('Pause', 'off'); // Esconde o Pause
+
+    $var_status_label = {status_code};
+
     {display_tempo} = "
-        <div id='mro_timer' data-sec='$segundos_totais' data-planned='$var_planned' style='font-size: 38px; font-weight: 800; color: $var_hh_color; font-family: monospace; text-align: center; padding: 15px; background: $var_hh_bg; border-radius: 8px; border: 2px solid $var_hh_border; width: 250px; margin: 0 auto;'>
-            <i class='fas fa-stopwatch'></i> Carregando...<br>
-            <div style='margin-top: 4px;'>$var_hh_texto</div>
+        <div style='font-size: 15px; font-weight: 800; color: #6c757d; font-family: Roboto, sans-serif; text-align: center; padding: 20px; background: #e9ecef; border-radius: 8px; border: 2px solid #6c757d; width: 320px; margin: 0 auto;'>
+            <i class='fas fa-flag-checkered'></i> ATIVIDADE ENCERRADA<br>
+            <span style='font-size: 13px; font-weight: 400; display: block; margin-top: 8px;'>
+                Status: <strong>$var_status_label</strong><br>
+                Esta atribuicao nao aceita mais Clock-In.
+            </span>
         </div>
-        <img src='x' onerror='iniciar_relogio_mro(); this.remove();' style='display:none;'>
     ";
     
 } else {

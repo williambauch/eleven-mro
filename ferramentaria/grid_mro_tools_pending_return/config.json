@@ -1,22 +1,16 @@
 {
   "nome": "grid_mro_tools_pending_return",
   "tipo": "Grid",
-  "nome_tabela": "public.mro_tool_transactions",
+  "nome_tabela": "grid_mro_tools_pending_return",
   "campos": [
     {
-      "nome": "transaction_id",
-      "tipo": "int4",
-      "required": false,
-      "pk": true
-    },
-    {
-      "nome": "tool_id",
-      "tipo": "int4",
+      "nome": "checkout_time",
+      "tipo": "datetime",
       "required": false,
       "pk": false
     },
     {
-      "nome": "part_number",
+      "nome": "checkout_user",
       "tipo": "varchar",
       "required": false,
       "pk": false
@@ -28,14 +22,8 @@
       "pk": false
     },
     {
-      "nome": "serial_number",
-      "tipo": "varchar",
-      "required": false,
-      "pk": false
-    },
-    {
-      "nome": "tool_status",
-      "tipo": "varchar",
+      "nome": "dias_em_posse",
+      "tipo": "int4",
       "required": false,
       "pk": false
     },
@@ -52,25 +40,37 @@
       "pk": false
     },
     {
+      "nome": "part_number",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "serial_number",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
       "nome": "task_id",
       "tipo": "int4",
       "required": false,
       "pk": false
     },
     {
-      "nome": "checkout_time",
-      "tipo": "datetime",
+      "nome": "tool_id",
+      "tipo": "int4",
       "required": false,
       "pk": false
     },
     {
-      "nome": "checkout_user",
+      "nome": "tool_status",
       "tipo": "varchar",
       "required": false,
       "pk": false
     },
     {
-      "nome": "dias_em_posse",
+      "nome": "transaction_id",
       "tipo": "int4",
       "required": false,
       "pk": false

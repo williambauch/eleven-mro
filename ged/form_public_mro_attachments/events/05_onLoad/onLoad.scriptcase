@@ -7,6 +7,9 @@
 // 2) Monta [glo_att_subdir] SEMPRE, a partir dos campos do registro, para que
 //    o upload em edicao (troca de arquivo) tambem use a pasta correta.
 
+// Padrao de seguranca: subdiretorio base; sera refinado conforme o registro
+//[glo_att_subdir] = "/anexos_mro";
+
 if (sc_btn_new) {
     if ((int)[glo_att_task_id] > 0) {
         {task_id}     = (int)[glo_att_task_id];

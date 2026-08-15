@@ -1,12 +1,4 @@
 <?php
-/*----------------------------------------------------
-  ScriptCase Event File
-  Application: form_public_mro_task_resources
-  Type: Form
-  Event: onAfterUpdate
-  Created: 04/08/2026
-  Author: WBAUCH
-----------------------------------------------------*/
 
 // MRO-121: Apos alterar recurso, recalcula as horas orcadas
 // da task e atualiza o campo no form mestre aberto.

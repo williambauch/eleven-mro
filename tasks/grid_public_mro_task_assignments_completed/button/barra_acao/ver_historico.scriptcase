@@ -1,0 +1,14 @@
+<?php
+// ============================================================
+// BOTÃO DE BARRA DE AÇÃO: ver_historico
+// ============================================================
+// Tipo   : LINK
+// Label  : Ver Histórico
+// Ícone  : fas fa-clock-rotate-left
+// Estados:
+//   - state1 | Ver Histórico | fas fa-clock-rotate-left
+//
+// Liga para: blank_mro_timeline
+// Abertura  : Modal
+// Parâmetros: C?#?assignment_id?#?glo_assignment_id
+// ============================================================

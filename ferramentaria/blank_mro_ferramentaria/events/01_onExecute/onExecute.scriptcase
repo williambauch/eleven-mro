@@ -50,7 +50,7 @@ if (isset($_POST['action_mro'])) {
                        JOIN mro_task_assignments ta ON ts.assignment_id = ta.assignment_id 
                        JOIN mro_tasks t ON ta.task_id = t.task_id 
                        join mro_projects mp on t.project_id =mp.project_id 
-                       WHERE ts.employee_id = 2 AND ts.end_time IS NULL";
+                       WHERE ts.employee_id = $emp_id AND ts.end_time IS NULL";
         sc_lookup(rs_act, $sql_active);
         
         if(empty({rs_act})) {
