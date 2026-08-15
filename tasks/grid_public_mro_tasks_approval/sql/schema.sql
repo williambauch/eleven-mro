@@ -17,6 +17,6 @@ WHERE t.status_code = 'SUPSIG'
   AND EXISTS (
       SELECT 1 FROM "public".mro_task_assignments a
       WHERE a.task_id = t.task_id
-        AND a.planned_skill_id = [usr_skill_id]
+        AND a.planned_skill_id IN ([usr_skill_id])
   )
 ORDER BY t.updated_at DESC

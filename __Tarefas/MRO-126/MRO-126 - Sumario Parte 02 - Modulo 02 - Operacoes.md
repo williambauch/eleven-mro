@@ -40,7 +40,7 @@ Habilitar a seleção de mais de uma skill no cadastro do colaborador.
 
 ---
 
-## Sumario das alteracoes implementadas
+## Sumario das alteracoes implementadas - Tarefa do Modulo 02 — Operações e Chão de Fábrica (Mobile / Tablet)
 
 ## Auto-Pausa de Timesheet na Abertura de NRC — JA IMPLEMENTADO (MRO-122)
 
@@ -140,8 +140,62 @@ Habilitar a seleção de mais de uma skill no cadastro do colaborador.
 
 ---
 
+## `mro_employees`
+
+### Multiplas skills por colaborador (migration)
+
+**`migrations/MRO-126_employee_skills_multiplas.sql`**
+- Regra de negocio: `skill_id` alterado de `integer` para `varchar(100)` — guarda uma **lista de ids** (ex: `"1,5,14"`) gravada pelo Select Multiplo do ScriptCase
+- FK `mro_employees_skill_id_fkey` removida de proposito (lista nao pode ser FK de `mro_skills`)
+
+---
+
+## `sec_Login`
+
+### Login carrega a lista de skills
+
+**`events/onValidate`**
+- Regra de negocio: `[usr_skill_id]` passa a carregar a **lista** de skills do colaborador (ex: `"1,5,14"`), nao mais um id unico — usado nos filtros `IN` dos grids
+
+---
+
+## `form_public_mro_task_assignments_planned`
+
+### Grid filtrada pelas skills do supervisor
+
+**`sql/schema.sql`**
+- Regra de negocio: filtro `planned_skill_id = [usr_skill_id]` → **`IN ([usr_skill_id])`** — supervisor so ve alocacoes de todas as skills dele
+
+### Lookup de mecanicos filtrado pela skill do assignment
+
+**`events/onRecord`**
+- Regra de negocio: fallback `planned_skill_id = 0` quando o assignment nao tiver skill; com 0 o select de mecanicos fica **vazio** (forca definir a skill antes de atribuir)
+- Regra de negocio: lookup de `executed_by_employee_id` lista apenas mecanicos com a skill do assignment (`',' || skill_id || ',' LIKE '%,' || {planned_skill_id} || ',%'`)
+- **Validado (15/08/2026)**: assignment 15732 (B4) atribuida ao William (skills `11,14,9`) — evento `ASSIGNMENT` + status `ASSIGNED`
+
+---
+
+## `grid_public_mro_task_assignments_progress`, `grid_public_mro_task_assignments_blocked`, `grid_public_mro_task_assignments_completed`
+
+### Grids do supervisor com skill_code
+
+**`sql/schema.sql`**
+- Regra de negocio: filtro `planned_skill_id = [usr_skill_id]` → **`IN ([usr_skill_id])`** (mesmo padrao das demais grids do supervisor)
+- Campo `skill_code` adicionado via JOIN `mro_skills` para exibir o codigo da skill
+
+---
+
+## `grid_mro_dispatch`, `grid_public_mro_tasks_approval`, `grid_public_mro_tasks_insp`
+
+### Filtro de skill nas demais telas do supervisor/inspetor
+
+**`sql/schema.sql`**
+- Regra de negocio: `planned_skill_id = [usr_skill_id]` → **`IN ([usr_skill_id])`** — inspetor e dispatch seguem a mesma regra de multi-skill do supervisor
+
+---
+
 ## Pendências do Modulo 02
-- [ ] RLS do Supervisor por Skill + múltiplas skills no colaborador (proximo passo)
+- Nenhuma pendente — modulo concluido.
 
 ---
 
@@ -150,6 +204,6 @@ Habilitar a seleção de mais de uma skill no cadastro do colaborador.
 
 [ ] A JIC só realiza a transição de status para concluída se todos os mecânicos associados a ela tiverem realizado o clock-out
 
-[ ] O Supervisor logado só visualiza a lista de mecânicos que possuem o mesmo skill técnico que o dele 
+[x] O Supervisor logado só visualiza a lista de mecânicos que possuem o mesmo skill técnico que o dele — ATENDIDO (filtro `IN` por skills do supervisor + lookup de mecanicos pela skill do assignment)
 
 [ ] Qualquer mecânico consegue alterar o conteúdo de uma NRC se ela estiver em status de DRAFT, gerando log na tabela mro_task_events 

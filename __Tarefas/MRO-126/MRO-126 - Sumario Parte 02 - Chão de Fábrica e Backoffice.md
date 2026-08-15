@@ -14,13 +14,12 @@ Implementar e ajustar os motores de dados, regras de validação no tablet e int
 | Módulo | Tarefa | Status | Arquivo |
 |--------|--------|--------|---------|
 | **01 — Backoffice** (Core PM & Engenharia de Dados) | Revisão do Gantt e Kanban (Syncfusion, edição direta, 1+ projetos) | ✅ Concluído | [`Modulo 01 - Backoffice`](MRO-126%20-%20Sumario%20Parte%2002%20-%20Modulo%2001%20-%20Backoffice.md) |
-| **02 — Operações e Chão de Fábrica** (Mobile / Tablet) | Auto-pausa de NRC, concorrência de timesheet, duplicidade, rename clockout, DRAFT amplo | ✅ 5/6 itens concluídos (RLS pendente) | [`Modulo 02 - Operacoes`](MRO-126%20-%20Sumario%20Parte%2002%20-%20Modulo%2002%20-%20Operacoes.md) |
+| **02 — Operações e Chão de Fábrica** (Mobile / Tablet) | Auto-pausa de NRC, concorrência de timesheet, duplicidade, rename clockout, DRAFT amplo, RLS por skill | ✅ **Concluído** | [`Modulo 02 - Operacoes`](MRO-126%20-%20Sumario%20Parte%2002%20-%20Modulo%2002%20-%20Operacoes.md) |
 | **03 — Logística & Ferramentaria** (Almoxarifado) | Provedoria (Gated Process, bip de saída), Ferramentaria (check-in de avaria) | ⏳ Pendente | [`Modulo 03 - Logistica Ferramentaria`](MRO-126%20-%20Sumario%20Parte%2002%20-%20Modulo%2003%20-%20Logistica%20Ferramentaria.md) |
 
 ---
 
 ## Pendências gerais (todas as pendências dos Módulos 02/03)
-- [ ] RLS do Supervisor por Skill + múltiplas skills no colaborador (Módulo 02)
 - [ ] Provedoria: monitoramento de liberação (Gated Process) (Módulo 03)
 - [ ] Provedoria: bip de saída com lote (Módulo 03)
 - [ ] Ferramentaria: check-in com condição de retorno + bloqueio por calibração (Módulo 03)

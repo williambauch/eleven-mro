@@ -65,7 +65,7 @@
     },
     {
       "nome": "skill_id",
-      "tipo": "int4",
+      "tipo": "varchar",
       "required": false,
       "pk": false
     },

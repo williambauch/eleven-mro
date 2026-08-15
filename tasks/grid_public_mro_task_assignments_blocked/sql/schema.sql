@@ -9,6 +9,7 @@ SELECT
  a.executed_by_employee_id AS executed_by_employee_id,
  a.planned_skill_id AS planned_skill_id,
  a.skill_id AS skill_id,
+ sk.skill_code AS skill_code,
  a.supervisor_id AS supervisor_id,
  a.resource_id AS resource_id,
  a.role_id AS role_id,
@@ -24,7 +25,8 @@ FROM "public".mro_task_assignments a
 LEFT JOIN "public".mro_projects p   ON p.project_id  = a.project_id
 LEFT JOIN "public".mro_tasks t      ON t.task_id     = a.task_id
 LEFT JOIN "public".mro_employees e  ON e.employee_id = a.executed_by_employee_id
-WHERE a.planned_skill_id = [usr_skill_id]
+LEFT JOIN "public".mro_skills sk    ON sk.skill_id    = a.skill_id
+WHERE a.planned_skill_id IN ([usr_skill_id])
     AND (a.supervisor_id IS NULL OR a.supervisor_id = [usr_employee_id])
     AND a.status_code IN ('BLOCKED')
 ORDER BY a.task_id DESC

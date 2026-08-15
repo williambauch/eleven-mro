@@ -1,5 +1,17 @@
 <?php
 
+// ====================================================================
+// MRO-126: FALLBACK DA SKILL DO ASSIGNMENT (para o lookup de mecanicos)
+// ====================================================================
+// Se o assignment nao tiver planned_skill_id definido, usa 0.
+// O lookup de executed_by_employee_id filtra os mecanicos pela skill do
+// assignment; com 0 (skill inexistente) o LIKE '%,0,%' nao casa com nenhum
+// colaborador, entao o select fica VAZIO — forca o supervisor a definir
+// a skill da atribuicao antes de escolher o mecanico.
+if (empty({planned_skill_id})) {
+    {planned_skill_id} = 0;
+}
+
 // 1. Constrói a URL manualmente usando a estrutura de diretórios do Scriptcase
 // O padrão é: ../nome_da_aplicacao/nome_da_aplicacao.php?variavel=valor
 $url_timeline = "../blank_mro_timeline/blank_mro_timeline.php?glo_assignment_id=" . {assignment_id};

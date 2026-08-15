@@ -66,6 +66,9 @@ else if({rs[0][1]} == 'Y')
 	if (isset({rs[0][0]})) {
 		// Grava as variáveis globais na memória da sessão
 		[usr_employee_id]   = {rs[0][0]};
+		// MRO-126: skill_id NAO e mais id unico — e uma LISTA de ids separados
+		// por virgula (ex: "1,5,14"), gravada pelo Select Multiplo no cadastro.
+		// Os grids do supervisor usam: planned_skill_id IN ([usr_skill_id]).
 		[usr_skill_id]      = {rs[0][1]};
 		[usr_is_supervisor] = ({rs[0][2]} == 't'); // Retorna true ou false
 		[usr_is_inspector]  = ({rs[0][3]} == 't');
