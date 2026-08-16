@@ -58,11 +58,14 @@ No painel do mecânico, criar listagem de ferramentas com avaria pra o ele preen
 - Nova função **`fn_liberar_task_para_execucao($task_id, $projeto, $status, $is_blocked_pred, $origem)`** centraliza a liberação completa:
   1. Valida bloqueio por predecessora
   2. Critica de status (`PLANNING`/`NOT_STARTED`/`PLANNED`/`APPROVED`)
-  3. `UPDATE mro_tasks SET status_code='RELEASED'`
-  4. Audit log em `mro_task_history` — `RELEASED` (origem `PLANEJADOR`) ou `RELEASED_BY_PROVEDORIA` (origem `PROVEDORIA`)
-  5. Cria os assignments por skill via `fn_criar_assignments_por_skill` (LABOR do P6, com proteção de duplicidade)
+  3. **Valida skill/mão de obra (Gated Process)**: a task só libera se tiver ao menos um recurso LABOR com match em `mro_skills` OU `skill_code` existente em `mro_skills` — bloqueia com mensagem contendo **task_id + task_code**: *"Liberação bloqueada: a tarefa ID X (CODE) não possui skill/recursos de mão de obra definidos. Atribua a skill antes de liberar."*
+  4. `UPDATE mro_tasks SET status_code='RELEASED'`
+  5. Audit log em `mro_task_history` — `RELEASED` (origem `PLANEJADOR`) ou `RELEASED_BY_PROVEDORIA` (origem `PROVEDORIA`)
+  6. Cria os assignments por skill via `fn_criar_assignments_por_skill` (LABOR do P6, com proteção de duplicidade)
 - **`btn_liberar_para_execucao`** (grid_public_mro_tasks) refatorado → agora é *thin wrapper* que chama `fn_liberar_task_para_execucao(..., 'PLANEJADOR')`
 - Benefício: mesma lógica em um único lugar — a duplicata da provedoria reutiliza a mesma função
+
+**Motivação da validação de skill:** auditoria revelou que 5.215 tasks `NOT_STARTED`/`PLANNED` não têm LABOR nem `skill_code` — liberar sem a validação criaria tasks `RELEASED` sem slots de trabalho (fantasmas). Validado no banco: task 16635 (MI220) → bloqueada; task 28824 (NWB-ROTINA-C003) → libera.
 
 **Menu:** `item_50: Logística e Ferramentaria > Provedoria - Liberação de Materiais (grid_provedoria_release)` no `Security/sec_menu/menu_tree.md`
 

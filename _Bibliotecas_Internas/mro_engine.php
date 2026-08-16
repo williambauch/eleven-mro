@@ -314,6 +314,32 @@ function fn_liberar_task_para_execucao($v_task_id, $v_projeto_atual, $v_status, 
     }
 
     // ====================================================================
+    // 2.1 MRO-126: VALIDA SKILL / MAO DE OBRA (Gated Process)
+    //      A task so pode ser liberada se tiver ao menos uma skill
+    //      liberavel: recurso LABOR com match em mro_skills OU
+    //      skill_code da propria task que exista em mro_skills.
+    //      Evita task RELEASED sem slots de trabalho (fantasma).
+    // ====================================================================
+    sc_lookup(rs_liberavel, "SELECT t.task_code,
+                    CASE WHEN
+                        EXISTS (SELECT 1
+                                FROM mro_task_resources tr
+                                JOIN mro_resources r ON tr.resource_code = r.resource_code
+                                JOIN mro_skills s ON s.skill_code = tr.resource_code
+                                WHERE tr.task_id = t.task_id AND r.resource_type = 'LABOR')
+                        OR EXISTS (SELECT 1 FROM mro_skills s WHERE s.skill_code = t.skill_code)
+                    THEN 1 ELSE 0 END
+                    FROM mro_tasks t WHERE t.task_id = " . $v_task_id);
+
+    $var_task_code = !empty({rs_liberavel}) ? {rs_liberavel[0][0]} : $v_task_id;
+    $var_liberavel = !empty({rs_liberavel}) ? (int){rs_liberavel[0][1]} : 0;
+
+    if ($var_liberavel != 1) {
+        sc_error_message("Liberação bloqueada: a tarefa ID $v_task_id ($var_task_code) não possui skill/recursos de mão de obra definidos. Atribua a skill antes de liberar.");
+        sc_error_exit();
+    }
+
+    // ====================================================================
     // 3. ATUALIZA O STATUS PARA RELEASED
     // ====================================================================
     sc_exec_sql("UPDATE mro_tasks SET status_code = 'RELEASED' WHERE task_id = $v_task_id");
@@ -323,7 +349,7 @@ function fn_liberar_task_para_execucao($v_task_id, $v_projeto_atual, $v_status, 
     // ====================================================================
     if ($v_origem == 'PROVEDORIA') {
         $v_action  = 'RELEASED_BY_PROVEDORIA';
-        $v_remarks = 'Gated Process: 100% dos materiais disponiveis no estoque fisico - liberado para o hangar (grid_mro_material_release)';
+        $v_remarks = 'Gated Process: 100% dos materiais disponiveis no estoque fisico - liberado para o hangar (grid_provedoria_release)';
     } else {
         $v_action  = 'RELEASED';
         $v_remarks = 'Task liberada para execucao (btn_liberar_para_execucao): ' . $v_status . ' -> RELEASED';
