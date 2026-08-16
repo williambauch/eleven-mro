@@ -39,17 +39,8 @@
       "form_public_mro_tasks"
     ],
     "MRO-126": [
-      "blank_gantt",
-      "blank_kanban_critical",
-      "form_public_mro_tasks",
-      "grid_public_mro_projects",
-      "grid_public_mro_task_assignments_blocked",
-      "grid_public_mro_task_assignments_completed",
-      "grid_public_mro_task_assignments_progress",
-      "grid_public_mro_task_registro",
-      "grid_public_mro_tasks_approval",
-      "grid_public_mro_tasks_insp",
-      "menu_supervisor"
+      "grid_mro_material_release",
+      "grid_public_mro_tasks"
     ]
   },
   "shortcuts": {

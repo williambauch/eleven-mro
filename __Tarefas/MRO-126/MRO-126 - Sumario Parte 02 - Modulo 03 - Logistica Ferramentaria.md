@@ -30,19 +30,29 @@ No painel do mecânico, criar listagem de ferramentas com avaria pra o ele preen
 
 ### Provedoria — Monitoramento de Liberação (Gated Process) ✅
 
-**Nova app:** `Almoxarifado/grid_mro_material_release/` (Grid)
+**Nova app:** `Almoxarifado/grid_provedoria_release/` (Grid)
 
+- **Abordagem:** duplicata da `grid_public_mro_tasks` na IDE (herda campos, botões, onRecord, filtros e layout) — apenas o SQL foi alterado para o Gated Process.
 - **Regra:** lista apenas as JICs/tarefas (`PLANNED`/`NOT_STARTED`) que estejam com **100% dos materiais bloqueantes** (`is_blocking_task`) disponíveis no estoque físico (`stock_balance >= planned_qty`), permitindo ao planejador liberar as tarefas de forma segura para o hangar.
 
-**Arquivos:**
-- `sql/schema.sql` — SQL agregado com JOIN `mro_tasks` + `mro_projects` + `mro_task_materials` + `mro_materials`, colunas de `total_materiais`, `materiais_ok` e `pct_disponivel`; `HAVING` garante que só aparecem JICs com 100% de disponibilidade
-- `config.json` — declaração da grid (campos, tabelas, variavel `var_project_id`)
-- `events/03_onScriptInit/onScriptInit.scriptcase` — filtro opcional por projeto (`var_project_id`) usando `sc_select_where(add)`
-- `events/04_onRecord/onRecord.scriptcase` — badge visual de percentual (verde 100% / amarelo parcial / vermelho 0%) e indicador "X de Y" materiais
-- `button/btn_liberar_hangar/onRecord.scriptcase` — botão por linha "Liberar para Hangar":
-  - **Double-check no clique**: revalida no momento que não há materiais faltantes (trava de segurança)
-  - Chama `fn_liberar_task_para_execucao(..., 'PROVEDORIA')` da biblioteca interna (mro_engine.php)
-  - `sc_commit_trans()` + `sc_alert` + `sc_redir`
+**SQL (`sql/schema.sql`):**
+- `SELECT` principal com **alias em todos os campos expostos** (`t.task_id AS task_id`, ...)
+- Filtro Gated Process via subquery:
+  ```sql
+  WHERE t.task_id IN (
+      SELECT tm.task_id
+      FROM mro_task_materials tm
+      JOIN mro_materials m ON tm.material_id = m.material_id
+      WHERE tm.is_applied IS NOT TRUE
+        AND (m.is_blocking_task IS TRUE OR m.is_blocking_task IS NULL)
+      GROUP BY tm.task_id
+      HAVING COUNT(*) FILTER (WHERE m.stock_balance < tm.planned_qty) = 0
+  )
+    AND t.status_code IN ('PLANNED', 'NOT_STARTED')
+  ORDER BY t.task_code
+  ```
+
+**Botão:** herda o `btn_liberar_para_execucao` da duplicata (RUN multi-seleção + `onFinish` com `[glo_aviso_run]`), que já chama `fn_liberar_task_para_execucao(..., 'PLANEJADOR')` — na duplicata pode ser ajustado para origem `'PROVEDORIA'` no audit log.
 
 **Refatoração — código único na biblioteca interna (`_Bibliotecas_Internas/mro_engine.php`):**
 - Nova função **`fn_liberar_task_para_execucao($task_id, $projeto, $status, $is_blocked_pred, $origem)`** centraliza a liberação completa:
@@ -52,12 +62,13 @@ No painel do mecânico, criar listagem de ferramentas com avaria pra o ele preen
   4. Audit log em `mro_task_history` — `RELEASED` (origem `PLANEJADOR`) ou `RELEASED_BY_PROVEDORIA` (origem `PROVEDORIA`)
   5. Cria os assignments por skill via `fn_criar_assignments_por_skill` (LABOR do P6, com proteção de duplicidade)
 - **`btn_liberar_para_execucao`** (grid_public_mro_tasks) refatorado → agora é *thin wrapper* que chama `fn_liberar_task_para_execucao(..., 'PLANEJADOR')`
-- **`btn_liberar_hangar`** (grid_mro_material_release) refatorado → mantém o double-check de materiais e chama a **mesma** função com origem `PROVEDORIA`
-- Benefício: mesma lógica em um único lugar — qualquer ajuste futuro na liberação vale para os dois botões
+- Benefício: mesma lógica em um único lugar — a duplicata da provedoria reutiliza a mesma função
 
-**Menu:** `item_50: Logística e Ferramentaria > Provedoria - Liberação de Materiais (grid_mro_material_release)` no `Security/sec_menu/menu_tree.md`
+**Menu:** `item_50: Logística e Ferramentaria > Provedoria - Liberação de Materiais (grid_provedoria_release)` no `Security/sec_menu/menu_tree.md`
 
 **Observação de dados:** no estado atual do banco todos os 509 materiais estão com `stock_balance = 0.00`, portanto a grid nasce vazia (nenhuma JIC pronta) — comportamento correto da regra; quando o estoque físico for carregado, as JICs aptas passam a aparecer automaticamente.
+
+**Nota:** a grid `grid_mro_material_release` (criada manualmente numa primeira abordagem) foi **removida** — substituída pela duplicata `grid_provedoria_release`.
 
 ---
 

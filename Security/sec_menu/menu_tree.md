@@ -23,7 +23,7 @@ item_47: Logística e Ferramentaria > Ferramentas Pendentes (grid_mro_tools_pend
 item_44: Logística e Ferramentaria > Terminal Almoxarifado (blank_almox_kanban)
 item_45: Logística e Ferramentaria > Terminal Produção (blank_mec_materiais)
 item_27: Logística e Ferramentaria > Almoxarifado (Peças) (grid_public_mro_materials)
-item_50: Logística e Ferramentaria > Provedoria - Liberação de Materiais (grid_mro_material_release)
+item_50: Logística e Ferramentaria > Provedoria - Liberação de Materiais (grid_provedoria_release)
 item_49: Auditoria > Painel de Registros (grid_public_mro_task_registro)
 item_32: Config / Tab Básicas > Colaboradores & Mecânicos (grid_public_mro_employees)
 item_33: Config / Tab Básicas > Especialidades (Skills) (grid_public_mro_skills)
