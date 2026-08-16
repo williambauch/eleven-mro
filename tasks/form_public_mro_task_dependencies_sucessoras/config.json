@@ -2,22 +2,27 @@
   "nome": "form_public_mro_task_dependencies_sucessoras",
   "tipo": "Form",
   "nome_tabela": "\"public\".mro_task_dependencies",
+  "descricao": "Quais tarefas são bloqueadas pela tarefa atual (sucessoras)",
+  "login": "william",
+  "data_alteracao": "2026-07-28 19:04",
+  "nomeconexao": "conn_mro",
+  "tabelas": [
+    "public.mro_task_dependencies"
+  ],
+  "variaveis": [
+    "glo_task_id",
+    "usr_login"
+  ],
   "campos": [
     {
-      "nome": "dependency_id",
-      "tipo": "int4",
-      "required": false,
-      "pk": true
-    },
-    {
-      "nome": "predecessor_task_id",
-      "tipo": "int4",
+      "nome": "created_at",
+      "tipo": "datetime",
       "required": false,
       "pk": false
     },
     {
-      "nome": "successor_task_id",
-      "tipo": "int4",
+      "nome": "created_by",
+      "tipo": "varchar",
       "required": false,
       "pk": false
     },
@@ -28,20 +33,26 @@
       "pk": false
     },
     {
+      "nome": "dependency_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": true
+    },
+    {
       "nome": "lag_hours",
       "tipo": "numeric",
       "required": false,
       "pk": false
     },
     {
-      "nome": "created_at",
-      "tipo": "datetime",
+      "nome": "predecessor_task_id",
+      "tipo": "int4",
       "required": false,
       "pk": false
     },
     {
-      "nome": "created_by",
-      "tipo": "varchar",
+      "nome": "successor_task_id",
+      "tipo": "int4",
       "required": false,
       "pk": false
     },

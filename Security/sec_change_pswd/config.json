@@ -2,6 +2,16 @@
   "nome": "sec_change_pswd",
   "tipo": "Form",
   "nome_tabela": "sec_change_pswd",
+  "descricao": "SECURITY MODULE :: Change Password",
+  "login": "admin",
+  "nomeconexao": "conn_mro",
+  "variaveis": [
+    "act_code",
+    "pswd_expired",
+    "sett_password_min",
+    "sett_password_strength",
+    "usr_login"
+  ],
   "campos": [
     {
       "nome": "confirm_pswd",

@@ -27,5 +27,5 @@ if ([usr_is_inspector]) {
 } else {
 	// sc_menu_delete remove os itens do menu estatico (nao requer sc_appmenu_create)
     sc_menu_delete("item_5"); // Finalizacao (grid_public_mro_tasks_approval)
-    sc_menu_delete("item_6"); // Inspecao (grid_public_mro_tasks_insp)
-}	
+    sc_menu_delete("item_6"); // Inspecao (grid_public_mro_task_assignments_insp)
+}

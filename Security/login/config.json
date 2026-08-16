@@ -2,6 +2,8 @@
   "nome": "login",
   "tipo": "Form",
   "nome_tabela": "login",
+  "login": "admin",
+  "nomeconexao": "conn_mro",
   "campos": [
     {
       "nome": "login",

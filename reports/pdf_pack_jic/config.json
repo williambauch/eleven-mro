@@ -2,6 +2,18 @@
   "nome": "pdf_pack_jic",
   "tipo": "Form",
   "nome_tabela": "pdf_pack_jic",
+  "login": "admin",
+  "data_alteracao": "2026-07-20 15:05",
+  "nomeconexao": "conn_mro",
+  "tabelas": [
+    "mro_aircraft",
+    "mro_employees",
+    "mro_projects",
+    "mro_tasks"
+  ],
+  "variaveis": [
+    "glo_task_id"
+  ],
   "campos": [
     {
       "nome": "a.model",

@@ -2,6 +2,16 @@
   "nome": "sec_my_info",
   "tipo": "Form",
   "nome_tabela": "public.sec_users",
+  "descricao": "SECURITY MODULE :: Edit profile",
+  "login": "admin",
+  "nomeconexao": "conn_mro",
+  "tabelas": [
+    "public.sec_users"
+  ],
+  "variaveis": [
+    "str_where",
+    "usr_login"
+  ],
   "campos": [
     {
       "nome": "activation_code",

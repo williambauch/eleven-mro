@@ -2,15 +2,19 @@
   "nome": "control_split_assignment",
   "tipo": "Control",
   "nome_tabela": "control_split_assignment",
+  "descricao": "Divide uma Atribuição em Duas",
+  "login": "william",
+  "data_alteracao": "2026-08-14 16:31",
+  "nomeconexao": "conn_mro",
+  "variaveis": [
+    "glo_assignment_id_split",
+    "glo_split_original_hours",
+    "usr_employee_id",
+    "usr_login"
+  ],
   "campos": [
     {
-      "nome": "task_info",
-      "tipo": "varchar",
-      "required": false,
-      "pk": false
-    },
-    {
-      "nome": "skill_info",
+      "nome": "assignment_id",
       "tipo": "varchar",
       "required": false,
       "pk": false
@@ -28,19 +32,25 @@
       "pk": false
     },
     {
-      "nome": "status_info",
-      "tipo": "varchar",
-      "required": false,
-      "pk": false
-    },
-    {
       "nome": "hours_split",
       "tipo": "varchar",
       "required": false,
       "pk": false
     },
     {
-      "nome": "assignment_id",
+      "nome": "skill_info",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "status_info",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "task_info",
       "tipo": "varchar",
       "required": false,
       "pk": false

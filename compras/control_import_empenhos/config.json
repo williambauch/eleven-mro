@@ -2,6 +2,13 @@
   "nome": "control_import_empenhos",
   "tipo": "Control",
   "nome_tabela": "control_import_empenhos",
+  "login": "admin",
+  "data_alteracao": "2026-08-12 13:22",
+  "nomeconexao": "conn_mro",
+  "variaveis": [
+    "MODO_DEBUG",
+    "var_project_id"
+  ],
   "campos": [
     {
       "nome": "arquivo_excel",

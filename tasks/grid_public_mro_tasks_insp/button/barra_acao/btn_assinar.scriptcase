@@ -2,12 +2,15 @@
 // ============================================================
 // BOTÃO DE BARRA DE AÇÃO: btn_assinar
 // ============================================================
-// Tipo   : AJAX
-// Label  : Assinar
-// Ícone  : fas fa-file-signature
+// Tipo    : AJAX
+// Label   : Assinar
+// Ícone   : fas fa-file-signature
+// Display : btn
+// Formato : icon_text
 // Estados:
-//   - state1 | Assinar | fas fa-file-signature
-//   - state2 | Assinado | fas fa-signature
+//   - state1 | label="Assinar" | fas fa-file-signature | visual=purple
+//       confirma: Deseja assinar a inspeção dessa tarefa ?
+//   - state2 | label="Assinado" | fas fa-signature | visual=grey
 //
 // Ação: evento Ajax "actbtn_btn_assinar_onClick" (events_ajax/)
 // ============================================================

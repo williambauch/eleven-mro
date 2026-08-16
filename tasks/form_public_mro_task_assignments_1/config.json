@@ -2,36 +2,23 @@
   "nome": "form_public_mro_task_assignments_1",
   "tipo": "Form",
   "nome_tabela": "\"public\".mro_task_assignments",
+  "login": "admin",
+  "nomeconexao": "conn_mro",
+  "tabelas": [
+    "public.mro_task_assignments"
+  ],
   "campos": [
     {
-      "nome": "assignment_id",
-      "tipo": "int4",
-      "required": false,
-      "pk": true
-    },
-    {
-      "nome": "task_id",
-      "tipo": "int4",
-      "required": false,
-      "pk": false
-    },
-    {
-      "nome": "resource_id",
-      "tipo": "int4",
-      "required": false,
-      "pk": false
-    },
-    {
-      "nome": "planned_qty_hours",
+      "nome": "actual_qty_hours",
       "tipo": "numeric",
       "required": false,
       "pk": false
     },
     {
-      "nome": "role_id",
-      "tipo": "varchar",
+      "nome": "assignment_id",
+      "tipo": "int4",
       "required": false,
-      "pk": false
+      "pk": true
     },
     {
       "nome": "created_at",
@@ -46,19 +33,7 @@
       "pk": false
     },
     {
-      "nome": "updated_at",
-      "tipo": "datetime",
-      "required": false,
-      "pk": false
-    },
-    {
-      "nome": "updated_by",
-      "tipo": "varchar",
-      "required": false,
-      "pk": false
-    },
-    {
-      "nome": "planned_skill_id",
+      "nome": "employee_id",
       "tipo": "int4",
       "required": false,
       "pk": false
@@ -70,8 +45,26 @@
       "pk": false
     },
     {
-      "nome": "supervisor_id",
+      "nome": "planned_qty_hours",
+      "tipo": "numeric",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "planned_skill_id",
       "tipo": "int4",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "resource_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "role_id",
+      "tipo": "varchar",
       "required": false,
       "pk": false
     },
@@ -82,19 +75,31 @@
       "pk": false
     },
     {
-      "nome": "employee_id",
+      "nome": "status_code",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "supervisor_id",
       "tipo": "int4",
       "required": false,
       "pk": false
     },
     {
-      "nome": "actual_qty_hours",
-      "tipo": "numeric",
+      "nome": "task_id",
+      "tipo": "int4",
       "required": false,
       "pk": false
     },
     {
-      "nome": "status_code",
+      "nome": "updated_at",
+      "tipo": "datetime",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "updated_by",
       "tipo": "varchar",
       "required": false,
       "pk": false

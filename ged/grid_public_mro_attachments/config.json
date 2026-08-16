@@ -2,6 +2,19 @@
   "nome": "grid_public_mro_attachments",
   "tipo": "Grid",
   "nome_tabela": "public.mro_attachments",
+  "descricao": "Biblioteca Anexo de arquivos TASK, PROJECT ou AIRCRAFT",
+  "login": "william",
+  "data_alteracao": "2026-08-04 11:46",
+  "nomeconexao": "conn_mro",
+  "tabelas": [
+    "public.mro_attachments"
+  ],
+  "variaveis": [
+    "glo_att_aircraft_id",
+    "glo_att_project_id",
+    "glo_att_subdir",
+    "glo_att_task_id"
+  ],
   "campos": [
     {
       "nome": "aircraft_id",

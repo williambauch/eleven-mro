@@ -2,6 +2,12 @@
   "nome": "sec_grid_sec_apps",
   "tipo": "Grid",
   "nome_tabela": "public.sec_apps",
+  "descricao": "SECURITY MODULE :: Show apps",
+  "login": "admin",
+  "nomeconexao": "conn_mro",
+  "tabelas": [
+    "public.sec_apps"
+  ],
   "campos": [
     {
       "nome": "app_name",

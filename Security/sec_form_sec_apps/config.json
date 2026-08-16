@@ -2,6 +2,12 @@
   "nome": "sec_form_sec_apps",
   "tipo": "Form",
   "nome_tabela": "public.sec_apps",
+  "descricao": "SECURITY MODULE :: Add apps",
+  "login": "admin",
+  "nomeconexao": "conn_mro",
+  "tabelas": [
+    "public.sec_apps"
+  ],
   "campos": [
     {
       "nome": "app_name",

@@ -2,6 +2,16 @@
   "nome": "grid_public_mro_nrc",
   "tipo": "Grid",
   "nome_tabela": "public.mro_tasks",
+  "descricao": "-- APP DESCONTINUADO --",
+  "login": "admin",
+  "nomeconexao": "conn_mro",
+  "tabelas": [
+    "public.mro_tasks"
+  ],
+  "variaveis": [
+    "usr_groups",
+    "usr_login"
+  ],
   "campos": [
     {
       "nome": "access_panel",

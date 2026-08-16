@@ -2,6 +2,15 @@
   "nome": "ctrl_abertura_nrc",
   "tipo": "Form",
   "nome_tabela": "ctrl_abertura_nrc",
+  "login": "admin",
+  "data_alteracao": "2026-07-27 11:28",
+  "nomeconexao": "conn_mro",
+  "variaveis": [
+    "glo_origem",
+    "task_id_origem",
+    "usr_employee_id",
+    "usr_login"
+  ],
   "campos": [
     {
       "nome": "descricao_detalhada",

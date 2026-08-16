@@ -2,6 +2,12 @@
   "nome": "sec_grid_sec_users_groups",
   "tipo": "Form",
   "nome_tabela": "public.sec_users",
+  "descricao": "SECURITY MODULE :: Show users by groups",
+  "login": "admin",
+  "nomeconexao": "conn_mro",
+  "tabelas": [
+    "public.sec_users"
+  ],
   "campos": [
     {
       "nome": "active",

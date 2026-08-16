@@ -2,6 +2,16 @@
   "nome": "grid_public_mro_material_stock_location",
   "tipo": "Grid",
   "nome_tabela": "public.mro_materials",
+  "descricao": "Relatório de Saldo por Stock Location",
+  "login": "william",
+  "data_alteracao": "2026-08-05 11:57",
+  "nomeconexao": "conn_mro",
+  "tabelas": [
+    "public.mro_materials"
+  ],
+  "variaveis": [
+    "glo_part_number"
+  ],
   "campos": [
     {
       "nome": "description",

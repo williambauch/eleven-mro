@@ -2,6 +2,12 @@
   "nome": "grid_mro_oa_batches",
   "tipo": "Grid",
   "nome_tabela": "grid_mro_oa_batches",
+  "login": "admin",
+  "nomeconexao": "conn_mro",
+  "tabelas": [
+    "mro_oa_batches",
+    "mro_tasks"
+  ],
   "campos": [
     {
       "nome": "approved_at",

@@ -2,7 +2,25 @@
   "nome": "form_public_mro_task_assignments_planned",
   "tipo": "Form",
   "nome_tabela": "\"public\".mro_task_assignments",
+  "descricao": "Lista de ASSIGNMENT em NOT_STARTED, PLANNED, RELEASED",
+  "login": "admin",
+  "data_alteracao": "2026-08-15 14:55",
+  "nomeconexao": "conn_mro",
+  "tabelas": [
+    "public.mro_task_assignments"
+  ],
+  "variaveis": [
+    "usr_employee_id",
+    "usr_login",
+    "usr_skill_id"
+  ],
   "campos": [
+    {
+      "nome": "actual_qty_hours",
+      "tipo": "numeric",
+      "required": false,
+      "pk": false
+    },
     {
       "nome": "assignment_id",
       "tipo": "int4",
@@ -10,25 +28,7 @@
       "pk": true
     },
     {
-      "nome": "task_id",
-      "tipo": "int4",
-      "required": false,
-      "pk": false
-    },
-    {
-      "nome": "resource_id",
-      "tipo": "int4",
-      "required": false,
-      "pk": false
-    },
-    {
-      "nome": "planned_qty_hours",
-      "tipo": "numeric",
-      "required": false,
-      "pk": false
-    },
-    {
-      "nome": "role_id",
+      "nome": "btn_split_assignment",
       "tipo": "varchar",
       "required": false,
       "pk": false
@@ -46,19 +46,7 @@
       "pk": false
     },
     {
-      "nome": "updated_at",
-      "tipo": "datetime",
-      "required": false,
-      "pk": false
-    },
-    {
-      "nome": "updated_by",
-      "tipo": "varchar",
-      "required": false,
-      "pk": false
-    },
-    {
-      "nome": "planned_skill_id",
+      "nome": "employee_id",
       "tipo": "int4",
       "required": false,
       "pk": false
@@ -70,32 +58,14 @@
       "pk": false
     },
     {
-      "nome": "supervisor_id",
-      "tipo": "int4",
-      "required": false,
-      "pk": false
-    },
-    {
-      "nome": "skill_id",
-      "tipo": "int4",
-      "required": false,
-      "pk": false
-    },
-    {
-      "nome": "employee_id",
-      "tipo": "int4",
-      "required": false,
-      "pk": false
-    },
-    {
-      "nome": "actual_qty_hours",
+      "nome": "planned_qty_hours",
       "tipo": "numeric",
       "required": false,
       "pk": false
     },
     {
-      "nome": "status_code",
-      "tipo": "varchar",
+      "nome": "planned_skill_id",
+      "tipo": "int4",
       "required": false,
       "pk": false
     },
@@ -106,7 +76,49 @@
       "pk": false
     },
     {
-      "nome": "btn_split_assignment",
+      "nome": "resource_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "role_id",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "skill_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "status_code",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "supervisor_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "task_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "updated_at",
+      "tipo": "datetime",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "updated_by",
       "tipo": "varchar",
       "required": false,
       "pk": false

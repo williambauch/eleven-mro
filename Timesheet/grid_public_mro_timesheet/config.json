@@ -2,6 +2,11 @@
   "nome": "grid_public_mro_timesheet",
   "tipo": "Grid",
   "nome_tabela": "public.mro_timesheet",
+  "login": "admin",
+  "nomeconexao": "conn_mro",
+  "tabelas": [
+    "public.mro_timesheet"
+  ],
   "campos": [
     {
       "nome": "check_in",

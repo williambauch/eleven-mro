@@ -2,6 +2,12 @@
   "nome": "form_public_mro_projects",
   "tipo": "Form",
   "nome_tabela": "\"public\".mro_projects",
+  "login": "admin",
+  "data_alteracao": "2026-08-04 10:09",
+  "nomeconexao": "conn_mro",
+  "tabelas": [
+    "public.mro_projects"
+  ],
   "campos": [
     {
       "nome": "aircraft_id",

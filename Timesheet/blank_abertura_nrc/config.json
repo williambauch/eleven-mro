@@ -2,5 +2,16 @@
   "nome": "blank_abertura_nrc",
   "tipo": "Blank",
   "nome_tabela": "blank_abertura_nrc",
+  "descricao": "cria NR automaticamente: gera código hierárquico, aplica impeditivo (pausa timesheet, bloqueia task/assignment)",
+  "login": "william",
+  "data_alteracao": "2026-08-14 15:15",
+  "nomeconexao": "conn_mro",
+  "variaveis": [
+    "glo_origem",
+    "glo_ultima_nrc",
+    "task_id_origem",
+    "usr_employee_id",
+    "usr_login"
+  ],
   "campos": []
 }

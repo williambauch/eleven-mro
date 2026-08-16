@@ -2,6 +2,11 @@
   "nome": "form_public_mro_resource_trainings",
   "tipo": "Form",
   "nome_tabela": "\"public\".mro_resource_trainings",
+  "login": "admin",
+  "nomeconexao": "conn_mro",
+  "tabelas": [
+    "public.mro_resource_trainings"
+  ],
   "campos": [
     {
       "nome": "certificate_url",

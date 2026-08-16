@@ -2,6 +2,17 @@
   "nome": "grid_mro_tasks_oa_details",
   "tipo": "Grid",
   "nome_tabela": "public.mro_tasks",
+  "login": "admin",
+  "nomeconexao": "conn_mro",
+  "tabelas": [
+    "public.mro_tasks"
+  ],
+  "variaveis": [
+    "batch_id",
+    "i",
+    "total_chked",
+    "usr_login"
+  ],
   "campos": [
     {
       "nome": "ata_chapter",

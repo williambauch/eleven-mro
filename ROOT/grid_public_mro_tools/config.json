@@ -2,6 +2,11 @@
   "nome": "grid_public_mro_tools",
   "tipo": "Grid",
   "nome_tabela": "public.mro_tools",
+  "login": "admin",
+  "nomeconexao": "conn_mro",
+  "tabelas": [
+    "public.mro_tools"
+  ],
   "campos": [
     {
       "nome": "calibration_due_date",

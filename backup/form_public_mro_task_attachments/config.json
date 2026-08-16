@@ -2,6 +2,14 @@
   "nome": "form_public_mro_task_attachments",
   "tipo": "Form",
   "nome_tabela": "\"public\".mro_task_attachments",
+  "login": "admin",
+  "nomeconexao": "conn_mro",
+  "tabelas": [
+    "public.mro_task_attachments"
+  ],
+  "variaveis": [
+    "usr_login"
+  ],
   "campos": [
     {
       "nome": "attachment_id",

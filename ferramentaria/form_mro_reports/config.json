@@ -2,6 +2,18 @@
   "nome": "form_mro_reports",
   "tipo": "Form",
   "nome_tabela": "\"public\".mro_tool_reports",
+  "login": "admin",
+  "nomeconexao": "conn_mro",
+  "tabelas": [
+    "public.mro_tool_reports"
+  ],
+  "variaveis": [
+    "v_emp",
+    "v_proj",
+    "v_task",
+    "v_tipo",
+    "v_tool"
+  ],
   "campos": [
     {
       "nome": "employee_id",

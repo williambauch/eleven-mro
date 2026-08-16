@@ -2,5 +2,7 @@
   "nome": "blank_gantt_tracking",
   "tipo": "Blank",
   "nome_tabela": "blank_gantt_tracking",
+  "login": "admin",
+  "nomeconexao": "conn_mro",
   "campos": []
 }

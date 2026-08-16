@@ -2,12 +2,34 @@
   "nome": "grid_public_mro_projects",
   "tipo": "Grid",
   "nome_tabela": "public.mro_projects",
+  "login": "admin",
+  "data_alteracao": "2026-08-14 14:30",
+  "nomeconexao": "conn_mro",
+  "tabelas": [
+    "public.mro_projects"
+  ],
+  "variaveis": [
+    "glo_gantt_ids",
+    "glo_kanban_ids"
+  ],
   "campos": [
     {
-      "nome": "project_id",
+      "nome": "aircraft_id",
       "tipo": "int4",
       "required": false,
-      "pk": true
+      "pk": false
+    },
+    {
+      "nome": "created_at",
+      "tipo": "datetime",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "end_date",
+      "tipo": "date",
+      "required": false,
+      "pk": false
     },
     {
       "nome": "p6_proj_id",
@@ -16,14 +38,14 @@
       "pk": false
     },
     {
-      "nome": "project_name",
-      "tipo": "varchar",
+      "nome": "project_id",
+      "tipo": "int4",
       "required": false,
-      "pk": false
+      "pk": true
     },
     {
-      "nome": "aircraft_id",
-      "tipo": "int4",
+      "nome": "project_name",
+      "tipo": "varchar",
       "required": false,
       "pk": false
     },
@@ -36,18 +58,6 @@
     {
       "nome": "start_date",
       "tipo": "date",
-      "required": false,
-      "pk": false
-    },
-    {
-      "nome": "end_date",
-      "tipo": "date",
-      "required": false,
-      "pk": false
-    },
-    {
-      "nome": "created_at",
-      "tipo": "datetime",
       "required": false,
       "pk": false
     },

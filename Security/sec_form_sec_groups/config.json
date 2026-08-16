@@ -2,6 +2,12 @@
   "nome": "sec_form_sec_groups",
   "tipo": "Form",
   "nome_tabela": "public.sec_groups",
+  "descricao": "SECURITY MODULE :: Show Groups",
+  "login": "admin",
+  "nomeconexao": "conn_mro",
+  "tabelas": [
+    "public.sec_groups"
+  ],
   "campos": [
     {
       "nome": "description",

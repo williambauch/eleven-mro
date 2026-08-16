@@ -2,6 +2,12 @@
   "nome": "app_grid_log",
   "tipo": "Form",
   "nome_tabela": "sc_log",
+  "descricao": "Aplicação criada pelo Scriptcase, para visualização do log: audit",
+  "login": "admin",
+  "nomeconexao": "conn_mro",
+  "tabelas": [
+    "sc_log"
+  ],
   "campos": [
     {
       "nome": "action",

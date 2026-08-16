@@ -2,5 +2,10 @@
   "nome": "blank_modelo_teste",
   "tipo": "Blank",
   "nome_tabela": "blank_modelo_teste",
+  "login": "admin",
+  "nomeconexao": "conn_mro",
+  "variaveis": [
+    "task_id"
+  ],
   "campos": []
 }

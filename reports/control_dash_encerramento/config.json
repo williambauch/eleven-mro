@@ -2,6 +2,13 @@
   "nome": "control_dash_encerramento",
   "tipo": "Control",
   "nome_tabela": "control_dash_encerramento",
+  "descricao": "Filtro do Dashboard de Encerramento e Gargalos",
+  "login": "william",
+  "data_alteracao": "2026-08-11 08:58",
+  "nomeconexao": "conn_mro",
+  "variaveis": [
+    "glo_project_id"
+  ],
   "campos": [
     {
       "nome": "label_filtro",

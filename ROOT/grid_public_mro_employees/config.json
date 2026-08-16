@@ -2,6 +2,12 @@
   "nome": "grid_public_mro_employees",
   "tipo": "Grid",
   "nome_tabela": "public.mro_employees",
+  "login": "admin",
+  "data_alteracao": "2026-08-15 14:20",
+  "nomeconexao": "conn_mro",
+  "tabelas": [
+    "public.mro_employees"
+  ],
   "campos": [
     {
       "nome": "canac_code",
@@ -71,7 +77,7 @@
     },
     {
       "nome": "skill_id",
-      "tipo": "varchar",
+      "tipo": "int4",
       "required": false,
       "pk": false
     },

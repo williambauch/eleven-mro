@@ -2,13 +2,21 @@
 // ============================================================
 // BOTÃO DE BARRA DE AÇÃO: gantt
 // ============================================================
-// Tipo   : LINK
-// Label  : gantt
-// Ícone  : fas fa-chart-gantt
+// Tipo    : LINK
+// Label   : gantt
+// Ícone   : fas fa-chart-gantt
+// Display : fa
+// Formato : icon_text
 // Estados:
-//   - state1 | fas fa-chart-gantt
+//   - state1 | fas fa-chart-gantt | cor=#3033c9
+//       hint: Gantt
 //
-// Liga para: blank_gantt
-// Abertura  : Mesma janela
-// Parâmetros: N?#??#?usr_login?@?C?#?project_id?#?glo_project_id
+// ── LIGAÇÃO ──────────────────────────────────────────
+// App destino: blank_gantt (B)
+// Abertura    : Mesma janela
+// Parâmetros:
+//   - [Global] usr_login
+//   - [Campo] project_id → glo_project_id
+//   - [Global] FP
+//   - [Retorno] de  → glo_project_ids
 // ============================================================

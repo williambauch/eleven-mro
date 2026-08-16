@@ -2,6 +2,15 @@
   "nome": "grid_public_mro_tasks_copy",
   "tipo": "Grid",
   "nome_tabela": "public.mro_tasks",
+  "login": "admin",
+  "nomeconexao": "conn_mro",
+  "tabelas": [
+    "public.mro_tasks"
+  ],
+  "variaveis": [
+    "glo_aviso_run",
+    "var_project_id"
+  ],
   "campos": [
     {
       "nome": "access_panel",

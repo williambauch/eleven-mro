@@ -2,13 +2,20 @@
 // ============================================================
 // BOTÃO DE BARRA DE AÇÃO: exec
 // ============================================================
-// Tipo   : LINK
-// Label  : exec
-// Ícone  : fas fa-bullseye
+// Tipo    : LINK
+// Label   : exec
+// Ícone   : fas fa-bullseye
+// Display : fa
+// Formato : icon_text
 // Estados:
-//   - state1 | fas fa-bullseye
+//   - state1 | fas fa-bullseye | cor=#1e57c9
 //
-// Liga para: form_public_mro_task_assignments
-// Abertura  : Nova janela
-// Parâmetros: C?#?assignment_id?#?assignment_id?@?N?#??#?usr_employee_id?@?N?#??#?glo_timesheet_id?@?C?#?assignment_id?#?glo_assignment_id
+// ── LIGAÇÃO ──────────────────────────────────────────
+// App destino: form_public_mro_task_assignments (F)
+// Abertura    : Nova janela
+// Parâmetros:
+//   - [Campo] assignment_id → assignment_id
+//   - [Global] usr_employee_id
+//   - [Global] glo_timesheet_id
+//   - [Campo] assignment_id → glo_assignment_id
 // ============================================================

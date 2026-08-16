@@ -2,6 +2,12 @@
   "nome": "form_public_mro_employees",
   "tipo": "Form",
   "nome_tabela": "\"public\".mro_employees",
+  "login": "admin",
+  "data_alteracao": "2026-08-15 14:08",
+  "nomeconexao": "conn_mro",
+  "tabelas": [
+    "public.mro_employees"
+  ],
   "campos": [
     {
       "nome": "canac_code",

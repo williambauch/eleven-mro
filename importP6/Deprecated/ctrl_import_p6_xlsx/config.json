@@ -2,6 +2,11 @@
   "nome": "ctrl_import_p6_xlsx",
   "tipo": "Form",
   "nome_tabela": "ctrl_import_p6_xlsx",
+  "login": "admin",
+  "nomeconexao": "conn_mro",
+  "variaveis": [
+    "glo_project_id"
+  ],
   "campos": [
     {
       "nome": "arquivo_xlsx",

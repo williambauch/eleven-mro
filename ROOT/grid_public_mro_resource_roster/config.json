@@ -2,6 +2,11 @@
   "nome": "grid_public_mro_resource_roster",
   "tipo": "Grid",
   "nome_tabela": "public.mro_resource_roster",
+  "login": "admin",
+  "nomeconexao": "conn_mro",
+  "tabelas": [
+    "public.mro_resource_roster"
+  ],
   "campos": [
     {
       "nome": "aircraft_model",

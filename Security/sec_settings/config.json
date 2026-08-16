@@ -2,6 +2,20 @@
   "nome": "sec_settings",
   "tipo": "Form",
   "nome_tabela": "sec_settings",
+  "descricao": "SECURITY MODULE :: Settings",
+  "login": "admin",
+  "nomeconexao": "conn_mro",
+  "variaveis": [
+    "sett_smtp",
+    "sett_smtp_api",
+    "sett_smtp_from_email",
+    "sett_smtp_from_name",
+    "sett_smtp_pass",
+    "sett_smtp_port",
+    "sett_smtp_security",
+    "sett_smtp_server",
+    "sett_smtp_user"
+  ],
   "campos": [
     {
       "nome": "auth_sn_fb",

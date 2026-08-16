@@ -2,6 +2,12 @@
   "nome": "ctrl_import_excel",
   "tipo": "Form",
   "nome_tabela": "ctrl_import_excel",
+  "login": "admin",
+  "data_alteracao": "2026-08-03 12:46",
+  "nomeconexao": "conn_mro",
+  "variaveis": [
+    "glo_project_id"
+  ],
   "campos": [
     {
       "nome": "arquivo_xlsx",

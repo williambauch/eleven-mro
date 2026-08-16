@@ -2,5 +2,10 @@
   "nome": "pdf_pack_universal",
   "tipo": "Form",
   "nome_tabela": "pdf_pack_universal",
+  "login": "admin",
+  "nomeconexao": "conn_mro",
+  "variaveis": [
+    "task_id"
+  ],
   "campos": []
 }

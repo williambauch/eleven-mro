@@ -2,12 +2,15 @@
 // ============================================================
 // BOTÃO DE BARRA DE AÇÃO: btn_aprovar
 // ============================================================
-// Tipo   : AJAX
-// Label  : Aprovar
-// Ícone  : fas fa-plane-circle-check
+// Tipo    : AJAX
+// Label   : Aprovar
+// Ícone   : fas fa-plane-circle-check
+// Display : btn
+// Formato : icon_text
 // Estados:
-//   - state1 | Aprovar | fas fa-plane-circle-check
-//   - state2 | Aprovado | fas fa-check-double
+//   - state1 | label="Aprovar" | fas fa-plane-circle-check | visual=green
+//       confirma: Deseja confirmar a aprovação dessa tarefa?
+//   - state2 | label="Aprovado" | fas fa-check-double | visual=grey
 //
 // Ação: evento Ajax "actbtn_btn_aprovar_onClick" (events_ajax/)
 // ============================================================

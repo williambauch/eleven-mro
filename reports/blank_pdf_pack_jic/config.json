@@ -2,5 +2,12 @@
   "nome": "blank_pdf_pack_jic",
   "tipo": "Blank",
   "nome_tabela": "blank_pdf_pack_jic",
+  "descricao": "Pack para impressao (JIC, JEC, JMC, Shift Turnover, Calib Tools)",
+  "login": "william",
+  "data_alteracao": "2026-07-28 09:24",
+  "nomeconexao": "conn_mro",
+  "variaveis": [
+    "glo_task_id"
+  ],
   "campos": []
 }

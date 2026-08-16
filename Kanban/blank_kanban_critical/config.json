@@ -2,5 +2,13 @@
   "nome": "blank_kanban_critical",
   "tipo": "Blank",
   "nome_tabela": "blank_kanban_critical",
+  "login": "admin",
+  "data_alteracao": "2026-08-14 15:14",
+  "nomeconexao": "conn_mro",
+  "variaveis": [
+    "glo_project_id",
+    "glo_project_ids",
+    "usr_login"
+  ],
   "campos": []
 }

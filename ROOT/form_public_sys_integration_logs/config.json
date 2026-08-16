@@ -2,6 +2,11 @@
   "nome": "form_public_sys_integration_logs",
   "tipo": "Form",
   "nome_tabela": "\"public\".sys_integration_logs",
+  "login": "admin",
+  "nomeconexao": "conn_mro",
+  "tabelas": [
+    "public.sys_integration_logs"
+  ],
   "campos": [
     {
       "nome": "created_at",

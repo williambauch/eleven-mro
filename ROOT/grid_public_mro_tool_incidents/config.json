@@ -2,6 +2,11 @@
   "nome": "grid_public_mro_tool_incidents",
   "tipo": "Grid",
   "nome_tabela": "public.mro_tool_incidents",
+  "login": "admin",
+  "nomeconexao": "conn_mro",
+  "tabelas": [
+    "public.mro_tool_incidents"
+  ],
   "campos": [
     {
       "nome": "description",

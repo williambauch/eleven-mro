@@ -2,5 +2,14 @@
   "nome": "blank_gantt",
   "tipo": "Blank",
   "nome_tabela": "blank_gantt",
+  "login": "admin",
+  "data_alteracao": "2026-08-14 15:14",
+  "nomeconexao": "conn_mro",
+  "variaveis": [
+    "glo_project_id",
+    "glo_project_ids",
+    "FP",
+    "usr_login"
+  ],
   "campos": []
 }

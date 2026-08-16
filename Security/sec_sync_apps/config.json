@@ -2,6 +2,9 @@
   "nome": "sec_sync_apps",
   "tipo": "Form",
   "nome_tabela": "sec_sync_apps",
+  "descricao": "SECURITY MODULE :: Resync Applications",
+  "login": "admin",
+  "nomeconexao": "conn_mro",
   "campos": [
     {
       "nome": "check_deleted",

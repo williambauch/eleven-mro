@@ -2,6 +2,11 @@
   "nome": "form_public_mro_wbs",
   "tipo": "Form",
   "nome_tabela": "\"public\".mro_wbs",
+  "login": "admin",
+  "nomeconexao": "conn_mro",
+  "tabelas": [
+    "public.mro_wbs"
+  ],
   "campos": [
     {
       "nome": "phase_type",

@@ -2,6 +2,16 @@
   "nome": "grid_public_mro_tasks_15072026_MRO-117",
   "tipo": "Grid",
   "nome_tabela": "public.mro_tasks",
+  "login": "william",
+  "data_alteracao": "2026-07-14 16:21",
+  "nomeconexao": "conn_mro",
+  "tabelas": [
+    "public.mro_tasks"
+  ],
+  "variaveis": [
+    "glo_aviso_run",
+    "var_project_id"
+  ],
   "campos": [
     {
       "nome": "access_panel",

@@ -2,9 +2,13 @@
 // ============================================================
 // BOTÃO DE BARRA DE AÇÃO: print
 // ============================================================
-// Tipo   : LINK
-// Label  : print
-// Ícone  : far fa-file-pdf
+// Tipo    : LINK
+// Label   : print
+// Ícone   : far fa-file-pdf
+// Display : fa
+// Formato : icon_text
 // Estados:
 //   - state1 | far fa-file-pdf
+//
+// ── LIGAÇÃO ──────────────────────────────────────────
 // ============================================================

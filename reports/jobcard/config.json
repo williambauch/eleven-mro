@@ -2,6 +2,17 @@
   "nome": "jobcard",
   "tipo": "Form",
   "nome_tabela": "jobcard",
+  "login": "admin",
+  "nomeconexao": "conn_mro",
+  "tabelas": [
+    "mro_aircraft",
+    "mro_projects",
+    "mro_tasks",
+    "mro_wbs"
+  ],
+  "variaveis": [
+    "glo_task_id"
+  ],
   "campos": [
     {
       "nome": "amm",

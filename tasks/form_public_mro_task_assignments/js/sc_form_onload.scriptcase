@@ -1,0 +1,33 @@
+// ============================================================
+// sc_form_onload — JavaScript do formulário (Geral Form > Onload)
+// O Scriptcase executa esta função com o DOM pronto, tanto no load
+// inicial quanto nas navegações Ajax. Não usar DOMContentLoaded aqui.
+// Local na IDE: Formulário > Javascript > Selecionar "Geral Form"
+//               > Evento "Onload" > Editar
+// ============================================================
+
+console.log("[MRO] DOMContentLoaded disparado");
+
+    const timer = document.getElementById("mro_timer");
+
+    if (!timer) {
+        console.log("[MRO] ❌ #mro_timer não existe.");
+        return;
+    }
+
+    console.log("[MRO] #mro_timer encontrado.");
+
+    const ready = timer.getAttribute("data-mro-ready");
+
+    console.log("[MRO] data-mro-ready =", ready);
+
+    if (ready !== "true") {
+        console.log("[MRO] ⏸️ Timer ainda não está ready.");
+        return;
+    }
+
+    console.log("[MRO] 🚀 Timer está ready. Chamando iniciar_relogio_mro()...");
+
+    iniciar_relogio_mro();
+
+    console.log("[MRO] ✅ iniciar_relogio_mro() executado.");

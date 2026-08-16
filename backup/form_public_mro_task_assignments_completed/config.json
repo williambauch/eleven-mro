@@ -2,6 +2,18 @@
   "nome": "form_public_mro_task_assignments_completed",
   "tipo": "Form",
   "nome_tabela": "\"public\".mro_task_assignments",
+  "descricao": "-- APP DESCONTINUADO --",
+  "login": "admin",
+  "data_alteracao": "2026-08-11 15:00",
+  "nomeconexao": "conn_mro",
+  "tabelas": [
+    "public.mro_task_assignments"
+  ],
+  "variaveis": [
+    "usr_employee_id",
+    "usr_login",
+    "usr_skill_id"
+  ],
   "campos": [
     {
       "nome": "actual_qty_hours",

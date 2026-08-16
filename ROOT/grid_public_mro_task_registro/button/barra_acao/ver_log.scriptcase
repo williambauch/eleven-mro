@@ -1,0 +1,19 @@
+<?php
+// ============================================================
+// BOTÃO DE BARRA DE AÇÃO: ver_log
+// ============================================================
+// Tipo    : LINK
+// Label   : Ver Histórico
+// Ícone   : far fa-clock
+// Display : btn
+// Formato : icon_text
+// Estados:
+//   - state1 | label="Ver Histórico" | far fa-clock | visual=yellow
+//
+// ── LIGAÇÃO ──────────────────────────────────────────
+// App destino: grid_public_mro_task_history (C)
+// Abertura    : Modal
+// Modal       : 1000 x 900
+// Parâmetros:
+//   - [Campo] task_id → glo_task_id
+// ============================================================

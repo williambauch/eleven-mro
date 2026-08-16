@@ -2,6 +2,12 @@
   "nome": "form_public_mro_project_phases",
   "tipo": "Form",
   "nome_tabela": "\"public\".mro_project_phases",
+  "login": "admin",
+  "data_alteracao": "2026-07-23 11:09",
+  "nomeconexao": "conn_mro",
+  "tabelas": [
+    "public.mro_project_phases"
+  ],
   "campos": [
     {
       "nome": "created_at",

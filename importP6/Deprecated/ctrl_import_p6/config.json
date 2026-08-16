@@ -2,6 +2,12 @@
   "nome": "ctrl_import_p6",
   "tipo": "Form",
   "nome_tabela": "ctrl_import_p6",
+  "login": "admin",
+  "nomeconexao": "conn_mro",
+  "variaveis": [
+    "glo_project_id",
+    "usr_login"
+  ],
   "campos": [
     {
       "nome": "csv_assignments",

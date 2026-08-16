@@ -2,9 +2,14 @@
 // ============================================================
 // BOTÃO DE BARRA DE AÇÃO: ver_historico
 // ============================================================
-// Tipo   : LINK
-// Label  : ver_historico
-// Ícone  : fas fa-clock-rotate-left
+// Tipo    : LINK
+// Label   : ver_historico
+// Ícone   : fas fa-clock-rotate-left
+// Display : fa
+// Formato : icon_text
 // Estados:
-//   - state1 | fas fa-clock-rotate-left
+//   - state1 | fas fa-clock-rotate-left | cor=#d4c733
+//       hint: Ver Histórico
+//
+// ── LIGAÇÃO ──────────────────────────────────────────
 // ============================================================

@@ -2,5 +2,10 @@
   "nome": "pdf_jic_print",
   "tipo": "Form",
   "nome_tabela": "pdf_jic_print",
+  "login": "admin",
+  "nomeconexao": "conn_mro",
+  "variaveis": [
+    "task_id"
+  ],
   "campos": []
 }

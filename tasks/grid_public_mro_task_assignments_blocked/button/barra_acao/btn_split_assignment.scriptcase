@@ -2,13 +2,22 @@
 // ============================================================
 // BOTÃO DE BARRA DE AÇÃO: btn_split_assignment
 // ============================================================
-// Tipo   : LINK
-// Label  : Dividir
-// Ícone  : fas fa-user-plus
+// Tipo    : LINK
+// Label   : Dividir
+// Ícone   : fas fa-user-plus
+// Display : btn
+// Formato : icon_text
 // Estados:
-//   - state1 | Dividir | fas fa-user-plus
+//   - state1 | label="Dividir" | fas fa-user-plus | visual=green
+//       hint: Adicionar outro mecânico a esta atribuição (divide as horas pela metade).
 //
-// Liga para: control_split_assignment
-// Abertura  : Nova janela
-// Parâmetros: C?#?assignment_id?#?glo_assignment_id_split?@?N?#??#?glo_split_original_hours?@?N?#??#?usr_employee_id?@?N?#??#?usr_login?@?V?#?grid_public_mro_task_assignments_blocked?#?glo_split_voltar
+// ── LIGAÇÃO ──────────────────────────────────────────
+// App destino: control_split_assignment (F)
+// Abertura    : Nova janela
+// Parâmetros:
+//   - [Campo] assignment_id → glo_assignment_id_split
+//   - [Global] glo_split_original_hours
+//   - [Global] usr_employee_id
+//   - [Global] usr_login
+//   - [Retorno] de grid_public_mro_task_assignments_blocked → glo_split_voltar
 // ============================================================

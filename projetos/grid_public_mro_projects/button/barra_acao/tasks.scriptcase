@@ -2,13 +2,18 @@
 // ============================================================
 // BOTÃO DE BARRA DE AÇÃO: tasks
 // ============================================================
-// Tipo   : LINK
-// Label  : tasks
-// Ícone  : fas fa-list-check
+// Tipo    : LINK
+// Label   : tasks
+// Ícone   : fas fa-list-check
+// Display : fa
+// Formato : icon_text
 // Estados:
-//   - task | fas fa-list-check
+//   - task | fas fa-list-check | cor=#2825e6
 //
-// Liga para: grid_public_mro_tasks
-// Abertura  : Nova janela
-// Parâmetros: C?#?project_id?#?var_project_id?@?N?#??#?glo_aviso_run
+// ── LIGAÇÃO ──────────────────────────────────────────
+// App destino: grid_public_mro_tasks (C)
+// Abertura    : Nova janela
+// Parâmetros:
+//   - [Campo] project_id → var_project_id
+//   - [Global] glo_aviso_run
 // ============================================================

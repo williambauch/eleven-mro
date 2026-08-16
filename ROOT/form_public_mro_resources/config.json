@@ -2,6 +2,11 @@
   "nome": "form_public_mro_resources",
   "tipo": "Form",
   "nome_tabela": "\"public\".mro_resources",
+  "login": "admin",
+  "nomeconexao": "conn_mro",
+  "tabelas": [
+    "public.mro_resources"
+  ],
   "campos": [
     {
       "nome": "created_at",

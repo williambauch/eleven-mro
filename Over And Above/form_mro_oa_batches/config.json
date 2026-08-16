@@ -2,6 +2,14 @@
   "nome": "form_mro_oa_batches",
   "tipo": "Form",
   "nome_tabela": "\"public\".mro_oa_batches",
+  "login": "admin",
+  "nomeconexao": "conn_mro",
+  "tabelas": [
+    "public.mro_oa_batches"
+  ],
+  "variaveis": [
+    "usr_login"
+  ],
   "campos": [
     {
       "nome": "approved_at",

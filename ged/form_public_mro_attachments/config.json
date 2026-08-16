@@ -2,6 +2,20 @@
   "nome": "form_public_mro_attachments",
   "tipo": "Form",
   "nome_tabela": "\"public\".mro_attachments",
+  "descricao": "CRUD de arquivos Anexo TASK, PROJECT ou AIRCRAFT",
+  "login": "william",
+  "data_alteracao": "2026-08-04 11:13",
+  "nomeconexao": "conn_mro",
+  "tabelas": [
+    "public.mro_attachments"
+  ],
+  "variaveis": [
+    "glo_att_aircraft_id",
+    "glo_att_project_id",
+    "glo_att_subdir",
+    "glo_att_task_id",
+    "usr_login"
+  ],
   "campos": [
     {
       "nome": "aircraft_id",

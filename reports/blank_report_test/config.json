@@ -2,5 +2,10 @@
   "nome": "blank_report_test",
   "tipo": "Blank",
   "nome_tabela": "blank_report_test",
+  "login": "admin",
+  "nomeconexao": "conn_mro",
+  "variaveis": [
+    "X"
+  ],
   "campos": []
 }

@@ -2,7 +2,28 @@
   "nome": "grid_public_mro_task_assignments_blocked",
   "tipo": "Grid",
   "nome_tabela": "grid_public_mro_task_assignments_blocked",
+  "descricao": "Lista de ASSIGNMENT em BLOCKED",
+  "login": "william",
+  "data_alteracao": "2026-08-15 14:30",
+  "nomeconexao": "conn_mro",
+  "tabelas": [
+    "public.mro_employees",
+    "public.mro_projects",
+    "public.mro_skills",
+    "public.mro_task_assignments",
+    "public.mro_tasks"
+  ],
+  "variaveis": [
+    "usr_employee_id",
+    "usr_skill_id"
+  ],
   "campos": [
+    {
+      "nome": "actual_qty_hours",
+      "tipo": "numeric",
+      "required": false,
+      "pk": false
+    },
     {
       "nome": "assignment_id",
       "tipo": "int4",
@@ -10,25 +31,19 @@
       "pk": false
     },
     {
-      "nome": "task_id",
-      "tipo": "int4",
+      "nome": "assignments_status_code",
+      "tipo": "varchar",
       "required": false,
       "pk": false
     },
     {
-      "nome": "task_desc",
-      "tipo": "text",
+      "nome": "created_at",
+      "tipo": "datetime",
       "required": false,
       "pk": false
     },
     {
-      "nome": "project_id",
-      "tipo": "int4",
-      "required": false,
-      "pk": false
-    },
-    {
-      "nome": "project_code",
+      "nome": "created_by",
       "tipo": "varchar",
       "required": false,
       "pk": false
@@ -52,25 +67,25 @@
       "pk": false
     },
     {
+      "nome": "planned_qty_hours",
+      "tipo": "numeric",
+      "required": false,
+      "pk": false
+    },
+    {
       "nome": "planned_skill_id",
       "tipo": "int4",
       "required": false,
       "pk": false
     },
     {
-      "nome": "skill_id",
-      "tipo": "int4",
-      "required": false,
-      "pk": false
-    },
-    {
-      "nome": "skill_code",
+      "nome": "project_code",
       "tipo": "varchar",
       "required": false,
       "pk": false
     },
     {
-      "nome": "supervisor_id",
+      "nome": "project_id",
       "tipo": "int4",
       "required": false,
       "pk": false
@@ -88,37 +103,37 @@
       "pk": false
     },
     {
-      "nome": "planned_qty_hours",
-      "tipo": "numeric",
-      "required": false,
-      "pk": false
-    },
-    {
-      "nome": "actual_qty_hours",
-      "tipo": "numeric",
-      "required": false,
-      "pk": false
-    },
-    {
-      "nome": "assignments_status_code",
+      "nome": "skill_code",
       "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "skill_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "supervisor_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "task_desc",
+      "tipo": "text",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "task_id",
+      "tipo": "int4",
       "required": false,
       "pk": false
     },
     {
       "nome": "task_status_code",
-      "tipo": "varchar",
-      "required": false,
-      "pk": false
-    },
-    {
-      "nome": "created_at",
-      "tipo": "datetime",
-      "required": false,
-      "pk": false
-    },
-    {
-      "nome": "created_by",
       "tipo": "varchar",
       "required": false,
       "pk": false

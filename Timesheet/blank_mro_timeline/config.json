@@ -2,5 +2,11 @@
   "nome": "blank_mro_timeline",
   "tipo": "Blank",
   "nome_tabela": "blank_mro_timeline",
+  "login": "admin",
+  "data_alteracao": "2026-08-11 15:23",
+  "nomeconexao": "conn_mro",
+  "variaveis": [
+    "glo_assignment_id"
+  ],
   "campos": []
 }

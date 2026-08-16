@@ -2,13 +2,18 @@
 // ============================================================
 // BOTÃO DE BARRA DE AÇÃO: dashboard
 // ============================================================
-// Tipo   : LINK
-// Label  : dashboard
-// Ícone  : fas fa-chart-pie
+// Tipo    : LINK
+// Label   : dashboard
+// Ícone   : fas fa-chart-pie
+// Display : fa
+// Formato : icon_text
 // Estados:
-//   - state1 | fas fa-chart-pie
+//   - state1 | fas fa-chart-pie | cor=#c914c9
+//       hint: Dashboard de Encerramento e Gargalos
 //
-// Liga para: control_dash_encerramento
-// Abertura  : Nova janela
-// Parâmetros: C?#?project_id?#?glo_project_id
+// ── LIGAÇÃO ──────────────────────────────────────────
+// App destino: control_dash_encerramento (F)
+// Abertura    : Nova janela
+// Parâmetros:
+//   - [Campo] project_id → glo_project_id
 // ============================================================

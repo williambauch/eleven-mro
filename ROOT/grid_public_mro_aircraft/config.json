@@ -2,6 +2,11 @@
   "nome": "grid_public_mro_aircraft",
   "tipo": "Grid",
   "nome_tabela": "public.mro_aircraft",
+  "login": "admin",
+  "nomeconexao": "conn_mro",
+  "tabelas": [
+    "public.mro_aircraft"
+  ],
   "campos": [
     {
       "nome": "aircraft_id",

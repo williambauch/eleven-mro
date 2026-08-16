@@ -2,6 +2,18 @@
   "nome": "sec_form_sec_groups_apps",
   "tipo": "Form",
   "nome_tabela": "public.sec_groups_apps",
+  "descricao": "SECURITY MODULE :: Groups/Apps",
+  "login": "admin",
+  "nomeconexao": "conn_mro",
+  "tabelas": [
+    "public.sec_groups_apps"
+  ],
+  "variaveis": [
+    "arr_apps",
+    "arr_apps_desc",
+    "group",
+    "group_desc"
+  ],
   "campos": [
     {
       "nome": "app_name",

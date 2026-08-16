@@ -2,5 +2,10 @@
   "nome": "blank_kanban_board",
   "tipo": "Blank",
   "nome_tabela": "blank_kanban_board",
+  "login": "admin",
+  "nomeconexao": "conn_mro",
+  "variaveis": [
+    "var_project_id"
+  ],
   "campos": []
 }

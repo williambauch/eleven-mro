@@ -2,13 +2,18 @@
 // ============================================================
 // BOTÃO DE BARRA DE AÇÃO: ver_historico
 // ============================================================
-// Tipo   : LINK
-// Label  : Ver Histórico
-// Ícone  : fas fa-clock-rotate-left
+// Tipo    : LINK
+// Label   : Ver Histórico
+// Ícone   : fas fa-clock-rotate-left
+// Display : btn
+// Formato : icon_text
 // Estados:
-//   - state1 | Ver Histórico | fas fa-clock-rotate-left
+//   - state1 | label="Ver Histórico" | fas fa-clock-rotate-left | cor=#3b62ff | visual=blue
 //
-// Liga para: blank_mro_timeline
-// Abertura  : Modal
-// Parâmetros: C?#?assignment_id?#?glo_assignment_id
+// ── LIGAÇÃO ──────────────────────────────────────────
+// App destino: blank_mro_timeline (B)
+// Abertura    : Modal
+// Modal       : 900 x 600
+// Parâmetros:
+//   - [Campo] assignment_id → glo_assignment_id
 // ============================================================

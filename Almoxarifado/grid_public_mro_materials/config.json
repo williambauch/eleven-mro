@@ -2,6 +2,12 @@
   "nome": "grid_public_mro_materials",
   "tipo": "Grid",
   "nome_tabela": "public.mro_materials",
+  "login": "admin",
+  "data_alteracao": "2026-08-05 11:52",
+  "nomeconexao": "conn_mro",
+  "tabelas": [
+    "public.mro_materials"
+  ],
   "campos": [
     {
       "nome": "description",

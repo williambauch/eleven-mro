@@ -2,6 +2,15 @@
   "nome": "grid_mro_tools_pending_return",
   "tipo": "Grid",
   "nome_tabela": "grid_mro_tools_pending_return",
+  "descricao": "Relatório de ferramentas pendentes de devolução",
+  "login": "william",
+  "data_alteracao": "2026-08-05 11:07",
+  "nomeconexao": "conn_mro",
+  "tabelas": [
+    "mro_employees",
+    "mro_tool_transactions",
+    "mro_tools"
+  ],
   "campos": [
     {
       "nome": "checkout_time",

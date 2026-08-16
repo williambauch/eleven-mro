@@ -2,6 +2,21 @@
   "nome": "sec_form_add_users",
   "tipo": "Form",
   "nome_tabela": "public.sec_users",
+  "descricao": "SECURITY MODULE :: Add Users",
+  "login": "admin",
+  "nomeconexao": "conn_mro",
+  "tabelas": [
+    "public.sec_users"
+  ],
+  "variaveis": [
+    "req_active_by_email",
+    "sett_group_default",
+    "sett_password_min",
+    "sett_password_strength",
+    "sett_req_email_act",
+    "sett_send_email_adm",
+    "sett_smtp"
+  ],
   "campos": [
     {
       "nome": "activation_code",

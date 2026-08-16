@@ -2,13 +2,20 @@
 // ============================================================
 // BOTÃO DE BARRA DE AÇÃO: kanban
 // ============================================================
-// Tipo   : LINK
-// Label  : kanban
-// Ícone  : fas fa-table-columns
+// Tipo    : LINK
+// Label   : kanban
+// Ícone   : fas fa-table-columns
+// Display : fa
+// Formato : icon_text
 // Estados:
-//   - state1 | fas fa-table-columns
+//   - state1 | fas fa-table-columns | cor=#000000
+//       hint: Kanban
 //
-// Liga para: blank_kanban_critical
-// Abertura  : Mesma janela
-// Parâmetros: C?#?project_id?#?var_project_id
+// ── LIGAÇÃO ──────────────────────────────────────────
+// App destino: blank_kanban_critical (B)
+// Abertura    : Mesma janela
+// Parâmetros:
+//   - [Global] usr_login
+//   - [Retorno] de  → glo_project_ids
+//   - [Campo] project_id → glo_project_id
 // ============================================================

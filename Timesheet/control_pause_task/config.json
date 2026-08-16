@@ -2,6 +2,17 @@
   "nome": "control_pause_task",
   "tipo": "Control",
   "nome_tabela": "control_pause_task",
+  "login": "admin",
+  "data_alteracao": "2026-08-15 10:19",
+  "nomeconexao": "conn_mro",
+  "variaveis": [
+    "glo_assignment_id",
+    "glo_assignment_id_sel",
+    "glo_current_timesheet",
+    "glo_timesheet_id",
+    "usr_employee_id",
+    "usr_login"
+  ],
   "campos": [
     {
       "nome": "assignment_id",

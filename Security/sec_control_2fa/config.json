@@ -2,6 +2,19 @@
   "nome": "sec_control_2fa",
   "tipo": "Form",
   "nome_tabela": "sec_control_2fa",
+  "descricao": "SECURITY MODULE :: Control 2FA",
+  "login": "admin",
+  "nomeconexao": "conn_mro",
+  "variaveis": [
+    "remember_me",
+    "sett_enable_2fa_api",
+    "sett_enable_2fa_api_type",
+    "sett_enable_2fa_expiration_time",
+    "sett_mfa_last_updated",
+    "type_2fa",
+    "usr_email",
+    "usr_login"
+  ],
   "campos": [
     {
       "nome": "code",

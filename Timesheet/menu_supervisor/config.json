@@ -2,5 +2,12 @@
   "nome": "menu_supervisor",
   "tipo": "Menu",
   "nome_tabela": "___NM_APL_MEN___",
+  "descricao": "TAB Supervisor Melhorada",
+  "login": "william",
+  "data_alteracao": "2026-08-13 09:33",
+  "variaveis": [
+    "usr_is_inspector",
+    "usr_login"
+  ],
   "campos": []
 }

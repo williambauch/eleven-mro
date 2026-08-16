@@ -36,4 +36,4 @@ if (empty($var_limpos)) {
 
 $var_multi_project_id = implode(',', $var_limpos);
 // Redireciona para a blank_gantt com a lista de projetos passando multiplo project_id (glo_project_ids) e limpando glo_project_id
-sc_redir('blank_gantt', glo_project_ids=$var_multi_project_id,glo_project_id='','_blank');
+sc_redir('blank_gantt', glo_project_ids=$var_multi_project_id,glo_project_id='','_self');

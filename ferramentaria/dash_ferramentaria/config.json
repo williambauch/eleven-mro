@@ -2,5 +2,7 @@
   "nome": "dash_ferramentaria",
   "tipo": "Form",
   "nome_tabela": "dash_ferramentaria",
+  "login": "admin",
+  "nomeconexao": "conn_mro",
   "campos": []
 }

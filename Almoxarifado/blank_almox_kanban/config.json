@@ -2,5 +2,10 @@
   "nome": "blank_almox_kanban",
   "tipo": "Blank",
   "nome_tabela": "blank_almox_kanban",
+  "login": "admin",
+  "nomeconexao": "conn_mro",
+  "variaveis": [
+    "usr_login"
+  ],
   "campos": []
 }

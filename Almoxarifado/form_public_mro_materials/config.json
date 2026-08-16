@@ -2,6 +2,11 @@
   "nome": "form_public_mro_materials",
   "tipo": "Form",
   "nome_tabela": "\"public\".mro_materials",
+  "login": "admin",
+  "nomeconexao": "conn_mro",
+  "tabelas": [
+    "public.mro_materials"
+  ],
   "campos": [
     {
       "nome": "description",

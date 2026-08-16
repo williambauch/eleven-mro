@@ -2,6 +2,20 @@
   "nome": "form_public_mro_nrc",
   "tipo": "Form",
   "nome_tabela": "\"public\".mro_tasks",
+  "descricao": "-- APP DESCONTINUADO --",
+  "login": "admin",
+  "data_alteracao": "2026-08-12 13:22",
+  "nomeconexao": "conn_mro",
+  "tabelas": [
+    "public.mro_tasks"
+  ],
+  "variaveis": [
+    "parent_task_id",
+    "skill_code",
+    "usr_groups",
+    "usr_login",
+    "wbs_id"
+  ],
   "campos": [
     {
       "nome": "access_panel",

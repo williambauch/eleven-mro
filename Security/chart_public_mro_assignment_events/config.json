@@ -2,6 +2,11 @@
   "nome": "chart_public_mro_assignment_events",
   "tipo": "Chart",
   "nome_tabela": "public.mro_assignment_events",
+  "login": "admin",
+  "nomeconexao": "conn_mro",
+  "tabelas": [
+    "public.mro_assignment_events"
+  ],
   "campos": [
     {
       "nome": "assignment_id",

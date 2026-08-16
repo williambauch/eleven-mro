@@ -2,22 +2,26 @@
   "nome": "grid_mro_task_tools",
   "tipo": "Grid",
   "nome_tabela": "public.mro_task_tools",
+  "login": "admin",
+  "data_alteracao": "2026-08-04 16:02",
+  "nomeconexao": "conn_mro",
+  "tabelas": [
+    "mro_tools",
+    "public.mro_task_tools"
+  ],
+  "variaveis": [
+    "task_id"
+  ],
   "campos": [
     {
-      "nome": "task_tool_id",
-      "tipo": "int4",
-      "required": false,
-      "pk": true
-    },
-    {
-      "nome": "task_id",
-      "tipo": "int4",
+      "nome": "description",
+      "tipo": "varchar",
       "required": false,
       "pk": false
     },
     {
-      "nome": "tool_id",
-      "tipo": "int4",
+      "nome": "part_number",
+      "tipo": "varchar",
       "required": false,
       "pk": false
     },
@@ -28,14 +32,20 @@
       "pk": false
     },
     {
-      "nome": "description",
-      "tipo": "varchar",
+      "nome": "task_id",
+      "tipo": "int4",
       "required": false,
       "pk": false
     },
     {
-      "nome": "part_number",
-      "tipo": "varchar",
+      "nome": "task_tool_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": true
+    },
+    {
+      "nome": "tool_id",
+      "tipo": "int4",
       "required": false,
       "pk": false
     }

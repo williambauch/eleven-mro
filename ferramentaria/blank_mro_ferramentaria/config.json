@@ -2,5 +2,11 @@
   "nome": "blank_mro_ferramentaria",
   "tipo": "Blank",
   "nome_tabela": "blank_mro_ferramentaria",
+  "login": "admin",
+  "data_alteracao": "2026-08-07 08:38",
+  "nomeconexao": "conn_mro",
+  "variaveis": [
+    "usr_login"
+  ],
   "campos": []
 }

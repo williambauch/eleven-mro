@@ -2,5 +2,14 @@
   "nome": "blank_dash_encerramento",
   "tipo": "Blank",
   "nome_tabela": "blank_dash_encerramento",
+  "descricao": "Dashboard de Encerramento e Gargalos",
+  "login": "william",
+  "data_alteracao": "2026-08-10 18:23",
+  "nomeconexao": "conn_mro",
+  "variaveis": [
+    "glo_periodo_final",
+    "glo_periodo_inicial",
+    "glo_project_id"
+  ],
   "campos": []
 }

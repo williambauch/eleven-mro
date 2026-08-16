@@ -2,6 +2,18 @@
   "nome": "grid_mro_timesheet_consolidado",
   "tipo": "Grid",
   "nome_tabela": "grid_mro_timesheet_consolidado",
+  "descricao": "Consulta de Apontamentos(consolidado filtros obrigatórios)",
+  "login": "william",
+  "data_alteracao": "2026-07-30 13:42",
+  "nomeconexao": "conn_mro",
+  "tabelas": [
+    "public.mro_employees",
+    "public.mro_projects",
+    "public.mro_skills",
+    "public.mro_task_assignments",
+    "public.mro_tasks",
+    "public.mro_timesheet"
+  ],
   "campos": [
     {
       "nome": "actual_qty_hours",

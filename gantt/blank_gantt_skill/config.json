@@ -2,5 +2,7 @@
   "nome": "blank_gantt_skill",
   "tipo": "Blank",
   "nome_tabela": "blank_gantt_skill",
+  "login": "admin",
+  "nomeconexao": "conn_mro",
   "campos": []
 }

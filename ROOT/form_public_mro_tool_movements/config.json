@@ -2,6 +2,11 @@
   "nome": "form_public_mro_tool_movements",
   "tipo": "Form",
   "nome_tabela": "\"public\".mro_tool_movements",
+  "login": "admin",
+  "nomeconexao": "conn_mro",
+  "tabelas": [
+    "public.mro_tool_movements"
+  ],
   "campos": [
     {
       "nome": "checkin_time",

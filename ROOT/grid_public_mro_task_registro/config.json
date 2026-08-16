@@ -1,0 +1,94 @@
+{
+  "nome": "grid_public_mro_task_registro",
+  "tipo": "Grid",
+  "nome_tabela": "grid_public_mro_task_registro",
+  "descricao": "Auditoria de Tasks que estão COMPLETED",
+  "login": "william",
+  "data_alteracao": "2026-08-13 14:19",
+  "nomeconexao": "conn_mro",
+  "tabelas": [
+    "public.mro_projects",
+    "public.mro_task_history",
+    "public.mro_tasks"
+  ],
+  "campos": [
+    {
+      "nome": "actual_end",
+      "tipo": "datetime",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "inspector_1_login",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "inspector_2_login",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "is_rii",
+      "tipo": "bool",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "jic_number",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "project_code",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "project_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "requires_rii",
+      "tipo": "bool",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "status_code",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "task_code",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "task_desc",
+      "tipo": "text",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "task_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "updated_at",
+      "tipo": "datetime",
+      "required": false,
+      "pk": false
+    }
+  ]
+}
