@@ -119,7 +119,10 @@ if (!empty([glo_aviso_run])) {
 ?>
 <script>
 // MRO-119: Desabilitar checkbox RUN se a task estiver bloqueada por predecessora
+// MRO-126: desabilita tambem quando o status da linha nao permite liberacao
+// (so liberam: PLANNING, NOT_STARTED, PLANNED, APPROVED)
 function esconderCheckboxRun() {
+  const statusPermitidos = ['PLANNING', 'NOT_STARTED', 'PLANNED', 'APPROVED'];
   const predSpans = document.querySelectorAll("span[id^='id_sc_field_btn_predecessor_']");
   predSpans.forEach(span => {
     const match = span.id.match(/id_sc_field_btn_predecessor_(\d+)$/);
@@ -130,9 +133,11 @@ function esconderCheckboxRun() {
     if (!innerSpan) return;
 
     const blocked = innerSpan.getAttribute('data-blocked');
+    const status = innerSpan.getAttribute('data-status');
+    const statusOk = statusPermitidos.indexOf(status) !== -1;
     const checkbox = document.getElementById('NM_ck_run' + linhaNum);
 
-    if (checkbox && blocked === '1') {
+    if (checkbox && (blocked === '1' || !statusOk)) {
       checkbox.disabled = true;
       checkbox.checked = false;
       checkbox.closest('td').style.opacity = '0.4';

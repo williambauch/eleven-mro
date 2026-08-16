@@ -32,16 +32,20 @@ if ({is_nrc} == 't' || {is_nrc} == 1 || {is_nrc} === true) {
 
 // MRO-119/MRO-124: Icone de bloqueio por predecessora
 // Bloqueio manual sobrepoe o bloqueio automatico visualmente
+// MRO-126: inclui data-status (status_code da linha) para o JS desabilitar
+// o checkbox RUN apenas nos status com liberacao permitida.
 $var_predecessor_manual = (!empty({is_predecessor_manual}) && ({is_predecessor_manual} == 't' || {is_predecessor_manual} == 1 || {is_predecessor_manual} === true));
 
 $var_predecessor_auto = (!empty({is_blocked_predecessor}) && ({is_blocked_predecessor} == 't' || {is_blocked_predecessor} == 1 || {is_blocked_predecessor} === true));
 
+$var_status_linha = {status_code};
+
 if ($var_predecessor_manual) {
-    {btn_predecessor} = "<span data-blocked='1'><i class='fa-solid fa-ban' style='color:#f9a825; font-size:16px;' title='Bloqueio manual de predecessora'></i></span>";
+    {btn_predecessor} = "<span data-blocked='1' data-status='$var_status_linha'><i class='fa-solid fa-ban' style='color:#f9a825; font-size:16px;' title='Bloqueio manual de predecessora'></i></span>";
 } elseif ($var_predecessor_auto) {
-    {btn_predecessor} = "<span data-blocked='1'><i class='fa-solid fa-ban' style='color:#c62828; font-size:16px;' title='Bloqueada por tarefa predecessora'></i></span>";
+    {btn_predecessor} = "<span data-blocked='1' data-status='$var_status_linha'><i class='fa-solid fa-ban' style='color:#c62828; font-size:16px;' title='Bloqueada por tarefa predecessora'></i></span>";
 } else {
-    {btn_predecessor} = "<span data-blocked='0'><i class='fa-solid fa-ban' style='color:#ced4da; font-size:16px;' title='Sem bloqueio de predecessora'></i></span>";
+    {btn_predecessor} = "<span data-blocked='0' data-status='$var_status_linha'><i class='fa-solid fa-ban' style='color:#ced4da; font-size:16px;' title='Sem bloqueio de predecessora'></i></span>";
 }
 
 

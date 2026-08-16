@@ -67,6 +67,10 @@ No painel do mecânico, criar listagem de ferramentas com avaria pra o ele preen
 
 **Motivação da validação de skill:** auditoria revelou que 5.215 tasks `NOT_STARTED`/`PLANNED` não têm LABOR nem `skill_code` — liberar sem a validação criaria tasks `RELEASED` sem slots de trabalho (fantasmas). Validado no banco: task 16635 (MI220) → bloqueada; task 28824 (NWB-ROTINA-C003) → libera.
 
+**Front-end — checkbox RUN habilitado só para status liberáveis:**
+- `events/04_onRecord/onRecord.scriptcase` — o span do `btn_predecessor` agora inclui `data-status='{status_code}'` (campo da linha, com chaves — não `[...]` que é global)
+- `events/03_onScriptInit/onScriptInit.scriptcase` — a função `esconderCheckboxRun()` agora desabilita o checkbox RUN (esmaecido) quando o status **não** está em `PLANNING`/`NOT_STARTED`/`PLANNED`/`APPROVED` **ou** quando bloqueada por predecessora
+
 **Menu:** `item_50: Logística e Ferramentaria > Provedoria - Liberação de Materiais (grid_provedoria_release)` no `Security/sec_menu/menu_tree.md`
 
 **Observação de dados:** no estado atual do banco todos os 509 materiais estão com `stock_balance = 0.00`, portanto a grid nasce vazia (nenhuma JIC pronta) — comportamento correto da regra; quando o estoque físico for carregado, as JICs aptas passam a aparecer automaticamente.
