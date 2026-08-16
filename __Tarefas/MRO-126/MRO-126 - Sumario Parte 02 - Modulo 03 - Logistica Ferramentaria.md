@@ -41,10 +41,19 @@ No painel do mecânico, criar listagem de ferramentas com avaria pra o ele preen
 - `events/04_onRecord/onRecord.scriptcase` — badge visual de percentual (verde 100% / amarelo parcial / vermelho 0%) e indicador "X de Y" materiais
 - `button/btn_liberar_hangar/onRecord.scriptcase` — botão por linha "Liberar para Hangar":
   - **Double-check no clique**: revalida no momento que não há materiais faltantes (trava de segurança)
-  - Trava de status (só `PLANNED`/`NOT_STARTED`)
-  - `UPDATE mro_tasks SET status_code='RELEASED', is_blocked_material=false`
-  - Audit log em `mro_task_history` (`RELEASED_BY_PROVEDORIA` com remarks)
+  - Chama `fn_liberar_task_para_execucao(..., 'PROVEDORIA')` da biblioteca interna (mro_engine.php)
   - `sc_commit_trans()` + `sc_alert` + `sc_redir`
+
+**Refatoração — código único na biblioteca interna (`_Bibliotecas_Internas/mro_engine.php`):**
+- Nova função **`fn_liberar_task_para_execucao($task_id, $projeto, $status, $is_blocked_pred, $origem)`** centraliza a liberação completa:
+  1. Valida bloqueio por predecessora
+  2. Critica de status (`PLANNING`/`NOT_STARTED`/`PLANNED`/`APPROVED`)
+  3. `UPDATE mro_tasks SET status_code='RELEASED'`
+  4. Audit log em `mro_task_history` — `RELEASED` (origem `PLANEJADOR`) ou `RELEASED_BY_PROVEDORIA` (origem `PROVEDORIA`)
+  5. Cria os assignments por skill via `fn_criar_assignments_por_skill` (LABOR do P6, com proteção de duplicidade)
+- **`btn_liberar_para_execucao`** (grid_public_mro_tasks) refatorado → agora é *thin wrapper* que chama `fn_liberar_task_para_execucao(..., 'PLANEJADOR')`
+- **`btn_liberar_hangar`** (grid_mro_material_release) refatorado → mantém o double-check de materiais e chama a **mesma** função com origem `PROVEDORIA`
+- Benefício: mesma lógica em um único lugar — qualquer ajuste futuro na liberação vale para os dois botões
 
 **Menu:** `item_50: Logística e Ferramentaria > Provedoria - Liberação de Materiais (grid_mro_material_release)` no `Security/sec_menu/menu_tree.md`
 

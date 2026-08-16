@@ -277,6 +277,69 @@ function fn_criar_assignments_por_skill($v_task_id, $v_projeto_atual)
     return true;
 }
 
+// ====================================================================
+// MRO-126: LIBERA UMA TASK PARA EXECUCAO (GATED PROCESS / PLANEJADOR)
+// ====================================================================
+// Centraliza a logica que antes vivia duplicada no btn_liberar_para_execucao
+// (grid_public_mro_tasks). Agora tambem e usada pela provedoria
+// (grid_mro_material_release). Recebe a origem para diferenciar o audit log.
+//
+// Parametros:
+//   $v_task_id           - ID da tarefa (linha da grid)
+//   $v_projeto_atual     - project_id da tarefa
+//   $v_status            - status_code atual da tarefa
+//   $v_is_blocked_pred   - flag de bloqueio por predecessora ('t'/'f'/bool)
+//   $v_origem            - 'PLANEJADOR' (grid geral) ou 'PROVEDORIA' (gated process)
+function fn_liberar_task_para_execucao($v_task_id, $v_projeto_atual, $v_status, $v_is_blocked_pred = false, $v_origem = 'PLANEJADOR')
+{
+    $v_task_id         = (int)$v_task_id;
+    $v_projeto_atual   = (int)$v_projeto_atual;
+    $v_origem          = addslashes($v_origem);
+    $var_user_logado   = [usr_login];
+
+    // ====================================================================
+    // 1. BLOQUEIO POR PREDECESSORA
+    // ====================================================================
+    if ($v_is_blocked_pred == 't' || $v_is_blocked_pred === true || $v_is_blocked_pred == 1) {
+        sc_error_message("A tarefa ID $v_task_id não pode ser liberada porque possui dependência de uma tarefa predecessora que ainda não foi concluída.");
+        sc_error_exit();
+    }
+
+    // ====================================================================
+    // 2. CRITICA DE STATUS: so libera nos status planejados
+    // ====================================================================
+    if (!in_array($v_status, array('PLANNING', 'NOT_STARTED', 'PLANNED', 'APPROVED'))) {
+        sc_error_message("A tarefa ID $v_task_id não pode ser liberada no status atual (" . $v_status . ").");
+        sc_error_exit();
+    }
+
+    // ====================================================================
+    // 3. ATUALIZA O STATUS PARA RELEASED
+    // ====================================================================
+    sc_exec_sql("UPDATE mro_tasks SET status_code = 'RELEASED' WHERE task_id = $v_task_id");
+
+    // ====================================================================
+    // 4. AUDIT LOG (diferencia a origem)
+    // ====================================================================
+    if ($v_origem == 'PROVEDORIA') {
+        $v_action  = 'RELEASED_BY_PROVEDORIA';
+        $v_remarks = 'Gated Process: 100% dos materiais disponiveis no estoque fisico - liberado para o hangar (grid_mro_material_release)';
+    } else {
+        $v_action  = 'RELEASED';
+        $v_remarks = 'Task liberada para execucao (btn_liberar_para_execucao): ' . $v_status . ' -> RELEASED';
+    }
+    sc_exec_sql("INSERT INTO mro_task_history (task_id, action_taken, user_login, remarks)
+                 VALUES ($v_task_id, '$v_action', '$var_user_logado', '$v_remarks')");
+
+    // ====================================================================
+    // 5. CRIA OS ASSIGNMENTS POR SKILL (LABOR do P6)
+    //    Reaproveita fn_criar_assignments_por_skill com protecao de duplicidade
+    // ====================================================================
+    fn_criar_assignments_por_skill($v_task_id, $v_projeto_atual);
+
+    return true;
+}
+
 // FIM 
 
 ?>

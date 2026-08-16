@@ -4,12 +4,15 @@
 // BOTÃO POR LINHA: btn_liberar_hangar (grid_mro_material_release)
 // Libera a JIC para o hangar somente se 100% dos materiais bloqueantes
 // estiverem disponíveis no estoque físico (Gated Process).
+// A logica de liberacao (status + assignments + audit log) e centralizada
+// na biblioteca interna mro_engine.php (fn_liberar_task_para_execucao).
 // ====================================================================
 
 $var_task_id = (int){task_id};
+$var_project_id = (int){project_id};
 $var_jic     = {jic};
 $var_status  = {status_code};
-$var_user    = [usr_login];
+$var_is_blocked_pred = {is_blocked_predecessor};
 
 // ====================================================================
 // 1. DOUBLE-CHECK DE SEGURANCA: revalida no momento do clique que
@@ -37,27 +40,18 @@ if ($var_faltantes > 0) {
 }
 
 // ====================================================================
-// 2. Trava de status: so libera JICs que ainda nao foram liberadas
+// 2. LIBERA PARA O HANGAR (funcao centralizada na biblioteca interna)
+//    - Valida predecessora e status
+//    - UPDATE para RELEASED
+//    - Audit log RELEASED_BY_PROVEDORIA
+//    - Cria os assignments por skill (LABOR do P6)
 // ====================================================================
-if ($var_status != 'PLANNED' && $var_status != 'NOT_STARTED') {
-    sc_error_message("A JIC {$var_jic} já foi liberada ou está em outro status ({$var_status}).");
-    sc_error_exit();
-}
-
-// ====================================================================
-// 3. LIBERA PARA O HANGAR
-// ====================================================================
-sc_exec_sql("UPDATE mro_tasks SET status_code = 'RELEASED', is_blocked_material = false WHERE task_id = $var_task_id");
-
-// 3.1 Audit log (Assinatura Digital)
-sc_exec_sql("INSERT INTO mro_task_history (task_id, action_taken, user_login, remarks)
-             VALUES ($var_task_id, 'RELEASED_BY_PROVEDORIA', '$var_user',
-             'Gated Process: 100% dos materiais disponiveis no estoque fisico - liberado para o hangar (grid_mro_material_release)')");
+fn_liberar_task_para_execucao($var_task_id, $var_project_id, $var_status, $var_is_blocked_pred, 'PROVEDORIA');
 
 sc_commit_trans();
 
 // ====================================================================
-// 4. Feedback e recarga da grid
+// 3. Feedback e recarga da grid
 // ====================================================================
 sc_alert("JIC {$var_jic} liberada para o hangar com sucesso!");
 sc_redir(grid_mro_material_release);

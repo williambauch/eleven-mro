@@ -1,5 +1,7 @@
 SELECT
     t.task_id,
+    t.project_id,
+    t.is_blocked_predecessor,
     COALESCE(p.p6_proj_id, 'N/A') AS projeto,
     t.task_code AS jic,
     COALESCE(t.task_name, 'Sem descricao tecnica') AS descricao,
@@ -22,6 +24,8 @@ WHERE t.status_code IN ('PLANNED', 'NOT_STARTED')
   AND (m.is_blocking_task IS TRUE OR m.is_blocking_task IS NULL)
 GROUP BY
     t.task_id,
+    t.project_id,
+    t.is_blocked_predecessor,
     p.p6_proj_id,
     t.task_code,
     t.task_name,
