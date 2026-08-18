@@ -1,0 +1,11 @@
+{
+  "nome": "blank_mro_reports_resume",
+  "tipo": "Blank",
+  "nome_tabela": "blank_mro_reports_resume",
+  "login": "admin",
+  "nomeconexao": "conn_mro",
+  "variaveis": [
+    "report_id"
+  ],
+  "campos": []
+}

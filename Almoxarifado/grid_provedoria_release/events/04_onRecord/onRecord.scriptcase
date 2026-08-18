@@ -1,0 +1,111 @@
+<?php
+
+// ====================================================================
+// onRecord da grid_provedoria_release (Provedoria - Gated Process)
+// Formata os icones de status de material e predecessora, alem do badge
+// de status. O span do btn_predecessor carrega data-blocked/data-status
+// para o JS desabilitar o checkbox RUN nas linhas nao liberaveis.
+// ====================================================================
+
+// Icone de Material (gate principal da provedoria)
+if ({is_blocked_material} == 't' || {is_blocked_material} == 1) {
+    {btn_mat} = "<i class='fa-solid fa-box-open' style='color:#dc3545; font-size:16px;' title='Bloqueio de Material'></i>";
+} else {
+    {btn_mat} = "<i class='fa-solid fa-box-open' style='color:#198754; font-size:16px;' title='Material OK'></i>";
+}
+
+// Icone de bloqueio por predecessora
+// Bloqueio manual sobrepoe o bloqueio automatico visualmente
+// MRO-126: inclui data-status (status_code da linha) para o JS desabilitar
+// o checkbox RUN apenas nos status com liberacao permitida.
+$var_predecessor_manual = (!empty({is_predecessor_manual}) && ({is_predecessor_manual} == 't' || {is_predecessor_manual} == 1 || {is_predecessor_manual} === true));
+
+$var_predecessor_auto = (!empty({is_blocked_predecessor}) && ({is_blocked_predecessor} == 't' || {is_blocked_predecessor} == 1 || {is_blocked_predecessor} === true));
+
+$var_status_linha = {status_code};
+
+if ($var_predecessor_manual) {
+    {btn_predecessor} = "<span data-blocked='1' data-status='$var_status_linha'><i class='fa-solid fa-ban' style='color:#f9a825; font-size:16px;' title='Bloqueio manual de predecessora'></i></span>";
+} elseif ($var_predecessor_auto) {
+    {btn_predecessor} = "<span data-blocked='1' data-status='$var_status_linha'><i class='fa-solid fa-ban' style='color:#c62828; font-size:16px;' title='Bloqueada por tarefa predecessora'></i></span>";
+} else {
+    {btn_predecessor} = "<span data-blocked='0' data-status='$var_status_linha'><i class='fa-solid fa-ban' style='color:#ced4da; font-size:16px;' title='Sem bloqueio de predecessora'></i></span>";
+}
+
+// Badge de status (cor, icone, label vindos de mro_sys_status)
+$status = {status_code};
+
+if (!empty($status)) {
+    $var_sql = "SELECT label_ptbr, kanban_color, icon FROM mro_sys_status WHERE status_code = '" . addslashes($status) . "' AND module = 'TASKS'";
+    sc_lookup(rs_status, $var_sql);
+}
+
+if (!empty({rs_status})) {
+    $var_label = strtoupper({rs_status[0][0]});
+    $var_color = {rs_status[0][1]};
+    $var_icon  = {rs_status[0][2]};
+    // Define cor do texto conforme brilho do fundo (cores claras usam texto escuro)
+    $var_text_color = (in_array($var_color, ['#ffc107', '#fd7e14', '#e9ecef', '#adb5bd'])) ? '#000000' : '#ffffff';
+    {status_badge} = "<span style='background-color: $var_color; color: $var_text_color; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 11px; white-space: nowrap;'><i class='$var_icon'></i> $var_label</span>";
+} else {
+    {status_badge} = "<span style='background-color: #e9ecef; color: #495057; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 11px; white-space: nowrap;'>".{status_code}."</span>";
+}
+
+
+
+
+
+
+
+// ====================================================================
+// MRO-126: Percentual de separacao de materiais (bip de saida)
+// Mostra barra de progresso + badge com X de Y e % separado.
+// 100% = pacote pronto (verde); parcial = amarelo; 0% = cinza.
+// ====================================================================
+$var_sep   = (int){separados};
+$var_total = (int){total_separar};
+$var_pct   = (float){pct_separado};
+
+// Exibicao pt-BR: virgula decimal (ex: 8,7%)
+$var_pct_txt = number_format($var_pct, 1, ',', '');
+// Largura da barra: ponto decimal (CSS)
+$var_pct_bar = number_format($var_pct, 1, '.', '');
+
+if ($var_total > 0) {
+    if ($var_pct >= 100) {
+        // 100% separado: badge verde (pacote pronto)
+        {ver_pct_seprado} = "<div style='min-width:120px;'>
+            <div style='display:flex; justify-content:space-between; font-size:11px; margin-bottom:2px;'>
+                <span style='color:#198754; font-weight:bold;'><i class='fa-solid fa-circle-check'></i> Separado</span>
+                <span style='color:#198754; font-weight:bold;'>$var_pct_txt%</span>
+            </div>
+            <div style='background:#e9ecef; border-radius:8px; height:8px; overflow:hidden;'>
+                <div style='background:#198754; width:100%; height:100%;'></div>
+            </div>
+        </div>";
+    } elseif ($var_pct > 0) {
+        // Parcial: badge amarelo
+        {ver_pct_seprado} = "<div style='min-width:120px;'>
+            <div style='display:flex; justify-content:space-between; font-size:11px; margin-bottom:2px;'>
+                <span style='color:#664d03; font-weight:bold;'><i class='fa-solid fa-hourglass-half'></i> $var_sep de $var_total</span>
+                <span style='color:#664d03; font-weight:bold;'>$var_pct_txt%</span>
+            </div>
+            <div style='background:#e9ecef; border-radius:8px; height:8px; overflow:hidden;'>
+                <div style='background:#ffc107; width:$var_pct_bar%; height:100%;'></div>
+            </div>
+        </div>";
+    } else {
+        // 0%: badge cinza (nada separado ainda)
+        {ver_pct_seprado} = "<div style='min-width:120px;'>
+            <div style='display:flex; justify-content:space-between; font-size:11px; margin-bottom:2px;'>
+                <span style='color:#6c757d; font-weight:bold;'><i class='fa-solid fa-box-open'></i> $var_sep de $var_total</span>
+                <span style='color:#6c757d; font-weight:bold;'>$var_pct_txt%</span>
+            </div>
+            <div style='background:#e9ecef; border-radius:8px; height:8px; overflow:hidden;'>
+                <div style='background:#ced4da; width:$var_pct_bar%; height:100%;'></div>
+            </div>
+        </div>";
+    }
+} else {
+    {ver_pct_seprado} = "<span style='color:#6c757d; font-size:11px;'>Sem materiais</span>";
+}

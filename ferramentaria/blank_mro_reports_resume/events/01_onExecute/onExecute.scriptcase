@@ -1,0 +1,91 @@
+<?php
+
+$var_report_id = 0;
+
+if (isset([glo_report_id]) && !empty([glo_report_id])) {
+    $var_report_id = (int)[glo_report_id];
+}
+
+if ($var_report_id <= 0) {
+    echo "<h3>Registro de relatório não informado.</h3>";
+    exit;
+}
+
+$sql_report = "
+    SELECT r.report_type,
+           r.report_date,
+           r.occurrence_description,
+           r.status,
+           t.part_number,
+           t.description,
+           e.employee_registration,
+           e.full_name,
+           tk.task_code,
+           tk.task_name,
+           r.tool_id,
+           r.employee_id,
+           r.task_id,
+           r.project_id,
+           r.transaction_id
+    FROM public.mro_tool_reports r
+    LEFT JOIN public.mro_tools t ON t.tool_id = r.tool_id
+    LEFT JOIN public.mro_employees e ON e.employee_id = r.employee_id
+    LEFT JOIN public.mro_tasks tk ON tk.task_id = r.task_id
+    WHERE r.report_id = " . (int)$var_report_id;
+
+sc_lookup(rs_report, $sql_report);
+
+if (empty({rs_report})) {
+    echo "<h3>Registro não localizado.</h3>";
+    exit;
+}
+
+$var_tipo = {rs_report[0][0]};
+$var_data = {rs_report[0][1]};
+$var_desc = {rs_report[0][2]};
+$var_status = !empty({rs_report[0][3]}) ? {rs_report[0][3]} : 'SEM STATUS';
+$var_pn = !empty({rs_report[0][4]}) ? {rs_report[0][4]} : 'N/A';
+$var_tool = !empty({rs_report[0][5]}) ? {rs_report[0][5]} : 'N/A';
+$var_matricula = !empty({rs_report[0][6]}) ? {rs_report[0][6]} : 'N/A';
+$var_mecanico = !empty({rs_report[0][7]}) ? {rs_report[0][7]} : 'N/A';
+$var_task_code = !empty({rs_report[0][8]}) ? {rs_report[0][8]} : 'N/A';
+$var_task_name = !empty({rs_report[0][9]}) ? {rs_report[0][9]} : 'N/A';
+$var_trans_id = !empty({rs_report[0][14]}) ? {rs_report[0][14]} : 'N/A';
+?>
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Resumo do Relatório</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 24px; background: #f5f7fb; color: #212529; }
+        .card { max-width: 900px; margin: 0 auto; background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 12px rgba(0,0,0,.08); }
+        .title { font-size: 26px; font-weight: bold; margin-bottom: 16px; }
+        .row { display: grid; grid-template-columns: 220px 1fr; gap: 12px; padding: 10px 0; border-bottom: 1px solid #eef1f5; }
+        .label { font-weight: bold; color: #495057; }
+        .value { color: #212529; }
+        .badge { display: inline-block; padding: 6px 10px; border-radius: 999px; background: #e9ecef; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="title">Resumo da Ocorrência</div>
+
+        <div class="row"><div class="label">Report ID</div><div class="value"><?php echo (int)$var_report_id; ?></div></div>
+        <div class="row"><div class="label">Transação (Check-in)</div><div class="value"><?php echo htmlspecialchars((string)$var_trans_id, ENT_QUOTES, 'UTF-8'); ?></div></div>
+        <div class="row"><div class="label">Tipo</div><div class="value"><?php echo htmlspecialchars($var_tipo, ENT_QUOTES, 'UTF-8'); ?></div></div>
+        <div class="row"><div class="label">Ferramenta</div><div class="value"><?php echo htmlspecialchars($var_pn . ' - ' . $var_tool, ENT_QUOTES, 'UTF-8'); ?></div></div>
+        <div class="row"><div class="label">Profissional</div><div class="value"><?php echo htmlspecialchars($var_matricula . ' - ' . $var_mecanico, ENT_QUOTES, 'UTF-8'); ?></div></div>
+        <div class="row"><div class="label">JIC</div><div class="value"><?php echo htmlspecialchars($var_task_code . ' - ' . $var_task_name, ENT_QUOTES, 'UTF-8'); ?></div></div>
+        <div class="row"><div class="label">Data</div><div class="value"><?php echo htmlspecialchars($var_data, ENT_QUOTES, 'UTF-8'); ?></div></div>
+        <div class="row"><div class="label">Status</div><div class="value"><span class="badge"><?php echo htmlspecialchars($var_status, ENT_QUOTES, 'UTF-8'); ?></span></div></div>
+        <div class="row"><div class="label">Descrição</div><div class="value"><?php echo nl2br(htmlspecialchars($var_desc, ENT_QUOTES, 'UTF-8')); ?></div></div>
+    </div>
+</body>
+</html>
+
+<?php 
+[glo_report_id] = "";
+
+exit;

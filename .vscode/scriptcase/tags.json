@@ -39,7 +39,12 @@
       "form_public_mro_tasks"
     ],
     "MRO-126": [
-      "grid_mro_material_release",
+      "blank_mro_ferramentaria",
+      "blank_mro_provedoria_bip",
+      "blank_mro_reports_resume",
+      "form_mro_reports",
+      "grid_mro_reports_mechanic",
+      "grid_provedoria_release",
       "grid_public_mro_tasks"
     ]
   },

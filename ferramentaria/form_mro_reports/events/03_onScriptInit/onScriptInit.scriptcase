@@ -1,0 +1,6 @@
+<?php
+
+// Garante que a variavel global usada no SQL do form nunca fique vazia e se for 0 abre o modo de insercao (insert) do form.
+if (empty([glo_report_id])) {
+    [glo_report_id] = 0;
+}

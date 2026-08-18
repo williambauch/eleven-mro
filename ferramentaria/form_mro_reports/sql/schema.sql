@@ -1,1 +1,2 @@
 SELECT * FROM "public".mro_tool_reports
+WHERE report_id = [glo_report_id]

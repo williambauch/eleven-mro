@@ -1,0 +1,428 @@
+<?php
+
+// =========================================================================
+// MRO SYSTEM - PROVEDORIA (BIP DE SAIDA / SEPARACAO DE MATERIAIS)
+// =========================================================================
+// MRO-126
+// Fluxo do POO:
+//   1. Bipa a JIC (task_code) -> carrega os materiais pendentes de separacao
+//   2. Bipa cada material (part_number ou product_code) -> marca como separado
+//   3. Botao Finalizar -> confirma o pacote (JIC impressa + saco)
+// Sem cracha do mecanico e sem lote individual (o saco vai para a prateleira
+// do hangar e o mecanico pega por confianca).
+//
+// Padrao do projeto: processamento AJAX no proprio onExecute (POST) e
+// logica auxiliar em methods/ (mCarregarMateriais).
+// =========================================================================
+
+$usuario_logado = (isset([usr_login]) && !empty([usr_login])) ? trim([usr_login]) : '';
+
+if (isset($_POST['action_prov'])) {
+    header('Content-Type: application/json');
+    $action = $_POST['action_prov'];
+
+    // Trava de sessao: sem usuario logado nao processa nenhuma acao
+    if (empty($usuario_logado)) {
+        echo json_encode(['status' => 'error', 'msg' => 'Sessão inválida. Faça login no sistema antes de usar o terminal.']); die();
+    }
+
+    // ---------------------------------------------------------
+    // AÇÃO 1: CARREGAR JIC E SEUS MATERIAIS (bip da JIC)
+    // Obs: o mesmo task_code pode existir em varios projetos,
+    // entao valida todas as ocorrencias elegiveis e, se houver
+    // mais de uma, devolve a lista para o usuario escolher.
+    // ---------------------------------------------------------
+    if ($action == 'LOAD_JIC') {
+        $jic = isset($_POST['jic']) ? trim($_POST['jic']) : '';
+
+        if (empty($jic)) {
+            echo json_encode(['status' => 'error', 'msg' => 'Bipe o código da JIC.']); die();
+        }
+
+        // Valida a JIC: so as que passaram no Gated Process
+        // (PLANNED/NOT_STARTED, sem bloqueio operacional de material)
+        $sql_jic = "SELECT t.task_id, t.task_code, t.task_name, p.p6_proj_id
+                    FROM mro_tasks t
+                    JOIN mro_projects p ON p.project_id = t.project_id
+                    WHERE t.task_code = '" . addslashes($jic) . "'
+                      AND t.status_code IN ('PLANNED', 'NOT_STARTED')
+                      AND t.is_blocked_material IS NOT TRUE
+                    ORDER BY p.p6_proj_id";
+        sc_lookup(rs_jic, $sql_jic);
+
+        if (empty({rs_jic})) {
+            echo json_encode(['status' => 'error', 'msg' => 'JIC não localizada ou não liberada para separação (apenas PLANNED/NOT_STARTED sem bloqueio de material).']); die();
+        }
+
+        // Multiplas ocorrencias: devolve a lista para escolha
+        if (count({rs_jic}) > 1) {
+            $var_opcoes = array();
+            foreach ({rs_jic} as $linha) {
+                $var_opcoes[] = array(
+                    'task_id'   => $linha[0],
+                    'task_code' => $linha[1],
+                    'projeto'   => !empty($linha[3]) ? $linha[3] : 'N/A'
+                );
+            }
+            echo json_encode(['status' => 'multiplas', 'jic' => $jic, 'opcoes' => $var_opcoes]); die();
+        }
+        // Ocorrencia unica: segue o fluxo normal
+        $var_task_id   = {rs_jic[0][0]};
+        $var_task_code = {rs_jic[0][1]};
+        $var_task_name = {rs_jic[0][2]};
+        $var_projeto   = !empty({rs_jic[0][3]}) ? {rs_jic[0][3]} : 'N/A';
+
+        echo json_encode(mCarregarMateriais($var_task_id, $var_task_code, $var_task_name, $var_projeto)); die();
+    }
+
+    // ---------------------------------------------------------
+    // AÇÃO 1B: CARREGAR JIC POR TASK_ID (apos escolha de projeto)
+    // ---------------------------------------------------------
+    if ($action == 'LOAD_JIC_ID') {
+        $var_task_id = isset($_POST['task_id']) ? (int)$_POST['task_id'] : 0;
+
+        if ($var_task_id <= 0) {
+            echo json_encode(['status' => 'error', 'msg' => 'Task ID inválido.']); die();
+        }
+
+        $sql_jic = "SELECT t.task_id, t.task_code, t.task_name, p.p6_proj_id
+                    FROM mro_tasks t
+                    JOIN mro_projects p ON p.project_id = t.project_id
+                    WHERE t.task_id = $var_task_id
+                      AND t.status_code IN ('PLANNED', 'NOT_STARTED')
+                      AND t.is_blocked_material IS NOT TRUE";
+        sc_lookup(rs_jic2, $sql_jic);
+
+        if (empty({rs_jic2})) {
+            echo json_encode(['status' => 'error', 'msg' => 'JIC não localizada ou não elegível para separação.']); die();
+        }
+
+        echo json_encode(mCarregarMateriais(
+            {rs_jic2[0][0]},
+            {rs_jic2[0][1]},
+            {rs_jic2[0][2]},
+            !empty({rs_jic2[0][3]}) ? {rs_jic2[0][3]} : 'N/A'
+        )); die();
+    }
+
+    // ---------------------------------------------------------
+    // AÇÃO 2: MARCAR MATERIAL COMO SEPARADO (bip do material)
+    // ---------------------------------------------------------
+    if ($action == 'SEPARAR') {
+        $var_task_id = isset($_POST['task_id']) ? (int)$_POST['task_id'] : 0;
+        $material    = isset($_POST['material']) ? trim($_POST['material']) : '';
+
+        if ($var_task_id <= 0 || empty($material)) {
+            echo json_encode(['status' => 'error', 'msg' => 'Informe a JIC e bipe o material.']); die();
+        }
+
+        // Busca o material pelo codigo de barras (part_number OU product_code)
+        $sql_mat = "SELECT tm.task_material_id, tm.separated_at, m.part_number, m.description
+                    FROM mro_task_materials tm
+                    JOIN mro_materials m ON m.material_id = tm.material_id
+                    WHERE tm.task_id = $var_task_id
+                      AND (m.part_number = '" . addslashes($material) . "'
+                           OR m.product_code = '" . addslashes($material) . "')
+                      AND tm.is_applied IS NOT TRUE
+                      AND (m.is_blocking_task IS TRUE OR m.is_blocking_task IS NULL)
+                      AND COALESCE(tm.committed_qty, 0) >= tm.planned_qty";
+        sc_lookup(rs_mat_bip, $sql_mat);
+
+        if (empty({rs_mat_bip})) {
+            echo json_encode(['status' => 'error', 'msg' => 'Material não pertence a esta JIC ou não está elegível para separação.']); die();
+        }
+
+        $var_tm_id = {rs_mat_bip[0][0]};
+        $var_ja_sep = ({rs_mat_bip[0][1]} != '' && {rs_mat_bip[0][1]} != null);
+        $var_pn = {rs_mat_bip[0][2]};
+        $var_desc = {rs_mat_bip[0][3]};
+
+        if ($var_ja_sep) {
+            echo json_encode(['status' => 'success', 'msg' => "Material $var_pn já estava separado.", 'ja_separado' => true]); die();
+        }
+
+        $sql_upd = "UPDATE mro_task_materials
+                    SET separated_at = NOW(),
+                        separated_by = '" . addslashes($usuario_logado) . "'
+                    WHERE task_material_id = " . $var_tm_id;
+        sc_exec_sql($sql_upd);
+
+        sc_log_add("provedoria_separacao", "Material $var_pn da task $var_task_id separado por $usuario_logado");
+
+        echo json_encode(['status' => 'success', 'msg' => "Material $var_pn separado com sucesso!", 'ja_separado' => false]); die();
+    }
+
+    // ---------------------------------------------------------
+    // AÇÃO 3: FINALIZAR SEPARACAO (botao)
+    // ---------------------------------------------------------
+    if ($action == 'FINALIZAR') {
+        $var_task_id = isset($_POST['task_id']) ? (int)$_POST['task_id'] : 0;
+
+        if ($var_task_id <= 0) {
+            echo json_encode(['status' => 'error', 'msg' => 'Bipe a JIC primeiro.']); die();
+        }
+
+        $sql_count = "SELECT
+                        COUNT(*) FILTER (WHERE separated_at IS NULL) AS pendentes,
+                        COUNT(*) AS total
+                      FROM mro_task_materials tm
+                      JOIN mro_materials m ON m.material_id = tm.material_id
+                      WHERE tm.task_id = $var_task_id
+                        AND tm.is_applied IS NOT TRUE
+                        AND (m.is_blocking_task IS TRUE OR m.is_blocking_task IS NULL)
+                        AND COALESCE(tm.committed_qty, 0) >= tm.planned_qty";
+        sc_lookup(rs_count, $sql_count);
+
+        $var_pend = !empty({rs_count}) ? (int){rs_count[0][0]} : 0;
+        $var_total = !empty({rs_count}) ? (int){rs_count[0][1]} : 0;
+
+        if ($var_pend > 0) {
+            echo json_encode(['status' => 'warning', 'msg' => "Ainda existem $var_pend material(is) pendente(s) de $var_total. Separe todos antes de finalizar o pacote."]); die();
+        }
+
+        echo json_encode(['status' => 'success', 'msg' => "Pacote da JIC finalizado! Todos os $var_total materiais foram separados e o saco pode seguir para o hangar."]); die();
+    }
+}
+?>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>MRO - Provedoria | Bip de Saída (Separação)</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <link href="/libs/syncfusion/styles/material3.css" rel="stylesheet">
+    <script src="/libs/syncfusion/scripts/ej2-syncfusion.js" type="text/javascript"></script>
+    <script src="/libs/syncfusion/mro_config.js" type="text/javascript"></script>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f6f8; margin: 0; padding: 20px; }
+        .header-title { font-size: 18px; font-weight: bold; color: #1a202c; margin-bottom: 20px; }
+        .mro-card { background: #fff; border-radius: 6px; padding: 25px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); max-width: 600px; margin: 0 auto; }
+        .card-green { border-top: 4px solid #198754; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-size: 13px; font-weight: bold; color: #4a5568; margin-bottom: 8px; text-transform: uppercase; }
+        .mro-field { width: 100%; padding: 12px; font-size: 15px; border: 2px solid #ced4da; border-radius: 4px; box-sizing: border-box; }
+        .mro-field:focus { outline: none; border-color: #0d6efd; }
+        .mro-field:disabled { background-color: #e9ecef; cursor: not-allowed; }
+        .btn-mro { color: #fff; border: none; padding: 12px 20px; font-size: 14px; font-weight: bold; border-radius: 4px; cursor: pointer; width: 100%; transition: 0.2s; }
+        .btn-primary { background: #0d6efd; }
+        .btn-primary:hover { background: #0b5ed7; }
+        .btn-success { background: #198754; }
+        .btn-success:hover { background: #157347; }
+        .btn-secondary { background: #6c757d; }
+        .btn-secondary:hover { background: #5c636a; }
+        .log-list { border: 1px solid #dee2e6; border-radius: 4px; background: #fafafa; padding: 10px; max-height: 320px; overflow-y: auto; list-style: none; margin: 0 0 15px 0; font-size: 13px; }
+        .log-item { padding: 8px; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 8px; border-radius: 3px; margin-bottom: 5px; font-family: monospace; }
+        #statusArea { margin-top: 10px; font-weight: bold; text-align: center; font-size: 13px; }
+        .info-box { background: #e9ecef; padding: 8px; border-radius: 4px; margin-bottom: 10px; font-weight: bold; font-size: 12px; color: #0d6efd; }
+    </style>
+</head>
+<body>
+
+<div class="mro-card card-green">
+    <div class="header-title" style="margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+        <span><i class="fa-solid fa-boxes-packing" style="color: #198754;"></i> Provedoria - Bip de Saída (Separação de Materiais)</span>
+        <span id="badgeUsuario" class="e-badge e-badge-primary" style="font-size: 12px; padding: 5px 12px;"></span>
+    </div>
+
+    <div class="form-group">
+        <label>1. JIC (Bipe o código)</label>
+        <input type="text" id="field_jic" class="mro-field" placeholder="Bipe ou digite o código da JIC..." autocomplete="off">
+    </div>
+
+    <button type="button" class="btn-mro btn-primary" onclick="carregarJIC()" style="margin-bottom: 15px;">
+        <i class="fa-solid fa-magnifying-glass"></i> Carregar JIC
+    </button>
+
+    <div class="form-group" id="group_material" style="display: none;">
+        <label>2. Material (Bipe o código de barras)</label>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <input type="text" id="field_material" class="mro-field" placeholder="Bipe o part number ou product code..." autocomplete="off" disabled style="flex: 1;">
+            <button type="button" id="btn_enter_material" onclick="separarMaterial()" style="height: 47px; padding: 0 20px; background: #0d6efd; color: white; border: none; border-radius: 4px; font-weight: bold; font-size: 14px; cursor: pointer;">
+                <i class="fa-solid fa-arrow-right"></i> Enter
+            </button>
+        </div>
+    </div>
+
+    <div id="infoJIC" style="display: none;"></div>
+    <ul id="listaMateriais" class="log-list">
+        <li style="color:#6c757d; text-align:center; padding-top:20px;">Aguardando leitura da JIC...</li>
+    </ul>
+
+    <div id="statusArea"></div>
+
+    <button type="button" class="btn-mro btn-success" id="btn_finalizar" style="display: none; margin-top: 15px;" onclick="finalizarSeparacao()">
+        <i class="fa-solid fa-box-archive"></i> Finalizar Separação (Pacote)
+    </button>
+    <button type="button" class="btn-mro btn-secondary" style="margin-top: 10px;" onclick="limparSessao()">
+        <i class="fa-solid fa-broom"></i> Limpar / Nova JIC
+    </button>
+</div>
+
+<script>
+    var currentTaskId = null;
+
+    document.addEventListener('DOMContentLoaded', function () {
+        // Exibe o usuario logado no cabecalho (global usr_login do ScriptCase)
+        var usuario = <?php echo json_encode($usuario_logado); ?>;
+        if (usuario && usuario !== '') {
+            $('#badgeUsuario').html("<i class='fa-solid fa-user'></i> " + usuario);
+        } else {
+            $('#badgeUsuario').html("<i class='fa-solid fa-triangle-exclamation'></i> Sem sessão").addClass('e-badge-danger');
+        }
+
+        $('#field_jic').focus();
+
+        // Enter no campo JIC carrega a JIC
+        $('#field_jic').on('keydown', function (e) {
+            if (e.key === 'Enter') { e.preventDefault(); carregarJIC(); }
+        });
+
+        // Enter no campo material marca como separado
+        $('#field_material').on('keydown', function (e) {
+            if (e.key === 'Enter') { e.preventDefault(); separarMaterial(); }
+        });
+    });
+
+    function carregarJIC() {
+        var jic = $('#field_jic').val().trim();
+        if (jic === '') { $('#statusArea').html("<span style='color:#dc3545;'>Bipe a JIC.</span>"); return; }
+
+        $('#listaMateriais').html('<li style="color:#6c757d; text-align:center; padding-top:20px;"><i class="fa-solid fa-spinner fa-spin"></i> Localizando JIC...</li>');
+
+        $.ajax({
+            type: "POST",
+            url: "",
+            data: { action_prov: 'LOAD_JIC', jic: jic },
+            dataType: "json",
+            success: function (res) {
+                if (res.status === 'success') {
+                    currentTaskId = res.task_id;
+                    $('#infoJIC').html(res.header).show();
+                    $('#listaMateriais').html(res.html);
+                    $('#group_material').show();
+                    $('#field_material').prop('disabled', false).val('').focus();
+                    $('#btn_enter_material').prop('disabled', false);
+                    $('#btn_finalizar').show();
+                    $('#statusArea').html("<span style='color:#198754;'>" + res.separados + " de " + res.total + " separados.</span>");
+                    // MRO-126: avisa se a JIC ja foi totalmente separada
+                    if (res.tudo_separado) {
+                        $('#statusArea').html("<span style='color:#fd7e14;'><i class='fa-solid fa-circle-check'></i> Atenção: todos os materiais desta JIC já foram separados. Pacote pronto para o hangar.</span>");
+                    }
+                } else if (res.status === 'multiplas') {
+                    // Mesma JIC em varios projetos: monta lista de escolha
+                    // Exibe o task_id para diferenciar ocorrencias com projeto repetido
+                    var opts = '';
+                    res.opcoes.forEach(function (o) {
+                        opts += "<li class='log-item' style='cursor:pointer; border-left:4px solid #0d6efd;' onclick=\"carregarJICPorId(" + o.task_id + ")\">" +
+                                "<i class='fa-solid fa-diagram-project' style='color:#0d6efd;'></i> <b>" + o.task_code + "</b> - " + o.projeto +
+                                " <span style='color:#6c757d; font-size:11px;'>[ID " + o.task_id + "]</span></li>";
+                    });
+                    $('#infoJIC').html("<div style='background:#e9ecef; padding:8px; border-radius:4px; margin-bottom:10px; font-weight:bold; font-size:12px; color:#0d6efd;'>JIC " + res.jic + " encontrada em múltiplos projetos. Selecione:</div>").show();
+                    $('#listaMateriais').html(opts);
+                    $('#group_material').hide();
+                    $('#btn_enter_material').prop('disabled', true);
+                    $('#btn_finalizar').hide();
+                    $('#statusArea').html('');
+                } else {
+                    currentTaskId = null;
+                    $('#statusArea').html("<span style='color:#dc3545;'>" + res.msg + "</span>");
+                }
+            }
+        });
+    }
+
+    function carregarJICPorId(taskId) {
+        $('#listaMateriais').html('<li style="color:#6c757d; text-align:center; padding-top:20px;"><i class="fa-solid fa-spinner fa-spin"></i> Localizando JIC...</li>');
+
+        $.ajax({
+            type: "POST",
+            url: "",
+            data: { action_prov: 'LOAD_JIC_ID', task_id: taskId },
+            dataType: "json",
+            success: function (res) {
+                if (res.status === 'success') {
+                    currentTaskId = res.task_id;
+                    $('#infoJIC').html(res.header).show();
+                    $('#listaMateriais').html(res.html);
+                    $('#group_material').show();
+                    $('#field_material').prop('disabled', false).val('').focus();
+                    $('#btn_enter_material').prop('disabled', false);
+                    $('#btn_finalizar').show();
+                    $('#statusArea').html("<span style='color:#198754;'>" + res.separados + " de " + res.total + " separados.</span>");
+                    // MRO-126: avisa se a JIC ja foi totalmente separada
+                    if (res.tudo_separado) {
+                        $('#statusArea').html("<span style='color:#fd7e14;'><i class='fa-solid fa-circle-check'></i> Atenção: todos os materiais desta JIC já foram separados. Pacote pronto para o hangar.</span>");
+                    }
+                } else {
+                    currentTaskId = null;
+                    $('#statusArea').html("<span style='color:#dc3545;'>" + res.msg + "</span>");
+                }
+            }
+        });
+    }
+
+    function separarMaterial() {
+        var material = $('#field_material').val().trim();
+        if (!currentTaskId || material === '') { return; }
+
+        $('#statusArea').html("<span style='color:#6c757d;'><i class='fa-solid fa-spinner fa-spin'></i> Verificando material...</span>");
+
+        $.ajax({
+            type: "POST",
+            url: "",
+            data: { action_prov: 'SEPARAR', task_id: currentTaskId, material: material },
+            dataType: "json",
+            success: function (res) {
+                if (res.status === 'success') {
+                    $('#statusArea').html("<span style='color:#198754;'>" + res.msg + "</span>");
+                    $('#field_material').val('').focus();
+                    // Recarrega direto a JIC selecionada (sem voltar para a lista de projetos)
+                    carregarJICPorId(currentTaskId);
+                } else {
+                    $('#statusArea').html("<span style='color:#dc3545;'>" + res.msg + "</span>");
+                    $('#field_material').val('').focus();
+                }
+            }
+        });
+    }
+
+    function finalizarSeparacao() {
+        if (!currentTaskId) { return; }
+
+        $('#statusArea').html("<span style='color:#6c757d;'><i class='fa-solid fa-spinner fa-spin'></i> Verificando pacote...</span>");
+
+        $.ajax({
+            type: "POST",
+            url: "",
+            data: { action_prov: 'FINALIZAR', task_id: currentTaskId },
+            dataType: "json",
+            success: function (res) {
+                if (res.status === 'success') {
+                    $('#statusArea').html("<span style='color:#198754;'><i class='fa-solid fa-circle-check'></i> " + res.msg + "</span>");
+                } else {
+                    $('#statusArea').html("<span style='color:#fd7e14;'>" + res.msg + "</span>");
+                }
+            }
+        });
+    }
+
+    function limparSessao() {
+        currentTaskId = null;
+        $('#field_jic').val('').focus();
+        $('#field_material').val('').prop('disabled', true);
+        $('#btn_enter_material').prop('disabled', true);
+        $('#group_material').hide();
+        $('#infoJIC').hide();
+        $('#listaMateriais').html('<li style="color:#6c757d; text-align:center; padding-top:20px;">Aguardando leitura da JIC...</li>');
+        $('#btn_finalizar').hide();
+        $('#statusArea').html('');
+    }
+</script>
+</body>
+</html>
+<?php
+exit;

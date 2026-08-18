@@ -1,0 +1,161 @@
+{
+  "nome": "grid_provedoria_release",
+  "tipo": "Grid",
+  "nome_tabela": "public.mro_tasks",
+  "descricao": "Provedoria — Tela de Monitoramento de Liberação (Gated Process)",
+  "login": "william",
+  "data_alteracao": "2026-08-17 13:36",
+  "nomeconexao": "conn_mro",
+  "tabelas": [
+    "mro_materials",
+    "mro_task_materials",
+    "public.mro_tasks"
+  ],
+  "bibliotecas": [
+    "mro_engine.php"
+  ],
+  "variaveis": [
+    "glo_aviso_run",
+    "var_project_id"
+  ],
+  "campos": [
+    {
+      "nome": "task_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": true
+    },
+    {
+      "nome": "task_code",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "task_name",
+      "tipo": "text",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "task_type",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "status_code",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "target_start",
+      "tipo": "datetime",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "target_end",
+      "tipo": "datetime",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "project_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "skill_code",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "estimated_hours",
+      "tipo": "numeric",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "is_blocked_material",
+      "tipo": "bool",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "is_blocked_predecessor",
+      "tipo": "bool",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "is_predecessor_manual",
+      "tipo": "bool",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "total_separar",
+      "tipo": "int8",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "separados",
+      "tipo": "int8",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "pct_separado",
+      "tipo": "numeric",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "btn_fer",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "btn_mao",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "btn_mat",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "btn_predecessor",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "nr",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "status_badge",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "ver_pct_seprado",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    }
+  ]
+}

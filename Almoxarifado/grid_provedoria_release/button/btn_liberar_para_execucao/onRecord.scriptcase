@@ -1,0 +1,17 @@
+<?php
+
+// ====================================================================
+// BOTÃO POR LINHA: btn_liberar_para_execucao (grid_provedoria_release)
+// MRO-126: logica centralizada na biblioteca interna (mro_engine.php).
+// A funcao fn_liberar_task_para_execucao valida predecessor + status,
+// completa skill/horas, muda para RELEASED, grava o audit log com origem
+// PROVEDORIA e cria os assignments por skill.
+// ====================================================================
+
+// Captura os dados da linha atual na Grid
+$v_task_id = {task_id};
+$v_status  = {status_code};
+$v_projeto = {project_id};
+$v_is_blocked_pred = {is_blocked_predecessor};
+
+fn_liberar_task_para_execucao($v_task_id, $v_projeto, $v_status, $v_is_blocked_pred, 'PROVEDORIA');

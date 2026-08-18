@@ -211,12 +211,11 @@ function fn_calcular_oa_nrc($v_task_id, $v_projeto_atual, $debug = false) {
 // Protecao: ignora skills que ja possuem assignment (evita duplicidade).
 function fn_criar_assignments_por_skill($v_task_id, $v_projeto_atual)
 {
-    // 0. Busca estimated_hours e skill_code da task (usados como fallback
-    // de horas, identico ao btn_liberar_para_execucao)
-    sc_lookup(rs_tk, "SELECT COALESCE(estimated_hours, 0), skill_code 
+    // 0. Busca apenas o skill_code da task para o fallback de skill.
+    // As horas dos assignments vêm exclusivamente de budgeted_hours.
+    sc_lookup(rs_tk, "SELECT skill_code
                       FROM mro_tasks WHERE task_id = " . (int)$v_task_id);
-    $var_horas_task = !empty({rs_tk}) ? (float){rs_tk[0][0]} : 0;
-    $var_skill_task = !empty({rs_tk}) ? {rs_tk[0][1]} : '';
+    $var_skill_task = !empty({rs_tk}) ? {rs_tk[0][0]} : '';
 
     // 1. Busca os recursos do tipo LABOR (Mao de Obra) alocados na tarefa
     $sql_resources = "SELECT DISTINCT tr.resource_code, tr.budgeted_hours
@@ -230,10 +229,9 @@ function fn_criar_assignments_por_skill($v_task_id, $v_projeto_atual)
 
         foreach ({rs_res} as $res) {
             $v_res_code = addslashes($res[0]);
-            // Fallback de horas: usa o budgeted_hours ou o estimated_hours da task.
-            // Trata "0"/"0.00" como vazio (budgeted zerado cai no fallback),
-            // identico ao btn_liberar_para_execucao.
-            $v_hours    = (!empty($res[1]) && (float)$res[1] > 0) ? (float)$res[1] : $var_horas_task;
+            // Usa exclusivamente as horas orcadas do recurso.
+            // Zero informado permanece zero; nao usar estimated_hours como fallback.
+            $v_hours    = !empty($res[1]) ? (float)$res[1] : 0;
 
             // Busca o skill_id da especialidade
             sc_lookup(rs_sid, "SELECT skill_id FROM mro_skills WHERE skill_code = '$v_res_code'");
@@ -254,7 +252,7 @@ function fn_criar_assignments_por_skill($v_task_id, $v_projeto_atual)
 
     } else {
         // 2. Fallback: sem recursos LABOR, cria uma alocacao generica
-        // com o skill_code da propria task e o total de horas estimadas
+        // com o skill_code da propria task e zero horas orcadas.
         $v_skill_code = addslashes($var_skill_task);
 
         if (!empty($v_skill_code)) {
@@ -268,7 +266,7 @@ function fn_criar_assignments_por_skill($v_task_id, $v_projeto_atual)
             if (empty({rs_dup2})) {
                 $sql_ins2 = "INSERT INTO mro_task_assignments 
                              (task_id, skill_id, planned_skill_id, status_code, planned_qty_hours, project_id) 
-                             VALUES (" . (int)$v_task_id . ", " . $v_skill_id2 . ", " . $v_skill_id2 . ", 'NOT_STARTED', " . $var_horas_task . ", " . (int)$v_projeto_atual . ")";
+                             VALUES (" . (int)$v_task_id . ", " . $v_skill_id2 . ", " . $v_skill_id2 . ", 'NOT_STARTED', 0, " . (int)$v_projeto_atual . ")";
                 sc_exec_sql($sql_ins2);
             }
         }
@@ -314,7 +312,56 @@ function fn_liberar_task_para_execucao($v_task_id, $v_projeto_atual, $v_status, 
     }
 
     // ====================================================================
-    // 2.1 MRO-126: VALIDA SKILL / MAO DE OBRA (Gated Process)
+    // 2.1 MRO-126: COMPLETA DADOS BASICOS DA TASK ANTES DA LIBERACAO
+    //      Se estimated_hours estiver vazio, soma budgeted_hours.
+    //      Se skill_code estiver vazio, usa o primeiro recurso LABOR
+    //      com skill cadastrada, respeitando a ordem da alocacao.
+    // ====================================================================
+    sc_lookup(rs_dados_task, "SELECT task_code,
+                    estimated_hours,
+                    skill_code
+                    FROM mro_tasks
+                    WHERE task_id = " . $v_task_id);
+
+    $var_task_code = !empty({rs_dados_task}) ? {rs_dados_task[0][0]} : $v_task_id;
+    $var_estimated_hours = !empty({rs_dados_task}) ? {rs_dados_task[0][1]} : null;
+    $var_skill_code = !empty({rs_dados_task}) ? trim({rs_dados_task[0][2]}) : '';
+
+    if ($var_estimated_hours === null || $var_estimated_hours === '') {
+        // Soma apenas os recursos LABOR (mao de obra) - ignora NONLABOR/materiais
+        sc_lookup(rs_horas_task, "SELECT COALESCE(SUM(tr.budgeted_hours), 0)
+                                  FROM mro_task_resources tr
+                                  JOIN mro_resources r ON r.resource_code = tr.resource_code
+                                  WHERE tr.task_id = " . $v_task_id . "
+                                    AND r.resource_type = 'LABOR'");
+
+        $var_horas_recalculadas = !empty({rs_horas_task}) ? (float){rs_horas_task[0][0]} : 0;
+
+        sc_exec_sql("UPDATE mro_tasks
+                     SET estimated_hours = " . $var_horas_recalculadas . "
+                     WHERE task_id = " . $v_task_id);
+    }
+
+    if ($var_skill_code === '') {
+        sc_lookup(rs_skill_primary, "SELECT tr.resource_code
+                                    FROM mro_task_resources tr
+                                    JOIN mro_resources r ON r.resource_code = tr.resource_code
+                                    JOIN mro_skills s ON s.skill_code = tr.resource_code
+                                    WHERE tr.task_id = " . $v_task_id . "
+                                      AND r.resource_type = 'LABOR'
+                                    ORDER BY tr.allocation_id ASC
+                                    LIMIT 1");
+
+        if (!empty({rs_skill_primary})) {
+            $var_skill_code = addslashes({rs_skill_primary[0][0]});
+            sc_exec_sql("UPDATE mro_tasks
+                         SET skill_code = '$var_skill_code'
+                         WHERE task_id = " . $v_task_id);
+        }
+    }
+
+    // ====================================================================
+    // 2.2 MRO-126: VALIDA SKILL / MAO DE OBRA (Gated Process)
     //      A task so pode ser liberada se tiver ao menos uma skill
     //      liberavel: recurso LABOR com match em mro_skills OU
     //      skill_code da propria task que exista em mro_skills.
@@ -331,7 +378,7 @@ function fn_liberar_task_para_execucao($v_task_id, $v_projeto_atual, $v_status, 
                     THEN 1 ELSE 0 END
                     FROM mro_tasks t WHERE t.task_id = " . $v_task_id);
 
-    $var_task_code = !empty({rs_liberavel}) ? {rs_liberavel[0][0]} : $v_task_id;
+    $var_task_code = !empty({rs_liberavel}) ? {rs_liberavel[0][0]} : $var_task_code;
     $var_liberavel = !empty({rs_liberavel}) ? (int){rs_liberavel[0][1]} : 0;
 
     if ($var_liberavel != 1) {

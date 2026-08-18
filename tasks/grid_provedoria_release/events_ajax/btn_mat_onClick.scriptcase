@@ -1,0 +1,10 @@
+<?php
+
+// Inverte o valor no banco de dados
+$id = {task_id};
+
+$sql = "UPDATE mro_tasks SET is_blocked_material = NOT is_blocked_material WHERE task_id = $id";
+sc_exec_sql($sql);
+
+// Recarrega a linha da grid para mostrar a nova cor
+sc_ajax_refresh();

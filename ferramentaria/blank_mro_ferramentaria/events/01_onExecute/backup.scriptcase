@@ -1,5 +1,3 @@
-<?php
-
 /* * ============================================================================
  * MRO SYSTEM - PORTAL DA FERRAMENTARIA (OTIMIZADO)
  * ============================================================================
@@ -12,18 +10,6 @@ error_reporting(E_ALL);
 // Captura do usuário logado na ferramentaria para auditoria
 $usuario_logado = (isset([usr_login]) && !empty([usr_login])) ? trim([usr_login]) : 'SISTEMA_CRIB';
 
-// Auditoria garantida na sc_log: a aplicacao Blank nao possui tabela de log
-// configurada no ScriptCase, entao gravamos o INSERT direto na sc_log para
-// manter o rastro de conformidade. Formato igual ao das demais apps.
-if (!function_exists('mroLogFerramentaria')) {
-    function mroLogFerramentaria($var_acao, $var_descricao, $var_usuario) {
-        $var_ip  = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '';
-        $var_sql = "INSERT INTO sc_log (inserted_date, username, application, creator, ip_user, action, description)
-                    VALUES (NOW(), '" . addslashes($var_usuario) . "', 'blank_mro_ferramentaria', 'User', '" . addslashes($var_ip) . "', '" . addslashes($var_acao) . "', '" . addslashes($var_descricao) . "')";
-        sc_exec_sql($var_sql);
-    }
-}
-
 // ----------------------------------------------------------------------------
 // 1. PROCESSAMENTO AJAX (BACKEND)
 // ----------------------------------------------------------------------------
@@ -33,7 +19,7 @@ if (isset($_POST['action_mro'])) {
     $action      = $_POST['action_mro'];
     $matricula   = isset($_POST['matricula']) ? trim($_POST['matricula']) : '';
     $ferramenta  = isset($_POST['ferramenta']) ? trim($_POST['ferramenta']) : '';
-    $condicao    = isset($_POST['condicao']) ? trim($_POST['condicao']) : '';
+    $condicao    = isset($_POST['condicao']) ? $_POST['condicao'] : 'OK';
 
     $response = array('status' => 'error', 'msg' => '', 'redirect_form' => '');
 
@@ -143,14 +129,7 @@ if (isset($_POST['action_mro'])) {
         if (!empty($tool_calib) && strtotime($tool_calib) < strtotime(date('Y-m-d'))) {
             $sql_calib_upd = "UPDATE mro_tools SET status = 'FERRAMENTA EM CALIBRAÇÃO' WHERE tool_id = $tool_id";
             sc_exec_sql($sql_calib_upd);
-            mroLogFerramentaria('tool_checkout_block', "Ferramenta $tool_desc (PN: $ferramenta) bloqueada por calibração vencida no checkout.", $usuario_logado);
             $response['msg'] = "BLOQUEIO ANAC: A ferramenta '$tool_desc' está com calibração vencida e foi retida.";
-            echo json_encode($response); die();
-        }
-
-        $tool_status_blocked = in_array($tool_status, array('FERRAMENTA EM CALIBRAÇÃO', 'FERRAMENTA DANIFICADA', 'FERRAMENTA EXTRAVIADA'), true);
-        if ($tool_status_blocked) {
-            $response['msg'] = "A ferramenta '$tool_desc' está indisponível para empréstimo no momento.";
             echo json_encode($response); die();
         }
 
@@ -179,10 +158,6 @@ if (isset($_POST['action_mro'])) {
         $response['status'] = 'success';
         // LOG com Crachá, Part Number e Nome da Ferramenta
         $response['msg']    = "APONTAMENTO: Crachá: $matricula | PN: $ferramenta | Desc: $tool_desc" . $warning_append;
-
-        // Auditoria de saída (checkout) na sc_log
-        mroLogFerramentaria('tool_checkout', "Ferramenta $tool_desc (PN: $ferramenta) emprestada para $emp_name (Crachá: $matricula) pelo usuário $usuario_logado.", $usuario_logado);
-
         echo json_encode($response); die();
     }
 
@@ -192,11 +167,6 @@ if (isset($_POST['action_mro'])) {
     if ($action == 'CHECKIN') {
         if (empty($ferramenta)) {
             $response['msg'] = "Bipe a ferramenta para realizar a devolução.";
-            echo json_encode($response); die();
-        }
-
-        if (!in_array($condicao, array('OK', 'DANO', 'PERDA'), true)) {
-            $response['msg'] = "Condição de retorno obrigatória: selecione OK, Avariada ou Extraviada antes de confirmar a devolução.";
             echo json_encode($response); die();
         }
 
@@ -234,20 +204,15 @@ if (isset($_POST['action_mro'])) {
 
         // 3. Atualiza status de acordo com inspeção
         if ($condicao == 'DANO') {
-            $response_redirect_form = 'TF-60-013';
             sc_exec_sql("UPDATE mro_tools SET status = 'FERRAMENTA DANIFICADA' WHERE tool_id = $tool_id");
-            mroLogFerramentaria('tool_checkin', "Ferramenta $tool_desc (PN: $ferramenta) devolvida como avariada pelo usuário $usuario_logado.", $usuario_logado);
-            $response['redirect_form'] = $response_redirect_form;
+            $response['redirect_form'] = 'TF-60-013';
             $response['msg'] = "RETENÇÃO (DANO): Crachá: $emp_mat | PN: $ferramenta | Desc: $tool_desc.";
         } elseif ($condicao == 'PERDA') {
-            $response_redirect_form = 'TF-60-041';
             sc_exec_sql("UPDATE mro_tools SET status = 'FERRAMENTA EXTRAVIADA' WHERE tool_id = $tool_id");
-            mroLogFerramentaria('tool_checkin', "Ferramenta $tool_desc (PN: $ferramenta) devolvida como extraviada pelo usuário $usuario_logado.", $usuario_logado);
-            $response['redirect_form'] = $response_redirect_form;
+            $response['redirect_form'] = 'TF-60-041';
             $response['msg'] = "EXTRAVIO: Crachá: $emp_mat | PN: $ferramenta | Desc: $tool_desc.";
         } else {
             sc_exec_sql("UPDATE mro_tools SET status = 'DISPONIVEL' WHERE tool_id = $tool_id");
-            mroLogFerramentaria('tool_checkin', "Ferramenta $tool_desc (PN: $ferramenta) devolvida em OK pelo usuário $usuario_logado.", $usuario_logado);
             $response['msg'] = "DESAPONTAMENTO: Crachá: $emp_mat | PN: $ferramenta | Desc: $tool_desc (Disponível).";
         }
 
@@ -259,7 +224,6 @@ if (isset($_POST['action_mro'])) {
         $response['emp_id']     = $emp_id;
         $response['task_id']    = $task_id;
         $response['project_id'] = $project_id;
-        $response['trans_id']   = $trans_id;
         $response['status']     = 'success';
         
         echo json_encode($response); die();
@@ -315,68 +279,6 @@ if (isset($_POST['action_mro'])) {
         .btn-finalizar:hover { background: #495057; }
         
         #statusArea { margin-top: 10px; font-weight: bold; text-align: center; }
-
-        .mro-inspecao-dialog .e-header-content {
-            background: #0d6efd;
-            color: #fff;
-            font-weight: 700;
-            padding: 16px 18px;
-            border-bottom: none;
-        }
-        .mro-inspecao-dialog .e-dlg-content {
-            padding: 20px 20px 12px;
-            font-size: 14px;
-            color: #212529;
-            background: #fff;
-        }
-        .mro-inspecao-dialog .e-footer-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 18px 18px;
-            background: #fff;
-            box-sizing: border-box;
-        }
-        .mro-inspecao-dialog .e-footer-content .e-btn {
-            flex: 1 1 0;
-            width: 100%;
-            max-width: 130px;
-            min-width: 0;
-            height: 42px;
-            border-radius: 8px;
-            font-weight: 600;
-            letter-spacing: 0.1px;
-            box-shadow: 0 2px 8px rgba(13, 110, 253, 0.18);
-            border: 1px solid #dfe3e8;
-            transition: all 0.2s ease;
-            white-space: normal;
-            line-height: 1.2;
-            padding: 8px 6px;
-            font-size: 12px;
-        }
-        .mro-inspecao-dialog .e-footer-content .e-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(13, 110, 253, 0.18);
-        }
-        .mro-inspecao-dialog .e-footer-content .e-primary {
-            background: #0d6efd;
-            color: #fff;
-            border-color: #0d6efd;
-        }
-        .mro-inspecao-dialog .e-footer-content .e-danger {
-            background: #dc3545;
-            color: #fff;
-            border-color: #dc3545;
-        }
-        
-        /* Toast proprio em CSS puro (sem dependencia do Syncfusion nesta tela) */
-        .mro-toast { position: fixed; top: 20px; right: 20px; z-index: 99999; min-width: 280px; max-width: 420px; padding: 14px 16px; border-radius: 6px; box-shadow: 0 4px 14px rgba(0,0,0,0.18); color: #fff; font-size: 13px; font-family: 'Segoe UI', sans-serif; animation: mroToastIn 0.25s ease; }
-        .mro-toast strong { display: block; margin-bottom: 4px; font-size: 14px; }
-        .mro-toast-success { background: #198754; border-left: 5px solid #0f5132; }
-        .mro-toast-danger { background: #dc3545; border-left: 5px solid #842029; }
-        .mro-toast-warning { background: #ffc107; color: #212529; border-left: 5px solid #997404; }
-        @keyframes mroToastIn { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: translateX(0); } }
     </style>
 </head>
 <body>
@@ -439,31 +341,22 @@ if (isset($_POST['action_mro'])) {
 <script>
     var modoAtivo = 'CHECKOUT';
     var locks = { matricula: false };
+    var toastObj;
     var inspecaoDialog;
     var formDialog;
     var ferramentaBipada = '';
 
-    function mostrarToast(titulo, conteudo, tipo) {
-        var container = document.createElement('div');
-        container.className = 'mro-toast mro-toast-' + (tipo || 'success');
-        container.innerHTML = '<strong>' + titulo + '</strong>' + conteudo;
-        document.body.appendChild(container);
-        setTimeout(function() {
-            container.style.transition = 'opacity 0.4s';
-            container.style.opacity = '0';
-            setTimeout(function() { container.remove(); }, 400);
-        }, 4500);
-    }
-
     document.addEventListener('DOMContentLoaded', function() {
+        toastObj = new ej.notifications.Toast({ position: { X: 'Right', Y: 'Top' } });
+        toastObj.appendTo(document.body);
+
         inspecaoDialog = new ej.popups.Dialog({
             header: 'Inspeção de Retorno Aeronáutico',
             content: 'Confirme o estado físico do ferramental devolvido:',
-            showCloseIcon: false,
+            showCloseIcon: true,
             isModal: true,
             visible: false,
             width: '420px',
-            cssClass: 'mro-inspecao-dialog',
             buttons: [
                 { click: function() { executarTransacao('OK'); }, buttonModel: { content: 'OK - Sem Danos', isPrimary: true } },
                 { click: function() { executarTransacao('DANO'); }, buttonModel: { content: 'Avariada / Danificada' } },
@@ -575,7 +468,7 @@ if (isset($_POST['action_mro'])) {
                 } else {
                     // NÃO tem clock-in ou erro: Mantém apontamento bloqueado e limpa matrícula para nova tentativa
                     $('#field_ferramenta').prop('disabled', true);
-                    mostrarToast('Acesso Negado', res.msg, 'danger');
+                    toastObj.show({ title: 'Acesso Negado', content: res.msg, cssClass: 'e-toast-danger' });
                     
                     if(locks.matricula) toggleLock('matricula'); // Destrava a interface
                     $('#field_matricula').val('').focus();
@@ -614,14 +507,6 @@ if (isset($_POST['action_mro'])) {
         }
     }
 
-    $('#dialog_inspecao').on('click', '.e-dlg-closeicon-btn', function() {
-        ferramentaBipada = '';
-        $('#field_ferramenta').val('');
-        $('#field_ferramenta').focus();
-        adicionarLogLinha('Devolução cancelada. Selecione a condição de retorno antes de confirmar.', 'log-error');
-        inspecaoDialog.hide();
-    });
-
     function executarTransacao(condicaoRetorno) {
         inspecaoDialog.hide();
         
@@ -639,58 +524,26 @@ if (isset($_POST['action_mro'])) {
             dataType: "json",
             success: function(response) {
                 var areaStatus = document.getElementById('statusArea');
-                console.log('AJAX response:', response);
                 
                 if(response.status == 'success') {
-                    mostrarToast('Sucesso', 'Transação realizada.', 'success');
+                    toastObj.show({ title: 'Sucesso', content: 'Transação realizada.', cssClass: 'e-toast-success' });
                     adicionarLogLinha(response.msg, 'log-success');
                     areaStatus.innerHTML = '<span style="color:#198754;"><i class="fa-solid fa-circle-check"></i> Transação Concluída.</span>';
                     
                     if(modoAtivo === 'CHECKOUT') buscarFerramentasDoMecanico(); 
                     
-                    //glo_report_id=0 garante que o formulário abra em modo de criação, sem carregar nenhum registro existente
                     if(response.redirect_form) {
-                        var url_form = '../form_mro_reports/index.php?glo_report_id=0' + 
-                                       '&v_tipo=' + response.redirect_form + 
+                        var url_form = '../form_mro_reports/form_mro_reports.php?v_tipo=' + response.redirect_form + 
                                        '&v_tool=' + response.tool_id + 
                                        '&v_emp=' + response.emp_id + 
                                        '&v_task=' + response.task_id + 
-                                       '&v_proj=' + response.project_id +
-                                       '&v_trans=' + response.trans_id;
-
-                        var overlay = document.getElementById('relatorioModalOverlay');
-                        if (!overlay) {
-                            overlay = document.createElement('div');
-                            overlay.id = 'relatorioModalOverlay';
-                            overlay.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; z-index:99999;';
-
-                            var box = document.createElement('div');
-                            box.style.cssText = 'position:relative; width:92vw; height:88vh; background:#fff; border-radius:12px; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,0.35);';
-
-                            var closeBtn = document.createElement('button');
-                            closeBtn.innerHTML = 'Fechar';
-                            closeBtn.style.cssText = 'position:absolute; top:12px; right:12px; z-index:2; border:none; background:#dc3545; color:#fff; border-radius:6px; padding:8px 12px; cursor:pointer; font-weight:bold;';
-                            closeBtn.onclick = function() {
-                                if (overlay) overlay.remove();
-                            };
-
-                            var iframe = document.createElement('iframe');
-                            iframe.src = url_form;
-                            iframe.style.cssText = 'width:100%; height:100%; border:0;';
-
-                            box.appendChild(closeBtn);
-                            box.appendChild(iframe);
-                            overlay.appendChild(box);
-                            document.body.appendChild(overlay);
-                        } else {
-                            var iframeExistente = overlay.querySelector('iframe');
-                            if (iframeExistente) {
-                                iframeExistente.src = url_form;
-                            }
-                        }
+                                       '&v_proj=' + response.project_id;
+                        
+                        formDialog.content = '<iframe src="' + url_form + '" style="width:100%; height:100%; border:none; border-radius:4px;"></iframe>';
+                        formDialog.show();
                     }
                 } else {
-                    mostrarToast('Impedimento Operacional', response.msg, 'danger');
+                    toastObj.show({ title: 'Impedimento Operacional', content: 'Erro no processamento.', cssClass: 'e-toast-danger' });
                     adicionarLogLinha(response.msg, 'log-error');
                     areaStatus.innerHTML = '<span style="color:#dc3545;"><i class="fa-solid fa-ban"></i> Erro retornado. Leia os logs.</span>';
                 }
@@ -703,7 +556,7 @@ if (isset($_POST['action_mro'])) {
                 }
             },
             error: function() {
-                mostrarToast('Erro de Servidor', 'Falha na comunicação AJAX.', 'danger');
+                toastObj.show({ title: 'Erro de Servidor', content: 'Falha na comunicação AJAX.', cssClass: 'e-toast-danger' });
             }
         });
     }

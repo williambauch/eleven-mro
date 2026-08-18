@@ -1,0 +1,6 @@
+<?php
+
+// Grid de consulta do mecanico - sem CRUD direto
+sc_apl_conf("grid_mro_reports_mechanic", "insert", "off");
+sc_apl_conf("grid_mro_reports_mechanic", "delete", "off");
+sc_apl_conf("grid_mro_reports_mechanic", "update", "off");

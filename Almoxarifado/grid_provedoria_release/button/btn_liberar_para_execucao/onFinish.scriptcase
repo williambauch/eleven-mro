@@ -1,0 +1,8 @@
+<?php
+
+$total_selecionado = $this->count_all;
+
+$mensagem = "Liberação concluída!<br><br>";
+$mensagem .= "As JICs em <b>NOT_STARTED</b>, <b>PLANNING</b>, <b>PLANNED</b> ou <b>APPROVED</b> foram liberadas para o hangar e os assignments foram criados no Painel do Supervisor.";
+
+[glo_aviso_run] = $mensagem;

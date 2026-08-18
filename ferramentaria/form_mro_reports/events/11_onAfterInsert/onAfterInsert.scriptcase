@@ -1,0 +1,12 @@
+<?php
+
+$var_report_id = (int){report_id};
+
+if ($var_report_id <= 0) {
+    sc_error_message("Registro do relatório não foi identificado após o insert.");
+    sc_error_exit();
+}
+
+sc_redir('blank_mro_reports_resume', glo_report_id=$var_report_id, '_self');
+
+ 

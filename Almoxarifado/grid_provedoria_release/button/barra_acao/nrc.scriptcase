@@ -1,0 +1,15 @@
+<?php
+// ============================================================
+// BOTÃO DE BARRA DE AÇÃO: nrc
+// ============================================================
+// Tipo    : LINK (não exibido)
+// Label   : nrc
+// Ícone   : fas fa-triangle-exclamation
+// Display : fa
+// Formato : icon_text
+// Estados:
+//   - state1 | fas fa-triangle-exclamation | cor=#ff0a0e
+//       hint: Gerar Não Rotina
+//
+// ── LIGAÇÃO ──────────────────────────────────────────
+// ============================================================

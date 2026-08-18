@@ -1,0 +1,13 @@
+{
+  "nome": "blank_mro_provedoria_bip",
+  "tipo": "Blank",
+  "nome_tabela": "blank_mro_provedoria_bip",
+  "descricao": "Provedoria - Bip de Saida (Separacao de Materiais): bipa a JIC, bipa os materiais e finaliza o pacote",
+  "login": "william",
+  "data_alteracao": "2026-08-17 13:57",
+  "nomeconexao": "conn_mro",
+  "variaveis": [
+    "usr_login"
+  ],
+  "campos": []
+}

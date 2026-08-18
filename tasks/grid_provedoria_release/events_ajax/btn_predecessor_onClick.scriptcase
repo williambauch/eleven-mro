@@ -1,0 +1,15 @@
+<?php
+
+// MRO-124: Alterna o bloqueio manual de predecessora na tarefa
+$var_id = (int){task_id};
+
+// Registra a acao antes de executar
+sc_log_add("predecessor_manual_toggle", "Alternando bloqueio manual de predecessora da tarefa " . $var_id);
+
+$var_sql = "UPDATE mro_tasks
+            SET is_predecessor_manual = NOT is_predecessor_manual
+            WHERE task_id = " . $var_id;
+sc_exec_sql($var_sql);
+
+// Recarrega a linha da grid para refletir a nova cor
+sc_ajax_refresh();

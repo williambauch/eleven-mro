@@ -1,0 +1,99 @@
+<?php
+
+// ScriptInit da grid_provedoria_release (Provedoria - Gated Process)
+// Aplica filtro opcional por projeto (var_project_id) vindo do menu/dash.
+//
+// regra  documentada :
+//   - Lista apenas JICs PLANNED/NOT_STARTED com 100% dos materiais
+//     bloqueantes COMPROMETIDOS por compras para a task
+//     (mro_task_materials.committed_qty >= planned_qty). A disponibilidade
+//     e definida por compras (committed_qty) - pode haver saldo no estoque
+//     fisico (mro_materials.stock_balance), mas e a area de compras que
+//     determina em qual projeto o material sera aplicado (prioridade entre
+//     projetos). O committed_qty e alimentado na importacao da planilha.
+//   - Exclui tasks com is_blocked_material = true (bloqueio operacional
+//     vindo da importacao de empenhos ou pausa do mecanico). 
+// ====================================================================
+// 1. MONTA WHERE (filtro por projeto)
+// ====================================================================
+$var_cond = "";
+
+// Filtro 1: se veio de um projeto especifico, filtra por ele
+if (!empty([var_project_id])) {
+    $var_pid = [var_project_id];
+    $var_cond = "t.project_id = $var_pid";
+}
+
+// Aplica o WHERE completo (respeita sc_where_atual se ja existir)
+if ($var_cond != "") {
+    if (empty({sc_where_atual})) {
+        sc_select_where(add) = "WHERE $var_cond";
+    } else {
+        sc_select_where(add) = "AND $var_cond";
+    }
+
+  // Limpa a global de filtro para nao ficar com o filtro travado
+  [var_project_id] = '';
+}
+
+// ====================================================================
+// 2. ALERTA DE MENSAGEM (vindo do botao RUN)
+// ====================================================================
+
+// Verifica se existe alguma mensagem vinda do botão RUN
+if (!empty([glo_aviso_run])) {
+    // Limpa a variável imediatamente para a mensagem não ficar repetindo
+    // toda vez que o usuário mudar de página ou pesquisar algo na Grid.
+    sc_alert([glo_aviso_run]);
+    [glo_aviso_run] = '';
+}
+
+?>
+<script>
+// MRO-119: Desabilitar checkbox RUN se a task estiver bloqueada por predecessora
+// MRO-126: desabilita tambem quando o status da linha nao permite liberacao
+// (so liberam: PLANNING, NOT_STARTED, PLANNED, APPROVED)
+function esconderCheckboxRun() {
+  const statusPermitidos = ['PLANNING', 'NOT_STARTED', 'PLANNED', 'APPROVED'];
+  const predSpans = document.querySelectorAll("span[id^='id_sc_field_btn_predecessor_']");
+  predSpans.forEach(span => {
+    const match = span.id.match(/id_sc_field_btn_predecessor_(\d+)$/);
+    if (!match) return;
+
+    const linhaNum = match[1];
+    const innerSpan = span.querySelector('span[data-blocked]');
+    if (!innerSpan) return;
+
+    const blocked = innerSpan.getAttribute('data-blocked');
+    const status = innerSpan.getAttribute('data-status');
+    const statusOk = statusPermitidos.indexOf(status) !== -1;
+    const checkbox = document.getElementById('NM_ck_run' + linhaNum);
+
+    if (checkbox && (blocked === '1' || !statusOk)) {
+      checkbox.disabled = true;
+      checkbox.checked = false;
+      checkbox.closest('td').style.opacity = '0.4';
+    }
+  });
+}
+
+setTimeout(esconderCheckboxRun, 1);
+
+$(document).ajaxComplete(function () {
+  setTimeout(esconderCheckboxRun, 1);
+});
+
+document.addEventListener("DOMContentLoaded", function () {
+  // MRO-119: Sobrescreve funcao nativa do ScriptCase para nao selecionar checkboxes desabilitados
+  window.nm_marca_check_grid = function(obj_mark) {
+    $(".sc-ui-check-run").each(function() {
+      if (!this.disabled) {
+        this.checked = obj_mark.checked;
+      }
+    });
+  };
+});
+</script>
+
+
+<?php

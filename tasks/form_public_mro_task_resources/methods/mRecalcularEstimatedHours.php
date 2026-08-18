@@ -31,5 +31,7 @@ function mRecalcularEstimatedHours($var_task_id)
         sc_log_add("recalc_estimated_hours", "task " . $var_task_id . " = " . $var_total . "h");
         sc_exec_sql($var_update);
 
-        return $var_total;
+        // Retorna com separador decimal pt-BR (virgula) para o sc_master_value
+        // exibir no form mestre, preservando as casas decimais do banco.
+        return str_replace('.', ',', (string)$var_total);
 }
