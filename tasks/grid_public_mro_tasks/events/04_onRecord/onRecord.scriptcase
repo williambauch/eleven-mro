@@ -69,3 +69,21 @@ if (!empty({rs_status})) {
 } else {
     {status_badge} = "<span style='background-color: #e9ecef; color: #495057; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 11px; white-space: nowrap;'>".{status_code}."</span>";
 }
+
+
+
+// MRO-127: Seta o estado do botão AJAX "Marcar p/ Impressão" conforme
+// a linha já esteja marcada (state2) ou não (state1) na sessão.
+$var_task_atual = (int){task_id};
+$var_marcado = false;
+
+if (!empty([glo_jic_ids]) && $var_task_atual > 0) {
+    $var_ids = array_map('intval', explode(',', [glo_jic_ids]));
+    $var_marcado = in_array($var_task_atual, $var_ids, true);
+}
+
+if ($var_marcado) {
+    sc_actionbar_state('btn_marcar_impressao_JIC', 'state2');
+} else {
+    sc_actionbar_state('btn_marcar_impressao_JIC', 'state1');
+}

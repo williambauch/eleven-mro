@@ -18,21 +18,6 @@
       "grid_public_mro_materials",
       "grid_public_mro_material_stock_location"
     ],
-    "MRO-122": [
-      "blank_abertura_nrc",
-      "blank_fluxo_trabalho",
-      "ctrl_abertura_nrc",
-      "form_public_mro_task_assignments",
-      "form_public_mro_tasks",
-      "grid_public_mro_tasks"
-    ],
-    "MRO-124": [
-      "form_mro_task_tools",
-      "form_public_mro_projects",
-      "form_public_mro_tasks",
-      "grid_mro_task_tools",
-      "grid_public_mro_tasks"
-    ],
     "MRO-125": [
       "blank_pdf_pack_jic",
       "ctrl_abertura_nrc",
@@ -46,12 +31,16 @@
       "grid_mro_reports_mechanic",
       "grid_provedoria_release",
       "grid_public_mro_tasks"
+    ],
+    "MRO-127": [
+      "grid_public_mro_tasks",
+      "control_filtro_jic"
     ]
   },
   "shortcuts": {
-    "MRO-126": "__Tarefas\\MRO-126",
     "MCP": ".vscode",
     "_DOCS": "_DOCS",
-    "_SKILL": ".github\\_SKILL"
+    "_SKILL": ".github\\_SKILL",
+    "__Tarefas": "__Tarefas"
   }
 }

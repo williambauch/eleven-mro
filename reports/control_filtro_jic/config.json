@@ -1,0 +1,26 @@
+{
+  "nome": "control_filtro_jic",
+  "tipo": "Control",
+  "descricao": "Tela de configuração do filtro de impressão do Pack JIC",
+  "nome_tabela": "control_filtro_jic",
+  "login": "william",
+  "data_alteracao": "2026-08-18 15:18",
+  "nomeconexao": "conn_mro",
+  "variaveis": [
+    "glo_jic_ids"
+  ],
+  "campos": [
+    {
+      "nome": "filtro_resume",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "filtro_page",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    }
+  ]
+}

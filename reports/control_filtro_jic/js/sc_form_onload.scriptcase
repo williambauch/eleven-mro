@@ -1,0 +1,11 @@
+// ============================================================
+// sc_form_onload — JavaScript do formulário (Geral Form > Onload)
+// MRO-127: marca todos os checkboxes de paginas por padrao.
+// Usa o metodo nativo do campo checkbox (mesmo do icone "marcar todos").
+// Local na IDE: Controle > Javascript > Selecionar "Geral Form"
+//               > Evento "Onload" > Editar
+// ============================================================
+
+if (typeof nm_marca_check === 'function') {
+    nm_marca_check('filtro_page', 'S');
+}

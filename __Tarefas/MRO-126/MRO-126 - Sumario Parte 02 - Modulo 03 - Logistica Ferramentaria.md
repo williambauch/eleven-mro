@@ -71,6 +71,7 @@ No painel do mecânico, criar listagem de ferramentas com avaria pra o ele preen
 - Acoes AJAX: `LOAD_JIC`, `LOAD_JIC_ID`, `SEPARAR`, `FINALIZAR`; elegibilidade igual ao Gated Process (`is_applied IS NOT TRUE` + `is_blocking_task` + `committed_qty >= planned_qty`).
 - Trava de sessao (`[usr_login]` vazio bloqueia), botao Enter ao lado do campo material, materiais separados vao para o final da lista, aviso de JIC ja separada.
 - Regra de negocio: o botao Finalizar Separação (Pacote) nao permite finalizar com pendentes — bloqueia com aviso.
+- Diagnostico de JIC nao elegivel aprimorado: percorre TODAS as ocorrencias do mesmo `task_code` (em varios projetos) e consolida os motivos (bloqueio de material / status nao liberado / motivos mistos) em mensagem orientativa — antes usava apenas a primeira linha e podia mostrar motivo enganoso.
 
 **`methods/mCarregarMateriais.php`**
 - `mCarregarMateriais()` monta a lista (badges Separado/Pendente) e retorna `total`/`separados`/`tudo_separado`; logica auxiliar fora do corpo do `onExecute`.

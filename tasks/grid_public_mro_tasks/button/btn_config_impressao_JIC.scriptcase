@@ -1,0 +1,58 @@
+<?php
+
+// ============================================================
+// BOTÃO PHP (EXECUÇÃO ÚNICA): btn_config_impressao_JIC
+// ============================================================
+// Tipo    : PHP
+// Label   : Configurar Impressão Pack JIC
+// Ícone   : fas fa-print
+// Display : btn
+// Formato : icon_text
+//
+// MRO-127: Monta a lista de JICs para impressão em lote e
+// redireciona para a control_filtro_jic (seleção de relatórios).
+//
+// Regras de negócio:
+//  - Se [glo_jic_ids] tiver ids (marcados via btn_marcar_impressao_JIC),
+//    usa SOMENTE esses ids e limpa [glo_jic_where].
+//  - Se [glo_jic_ids] vazio, NAO popula a global com milhares de ids:
+//    salva o WHERE do filtro atual em [glo_jic_where] e limpa
+//    [glo_jic_ids]. A control_filtro_jic processa direto pelo WHERE.
+// ============================================================
+
+$var_ids = array();
+
+// 1. Se o usuário marcou JICs na barra de ação, usa somente elas
+if (!empty([glo_jic_ids])) {
+    foreach (explode(',', [glo_jic_ids]) as $var_item) {
+        $var_item = trim($var_item);
+        if ($var_item !== '') {
+            $var_ids[] = (int)$var_item;
+        }
+    }
+
+    $var_ids = array_values(array_unique($var_ids));
+
+    if (count($var_ids) <= 0) {
+        sc_error_message("Nenhuma JIC encontrada para impressão. Ajuste o filtro da grid e tente novamente.");
+        sc_error_exit();
+    }
+
+    // 2a. Modo ids explícitos: mantém a lista e limpa o WHERE
+    [glo_jic_ids] = implode(',', $var_ids);
+    [glo_jic_where] = '';
+} else {
+    // 2b. Modo "todas do filtro": salva o WHERE atual (não popula ids)
+    $var_where = trim({sc_where_current});
+
+    // Garante um WHERE válido (senão busca tudo)
+    if (empty($var_where)) {
+        $var_where = "1=1";
+    }
+
+    [glo_jic_where] = $var_where;
+    [glo_jic_ids] = '';
+}
+
+// 3. Redireciona para a tela de configuração da impressão
+sc_redir('control_filtro_jic');

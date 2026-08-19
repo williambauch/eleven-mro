@@ -1,0 +1,19 @@
+<?php
+
+// ====================================================================
+// CONTROL FILTRO JIC - MRO-127
+// onValidate: exige que pelo menos 1 pagina (relatorio) esteja marcada.
+// ====================================================================
+
+// O campo multi-check envia um array em {filtro_page}
+$var_paginas = {filtro_page};
+
+if (!is_array($var_paginas)) {
+    // Caso venha como string separada por ';' ou ','
+    $var_paginas = array_filter(array_map('trim', preg_split('/[;,]/', (string)$var_paginas)));
+}
+
+if (count($var_paginas) <= 0) {
+    sc_error_message("Selecione pelo menos 1 pagina para gerar o PDF.");
+    sc_error_exit();
+}

@@ -1,0 +1,3 @@
+<?php
+
+sc_redir('grid_public_mro_tasks', glo_jic_ids="");

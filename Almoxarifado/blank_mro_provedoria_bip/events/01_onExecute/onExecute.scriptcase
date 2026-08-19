@@ -51,7 +51,79 @@ if (isset($_POST['action_prov'])) {
         sc_lookup(rs_jic, $sql_jic);
 
         if (empty({rs_jic})) {
-            echo json_encode(['status' => 'error', 'msg' => 'JIC não localizada ou não liberada para separação (apenas PLANNED/NOT_STARTED sem bloqueio de material).']); die();
+            // ---------------------------------------------------------
+            // DIAGNÓSTICO EM CAMADAS: descobre o motivo exato de a JIC
+            // nao ter entrado na fila de separacao e orienta o operador.
+            // Percorre TODAS as ocorrencias (mesmo task_code em varios
+            // projetos) para nao mostrar motivo enganoso de uma so linha.
+            // ---------------------------------------------------------
+
+            // 1. JIC existe no sistema?
+            $sql_diag = "SELECT t.task_id, t.status_code, t.is_blocked_material, p.p6_proj_id
+                         FROM mro_tasks t
+                         JOIN mro_projects p ON p.project_id = t.project_id
+                         WHERE t.task_code = '" . addslashes($jic) . "'
+                         ORDER BY p.p6_proj_id";
+            sc_lookup(rs_diag, $sql_diag);
+
+            if (empty({rs_diag})) {
+                // JIC nao existe: provavel codigo errado ou JIC nao importada
+                echo json_encode(['status' => 'error',
+                    'msg' => "JIC $jic nao encontrada no sistema. Confira o codigo bipeado. Se o codigo estiver correto, procure o Planejamento para confirmar se a JIC foi importada do P6."
+                ]); die();
+            }
+
+            // 2. Percorre todas as ocorrencias e consolida os motivos
+            $var_qtd_block = 0;   // ocorrencias bloqueadas por material
+            $var_qtd_status = 0;  // ocorrencias em status nao liberado
+            $var_status_lista = array(); // status encontrados (sem repetir)
+            $var_projetos_lista = array(); // projetos com bloqueio/status
+
+            foreach ({rs_diag} as $linha_diag) {
+                $var_diag_block_linha = ($linha_diag[2] == 't' || $linha_diag[2] == 'true' || $linha_diag[2] == 1);
+                $var_diag_status_linha = trim($linha_diag[1]);
+
+                if ($var_diag_block_linha) {
+                    $var_qtd_block++;
+                    if (!in_array($linha_diag[3], $var_projetos_lista)) {
+                        $var_projetos_lista[] = $linha_diag[3];
+                    }
+                } elseif (!empty($var_diag_status_linha)) {
+                    $var_qtd_status++;
+                    if (!in_array($var_diag_status_linha, $var_status_lista)) {
+                        $var_status_lista[] = $var_diag_status_linha;
+                    }
+                }
+            }
+
+            // 2a. Todas as ocorrencias bloqueadas por material
+            if ($var_qtd_block > 0 && $var_qtd_status == 0) {
+                echo json_encode(['status' => 'error',
+                    'msg' => "JIC $jic esta com BLOQUEIO DE MATERIAL (compras ainda nao validou um material critico da JIC). A separacao so e liberada apos regularizar o bloqueio. Procure o Planejamento ou a area de Compras para resolver."
+                ]); die();
+            }
+
+            // 2b. Todas as ocorrencias em status nao liberado
+            if ($var_qtd_status > 0 && $var_qtd_block == 0) {
+                $var_status_msg = implode(' / ', $var_status_lista);
+                echo json_encode(['status' => 'error',
+                    'msg' => "JIC $jic esta no status $var_status_msg. A separacao so e permitida para JICs em PLANNED ou NOT_STARTED. Consulte o Planejamento se precisar ajustar o status."
+                ]); die();
+            }
+
+            // 2c. Motivos mistos: consolida na mensagem para o operador entender
+            $var_parts = array();
+            if ($var_qtd_block > 0) {
+                $var_parts[] = "$var_qtd_block ocorrencia(s) bloqueada(s) por material";
+            }
+            if ($var_qtd_status > 0) {
+                $var_parts[] = "$var_qtd_status ocorrencia(s) em status nao liberado (" . implode(' / ', $var_status_lista) . ")";
+            }
+            $var_msg_mista = implode('; ', $var_parts);
+
+            echo json_encode(['status' => 'error',
+                'msg' => "JIC $jic existe em " . count({rs_diag}) . " projeto(s), mas nenhum esta elegivel para separacao: $var_msg_mista. Procure o Planejamento para verificar a situacao da JIC."
+            ]); die();
         }
 
         // Multiplas ocorrencias: devolve a lista para escolha
@@ -94,7 +166,28 @@ if (isset($_POST['action_prov'])) {
         sc_lookup(rs_jic2, $sql_jic);
 
         if (empty({rs_jic2})) {
-            echo json_encode(['status' => 'error', 'msg' => 'JIC não localizada ou não elegível para separação.']); die();
+            // Diagnostico: o status ou bloqueio mudou desde que a lista foi montada
+            $sql_diag2 = "SELECT t.status_code, t.is_blocked_material, t.task_code
+                          FROM mro_tasks t
+                          WHERE t.task_id = $var_task_id";
+            sc_lookup(rs_diag2, $sql_diag2);
+
+            $var_diag2_block = !empty({rs_diag2}) && ({rs_diag2[0][1]} == 't' || {rs_diag2[0][1]} == 'true' || {rs_diag2[0][1]} == 1);
+            $var_diag2_status = !empty({rs_diag2}) ? {rs_diag2[0][0]} : '';
+
+            if ($var_diag2_block) {
+                echo json_encode(['status' => 'error',
+                    'msg' => 'Esta JIC acabou de ser bloqueada por material (compras nao validou material critico). Recarregue a lista e, se persistir, procure o Planejamento ou Compras.'
+                ]); die();
+            }
+            if (!empty($var_diag2_status)) {
+                echo json_encode(['status' => 'error',
+                    'msg' => 'O status desta JIC mudou para ' . $var_diag2_status . '. A separacao so e permitida em PLANNED ou NOT_STARTED. Recarregue a lista e, se persistir, consulte o Planejamento.'
+                ]); die();
+            }
+            echo json_encode(['status' => 'error',
+                'msg' => 'Esta JIC nao esta mais elegivel para separacao. Recarregue a lista e, se persistir, procure o Planejamento.'
+            ]); die();
         }
 
         echo json_encode(mCarregarMateriais(

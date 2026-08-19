@@ -1,0 +1,17 @@
+<?php
+// ============================================================
+// BOTÃO DE BARRA DE AÇÃO: btn_marcar_impressao_JIC
+// ============================================================
+// Tipo    : AJAX
+// Label   : btn_marcar_impressao_JIC
+// Ícone   : fas fa-print
+// Display : fa
+// Formato : icon_text
+// Estados:
+//   - state1 | fas fa-print | cor=#ababab
+//       hint: Marca essa JIC para ser impressa no PDF de Pack JIC	
+//   - state2 | fas fa-print | cor=#2ad413
+//       hint: Desmarca essa JIC para ser impressa no PDF de Pack JIC	
+//
+// Ação: evento Ajax "actbtn_btn_marcar_impressao_JIC_onClick" (events_ajax/)
+// ============================================================

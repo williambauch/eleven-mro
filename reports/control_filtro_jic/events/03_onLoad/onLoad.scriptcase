@@ -1,0 +1,101 @@
+<?php
+
+// ====================================================================
+// CONTROL FILTRO JIC - MRO-127
+// onLoad: monta o resumo das JICs que serao geradas.
+//
+// Dois modos:
+//  - Modo ids explicitos ([glo_jic_ids]): lista de task_id marcados.
+//  - Modo "todas do filtro" ([glo_jic_where]): WHERE da grid salvo
+//    pelo btn_config_impressao_JIC (evita popular sessao com milhares).
+//
+// NOTA: NAO ha filtro "somente rotinas" aqui — a grid_public_mro_tasks
+// ja tem todos os filtros (rotinas, NRCs, status, projeto etc). O
+// resumo reflete EXATAMENTE o que veio filtrado da grid.
+// Aviso de volumetria embutido quando o volume passa do limiar.
+// ====================================================================
+
+$var_limiar_volume = 300;
+
+$var_ids_raw = trim([glo_jic_ids]);
+$var_where = trim([glo_jic_where]);
+
+$var_codigos = array();
+$var_total = 0;
+
+if (!empty($var_where)) {
+    // ============ MODO "TODAS DO FILTRO" (WHERE) ============
+    $var_where = preg_replace('/^\s*where\s*/i', '', $var_where);
+    if (empty($var_where)) {
+        $var_where = "1=1";
+    }
+
+    $var_sql = "SELECT task_code FROM mro_tasks
+                WHERE " . $var_where . "
+                ORDER BY task_code";
+    sc_lookup(ds_resumo, $var_sql);
+
+    if ({ds_resumo} !== false && !empty({ds_resumo})) {
+        foreach ({ds_resumo} as $var_linha) {
+            $var_codigos[] = $var_linha[0];
+        }
+    }
+    $var_total = count($var_codigos);
+} else {
+    // ============ MODO IDS EXPLICITOS ============
+    $var_ids = array();
+    if (!empty($var_ids_raw)) {
+        foreach (explode(',', $var_ids_raw) as $var_item) {
+            $var_item = trim($var_item);
+            if ($var_item !== '') {
+                $var_ids[] = (int)$var_item;
+            }
+        }
+    }
+    $var_ids = array_values(array_unique($var_ids));
+
+    if (count($var_ids) > 0) {
+        $var_ids_sql = implode(',', $var_ids);
+        $var_sql = "SELECT task_code FROM mro_tasks
+                    WHERE task_id IN (" . $var_ids_sql . ")
+                    ORDER BY task_code";
+        sc_lookup(ds_resumo, $var_sql);
+
+        if ({ds_resumo} !== false && !empty({ds_resumo})) {
+            foreach ({ds_resumo} as $var_linha) {
+                $var_codigos[] = $var_linha[0];
+            }
+        }
+    }
+    $var_total = count($var_codigos);
+}
+
+if ($var_total <= 0) {
+    {filtro_resume} = "<span style='color:#c62828;'><b>Nenhuma JIC encontrada para impressão.</b> Volte à grid, ajuste o filtro e selecione as JICs.</span>";
+    return;
+}
+
+// ============ AVISO DE VOLUMETRIA ============
+$var_aviso = "";
+if ($var_total > $var_limiar_volume) {
+    $var_aviso = "<div style='background:#fff3cd; color:#856404; border:1px solid #ffeeba; border-radius:4px; padding:8px; margin-top:8px; font-size:12px;'>"
+        . "<b>Atenção:</b> volume alto (" . number_format($var_total, 0, ',', '.') . " JICs). "
+        . "A geração do PDF em lote pode levar vários minutos. Clique em Gerar PDF somente após conferir a seleção.</div>";
+}
+
+// ============ RESUMO ============
+// Exibe TODOS os codigos (sem LIMIT) com scroll — mostrar o volume
+// que sera gerado e o objetivo.
+$var_html = "<div style='font-size:12px; line-height:1.6;'>";
+$var_html .= "<b>" . $var_total . " Task(s) selecionada(s):</b>";
+
+if (count($var_codigos) > 0) {
+    $var_html .= "<div style='max-height:220px; overflow-y:auto; border:1px solid #dee2e6; border-radius:4px; padding:6px; margin-top:6px; background:#f8f9fa;'>";
+    $var_html .= implode(', ', array_map('htmlspecialchars', $var_codigos));
+    $var_html .= "</div>";
+}
+
+$var_html .= $var_aviso;
+$var_html .= "</div>";
+
+{filtro_resume} = $var_html;

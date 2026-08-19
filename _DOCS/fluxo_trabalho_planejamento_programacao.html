@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Fluxo Trabalho - Planejamento e Programação</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        html, body {
+            font-family: 'Roboto', 'Segoe UI', Tahoma, sans-serif;
+            background-color: #f4f6f8;
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        .page-header {
+            font-size: 20px;
+            color: #1a202c;
+            padding: 12px 15px 8px 15px;
+            font-weight: 600;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .page-sub {
+            font-size: 13px;
+            color: #4a5568;
+            padding: 4px 15px 0 15px;
+        }
+
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            padding: 10px 15px;
+            font-size: 12px;
+        }
+
+        .legend-item { display: flex; align-items: center; gap: 5px; }
+
+        .legend-swatch { width: 14px; height: 14px; border-radius: 3px; display: inline-block; }
+
+        .zoom-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin: 0 15px 10px 15px;
+            padding: 6px 10px;
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            width: fit-content;
+        }
+
+        .zoom-toolbar button {
+            border: 1px solid #cbd5e0;
+            background: #f7fafc;
+            color: #2d3748;
+            border-radius: 4px;
+            padding: 5px 12px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .zoom-toolbar button:hover { background: #e2e8f0; }
+
+        .zoom-label {
+            font-size: 13px;
+            font-weight: 700;
+            color: #4a5568;
+            min-width: 48px;
+            text-align: center;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .separator { width: 1px; height: 22px; background: #e2e8f0; margin: 0 2px; }
+
+        .section-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #1a202c;
+            padding: 4px 15px 6px 15px;
+        }
+        .section-title .pill {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 700;
+            border-radius: 10px;
+            padding: 2px 10px;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+        .pill-planej { background: #e3f2fd; color: #1565c0; border: 1px solid #1565c0; }
+        .pill-prog { background: #fce4ec; color: #c62828; border: 1px solid #c62828; }
+
+        .diagram-box {
+            background: #fff;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            padding: 20px;
+            margin: 0 15px 15px 15px;
+            overflow: hidden;
+        }
+
+        .zoom-viewport { transition: transform 0.15s ease; transform-origin: top left; }
+
+        /* Mouse: cursor de arrastar (grab) e SEM seleção de texto no diagrama */
+        .diagram-box .mermaid,
+        .diagram-box .mermaid svg,
+        .diagram-box .mermaid .node {
+            cursor: grab;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* FUNDO BRANCO NOS LABELS DAS ARESTAS */
+        .diagram-box .edgeLabel {
+            background: #ffffff !important;
+            border-radius: 3px;
+            padding: 1px 4px;
+        }
+        .diagram-box .edgeLabel rect,
+        .diagram-box .labelBkg {
+            fill: #ffffff !important;
+            background: #ffffff !important;
+            opacity: 1 !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="page-header">
+        MRO System - Fluxo de Trabalho por Perfil (Planejamento e Programação)
+    </div>
+    <div class="page-sub">
+        O que cada perfil faz e onde atua no fluxo.
+    </div>
+
+    <div class="legend">
+        <span class="legend-item"><span class="legend-swatch" style="background:#e3f2fd;border:1px solid #1565c0"></span> Entrada</span>
+        <span class="legend-item"><span class="legend-swatch" style="background:#fff3e0;border:1px solid #e65100"></span> Aguardando / Planejamento</span>
+        <span class="legend-item"><span class="legend-swatch" style="background:#e8f5e9;border:1px solid #2e7d32"></span> Execução / Aprovado</span>
+        <span class="legend-item"><span class="legend-swatch" style="background:#fff8e1;border:1px solid #f9a825"></span> Decisão</span>
+        <span class="legend-item"><span class="legend-swatch" style="background:#fce4ec;border:1px solid #c62828"></span> Cancelado / Bloqueado</span>
+        <span class="legend-item"><span class="legend-swatch" style="background:#f5f5f5;border:1px solid #9e9e9e"></span> Botão / Ação</span>
+        <span class="legend-item"><span style="display:inline-block;width:20px;border-top:2px dashed #ff6f00"></span> Retorno</span>
+        <span class="legend-item"><span style="display:inline-block;width:20px;border-top:2px solid #2e7d32"></span> Responsabilidade do perfil</span>
+    </div>
+
+    <div class="zoom-toolbar">
+        <button type="button" onclick="mroZoomOut()">−</button>
+        <button type="button" onclick="mroZoomIn()">+</button>
+        <span class="separator"></span>
+        <span class="zoom-label" id="mro_zoom_label">100%</span>
+        <span class="separator"></span>
+        <button type="button" onclick="mroZoomFit()">Ajustar</button>
+        <button type="button" onclick="mroZoomReset()">100%</button>
+        <button type="button" onclick="mroZoomSet(2)">200%</button>
+        <button type="button" onclick="mroZoomSet(2.3)">230%</button>
+        <button type="button" onclick="mroZoomSet(2.5)">250%</button>
+    </div>
+
+    <!-- ================================================================
+         DIAGRAMA 1: PLANEJAMENTO (group_id 8)
+         ================================================================ -->
+    <div class="section-title">
+        Perfil PLANEJAMENTO
+        <span class="pill pill-planej">login: planejador</span>
+        <span class="pill pill-planej">group_id 8</span>
+    </div>
+    <div class="diagram-box" style="min-height: 450px;">
+        <div class="zoom-viewport" id="zoom_viewport_planej">
+            <div class="mermaid">
+flowchart LR
+    %% ===================== PLANEJAMENTO - ROTINA =====================
+    A(CRUD PROJETOS<br/>IMPORTAÇÃO P6<br/>ctrl_import_excel<br/>CSV / Excel do P6 no<br/>form_public_mro_projects) --> B[ESTRUTURAR WBS<br/>form_public_mro_wbs]
+    B --> C[CADASTRAR ROTINAS<br/>form_public_mro_tasks<br/>new liberado p/ rotinas]
+    C --> D[ALOCAR MATERIAIS<br/>form_public_mro_task_materials]
+    D --> E[ALOCAR MÃO DE OBRA<br/>form_public_mro_task_resources<br/>LABOR / horas por skill]
+    E --> F[GERENCIAR DEPENDÊNCIAS<br/>form_public_mro_task_dependencies<br/>predecessoras e sucessoras]
+    F --> G[EDITAR DATAS NO GANTT<br/>blank_gantt<br/>arrastar target_start/end]
+    G --> H{Task pronta<br/>para execução?}
+    H -- Sim --> L[LIBERAR PARA EXECUÇÃO<br/>btn_liberar_para_execucao<br/>grid_public_mro_tasks]
+    L --> R[RELEASED<br/>valida predecessor<br/>cria assignments por skill]
+    R -.-> SV{Painel Supervisor<br/>distribui mecânicos<br/>execução no hangar}
+    H -- Não --> C
+
+    %% ===================== PLANEJAMENTO - NRC =====================
+    A2(CRIAR NRC<br/>blank_abertura_nrc<br/>botão actbtn_nrc na grid<br/>rota backoffice) --> B2[form_public_mro_tasks<br/>Fase 1 DRAFT<br/>btn_enviar_eng ou<br/>btn_enviar_prog<br/>inicia aprovação]
+    B2 -. fluxo NRC segue<br/>eng / coord / prog<br/>após aprovação do cliente .-> AP2[APPROVED<br/>Task aprovada]
+    AP2 -- btn_liberar_para_execucao --> R
+
+    %% ===================== PLANEJAMENTO - BLOQUEIOS =====================
+    G2(ALTERNAR BLOQUEIOS MANUAIS<br/>grid_public_mro_tasks<br/>
+    btn_mat / btn_fer / btn_mao<br/>liga/desliga manual) -.-> R
+    B3[BLOQUEIOS AUTOMÁTICOS<br/>
+    • <b>is_blocked_material = Compras</b>: Importação de Empenhos control_import_empenhos, MRO-115: <br/>quando um material crítico is_blocking_task=true está sem Status material_status vazio ou - na planilha,<br/> a flag é setada true. O checkin da provedoria blank_mro_provedoria_bip só libera tasks sem este bloqueio.<br/>
+    • <b>is_blocked_tool</b>: A ligação é sempre manual btn_fer, e a liberação acontece quando a ferramenta é devolvida.<br/>
+    • <b>is_blocked_labor</b>: dois gatilhos: <br/>1. NRC impeditiva — abertura de NRC blank_abertura_nrc marca is_blocked_labor=true quando o achado é impeditivo;<br/> 2. Impedimento do mecânico — control_pause_task motivo 3/4/5 material, ferramenta, qualidade/eng seta as flags correspondentes. <br/>É desligado na passagem de serviço último mecânico → is_blocked_labor=FALSE.<br/>
+    • <b>btn_predecessor</b>: bloqueio por dependência de tarefa predecessora automático via trigger MRO-119<br/> + manual via form de dependências.] -.-> R
+
+    style A fill:#e3f2fd,stroke:#1565c0,color:#000
+    style B fill:#e3f2fd,stroke:#1565c0,color:#000
+    style C fill:#fff3e0,stroke:#e65100,color:#000
+    style D fill:#fff3e0,stroke:#e65100,color:#000
+    style E fill:#fff3e0,stroke:#e65100,color:#000
+    style F fill:#fff3e0,stroke:#e65100,color:#000
+    style G fill:#fff3e0,stroke:#e65100,color:#000
+    style H fill:#fff8e1,stroke:#f9a825,color:#000
+    style L fill:#f5f5f5,stroke:#9e9e9e,color:#000
+    style R fill:#e8f5e9,stroke:#2e7d32,color:#000
+    style SV fill:#fff8e1,stroke:#f9a825,color:#000
+    style A2 fill:#e3f2fd,stroke:#1565c0,color:#000
+    style B2 fill:#f5f5f5,stroke:#9e9e9e,color:#000
+    style AP2 fill:#e8f5e9,stroke:#2e7d32,color:#000
+    style G2 fill:#f5f5f5,stroke:#9e9e9e,color:#000
+    style B3 fill:#fff8e1,stroke:#f9a825,color:#000
+            </div>
+        </div>
+    </div>
+
+    <!-- ================================================================
+         DIAGRAMA 2: PROGRAMACAO (group_id 7)
+         ================================================================ -->
+    <div class="section-title">
+        Perfil PROGRAMACAO
+        <span class="pill pill-prog">login: programador</span>
+        <span class="pill pill-prog">group_id 7</span>
+    </div>
+    <div class="diagram-box">
+        <div class="zoom-viewport" id="zoom_viewport_prog">
+            <div class="mermaid">
+flowchart LR
+    %% ===================== PROGRAMACAO - NRC (Fase 4) =====================
+    N(ENTRADA<br/>NRC em PENDING_PROG<br/>Fase 4 - Task) --> D[PENDING_PROG<br/>Task]
+    D -- btn_validar_prog<br/>valida no P6<br/>+ log PROGRAMMING_OK --> Z{Dentro do CAP<br/>do contrato?<br/>motor O&A}
+    Z -- Sim auto-approve<br/>cria assignments --> H[RELEASED<br/>Task]
+    Z -- Não estourou CAP --> OA[PENDING_OA<br/>dispara O&A<br/>aguarda cliente]
+    D -- btn_enviar_coord<br/>precisa reavaliar --> C[PENDING_COORD<br/>Task]
+    D -- btn_cancelar<br/>não viável --> X[CANCELLED<br/>Task]
+
+    %% ===================== PROGRAMACAO - ROTINA (MRO-120) =====================
+    P(ENTRADA<br/>Rotina em PENDING_PROG<br/>passagem de serviço<br/>último mecânico<br/>is_nrc = vazio) --> V[btn_validar_prog_rotina<br/>sem O&A<br/>calcula saldo HH por skill]
+    V --> V2{HH dentro do<br/>orçado?}
+    V2 -- Sim --> R2[RELEASED<br/>sem O&A<br/>cria/atualiza assignments<br/>sem pendência de MO]
+    V2 -- Não estouro HH --> AJ[Somente alerta<br/>bloqueia liberação<br/>ajuste recursos no P6]
+    AJ -. reprograma e<br/>tenta validar de novo .-> V
+
+    %% ===================== PROGRAMACAO - ACESSOS =====================
+    G3(DEPENDÊNCIAS<br/>form_public_mro_task_dependencies<br/>CRUD total) -.-> H
+    G4(PACK JIC<br/>blank_pdf_pack_jic<br/>export / print) -.-> H
+    G5(ACESSOS AUXILIARES<br/>form_public_mro_tasks CRUD<br/>recursos / WBS / Gantt<br/>abertura NRC) -.-> H
+
+    style N fill:#e3f2fd,stroke:#1565c0,color:#000
+    style D fill:#fff3e0,stroke:#e65100,color:#000
+    style Z fill:#fff8e1,stroke:#f9a825,color:#000
+    style H fill:#e8f5e9,stroke:#2e7d32,color:#000
+    style OA fill:#e8f5e9,stroke:#2e7d32,color:#000
+    style C fill:#fff3e0,stroke:#e65100,color:#000
+    style X fill:#fce4ec,stroke:#c62828,color:#000
+    style P fill:#e3f2fd,stroke:#1565c0,color:#000
+    style V fill:#f5f5f5,stroke:#9e9e9e,color:#000
+    style V2 fill:#fff8e1,stroke:#f9a825,color:#000
+    style R2 fill:#e8f5e9,stroke:#2e7d32,color:#000
+    style AJ fill:#fce4ec,stroke:#c62828,color:#000
+    style G3 fill:#f5f5f5,stroke:#9e9e9e,color:#000
+    style G4 fill:#f5f5f5,stroke:#9e9e9e,color:#000
+    style G5 fill:#f5f5f5,stroke:#9e9e9e,color:#000
+
+    %% Retorno tracejado laranja: AJ->V
+    linkStyle 8 stroke:#ff6f00,stroke-width:2px,stroke-dasharray: 5 5
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Zoom via transform CSS (Mermaid e SVG estatico)
+        var mroZoomAtual = 1;
+        var mroPanX = 0;
+        var mroPanY = 0;
+
+        function mroAplicarZoom() {
+            // Aplica o transform a todos os viewports
+            var vps = document.querySelectorAll('.zoom-viewport');
+            if (vps.length) {
+                vps.forEach(function (vp) {
+                    vp.style.transform = 'translate(' + mroPanX + 'px, ' + mroPanY + 'px) scale(' + mroZoomAtual + ')';
+                });
+            }
+            var lbl = document.getElementById('mro_zoom_label');
+            if (lbl) lbl.textContent = Math.round(mroZoomAtual * 100) + '%';
+        }
+
+        function mroZoomIn() { mroZoomAtual = Math.min(3, mroZoomAtual + 0.1); mroAplicarZoom(); }
+        function mroZoomOut() { mroZoomAtual = Math.max(0.2, mroZoomAtual - 0.1); mroAplicarZoom(); }
+        function mroZoomReset() { mroZoomAtual = 1; mroPanX = 0; mroPanY = 0; mroAplicarZoom(); }
+        function mroZoomSet(v) { mroZoomAtual = Math.min(3, Math.max(0.2, v)); mroPanX = 0; mroPanY = 0; mroAplicarZoom(); }
+
+        function mroZoomFit() {
+            var svg = document.querySelector('.mermaid svg');
+            var box = document.querySelector('.diagram-box');
+            if (!svg || !box) return;
+            var sw = svg.getBoundingClientRect().width;
+            var bw = box.clientWidth - 40;
+            mroZoomAtual = Math.min(3, Math.max(0.2, bw / sw));
+            mroPanX = 0;
+            mroPanY = 0;
+            mroAplicarZoom();
+        }
+
+        // =========================================================================
+        // PAN: ARRASTAR QUALQUER DIAGRAMA COM O MOUSE
+        // =========================================================================
+        (function () {
+            var boxes = document.querySelectorAll('.diagram-box');
+            if (!boxes.length) return;
+
+            var arrastando = false;
+            var iniX = 0, iniY = 0;
+            var panIniX = 0, panIniY = 0;
+
+            boxes.forEach(function (box) {
+                box.style.cursor = 'grab';
+
+                box.addEventListener('mousedown', function (e) {
+                    if (e.target.closest('button, a')) return;
+                    arrastando = true;
+                    iniX = e.clientX;
+                    iniY = e.clientY;
+                    panIniX = mroPanX;
+                    panIniY = mroPanY;
+                    box.style.cursor = 'grabbing';
+                    e.preventDefault();
+                });
+
+                box.addEventListener('mouseup', function () {
+                    if (arrastando) {
+                        arrastando = false;
+                        box.style.cursor = 'grab';
+                    }
+                });
+            });
+
+            window.addEventListener('mousemove', function (e) {
+                if (!arrastando) return;
+                var dx = e.clientX - iniX;
+                var dy = e.clientY - iniY;
+                mroPanX = panIniX + dx;
+                mroPanY = panIniY + dy;
+                mroAplicarZoom();
+            });
+
+            window.addEventListener('mouseup', function () {
+                if (arrastando) {
+                    arrastando = false;
+                }
+            });
+        })();
+
+        // Mermaid com fundo branco nos labels das arestas
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'base',
+            flowchart: { htmlLabels: true },
+            themeVariables: {
+                edgeLabelBackground: '#ffffff',
+                fontFamily: 'Roboto, Segoe UI, Tahoma, sans-serif'
+            }
+        });
+    </script>
+</body>
+</html>

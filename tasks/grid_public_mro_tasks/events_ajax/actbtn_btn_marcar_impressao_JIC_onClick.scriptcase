@@ -1,0 +1,55 @@
+<?php
+
+// ====================================================================
+// MRO-127: Marcar/Desmarcar JIC para impressão em lote (Pack JIC)
+// Botão AJAX da barra de ação com 2 estados:
+//   state1 -> "Marcar"   (adiciona task_id em [glo_jic_ids])
+//   state2 -> "Marcado"  (remove task_id de [glo_jic_ids])
+//
+// Diferente do checkbox nativo da grid (que só vale para a página
+// atual e se perde ao paginar), este botão acumula os ids em uma
+// variável global da sessão, permitindo marcar JICs em várias páginas.
+//
+// Uso:
+//  - Clicar com o botão em state1 -> marca a JIC (visual muda p/ state2)
+//  - Clicar com o botão em state2 -> desmarca a JIC (visual volta p/ state1)
+// ====================================================================
+
+// 1. Recupera o estado atual do botão no momento do clique
+$var_estado = sc_actionbar_clicked_state();
+
+$var_task_id = (int){task_id};
+
+if ($var_task_id <= 0) {
+    sc_ajax_message("Parâmetros inválidos para marcar a JIC.");
+    return;
+}
+
+// 2. Converte a global CSV em array para manipulação
+$var_ids = array();
+if (!empty([glo_jic_ids])) {
+    foreach (explode(',', [glo_jic_ids]) as $var_item) {
+        $var_item = trim($var_item);
+        if ($var_item !== '') {
+            $var_ids[] = (int)$var_item;
+        }
+    }
+}
+
+// 3. Toggle conforme o estado do botão
+if ($var_estado == 'state2') {
+    // state2 -> estava marcado, agora DESMARCA (remove o id)
+    $var_ids = array_diff($var_ids, array($var_task_id));
+    [glo_jic_ids] = implode(',', $var_ids);
+    sc_actionbar_state('btn_marcar_impressao_JIC', 'state1');
+    // sc_ajax_message("JIC " . $var_task_id . " removida da impressão. Todas: ".[glo_jic_ids]);
+} else {
+    // state1 -> estava desmarcado, agora MARCA (adiciona o id)
+    if (!in_array($var_task_id, $var_ids)) {
+        $var_ids[] = $var_task_id;
+    }
+    [glo_jic_ids] = implode(',', $var_ids);
+    sc_actionbar_state('btn_marcar_impressao_JIC', 'state2');
+   // sc_ajax_message("JIC " . $var_task_id . " marcada para impressão.  Todas: ".[glo_jic_ids]);
+}
+

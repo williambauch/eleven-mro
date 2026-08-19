@@ -42,6 +42,8 @@ if (!empty([var_project_id])) {
     }
 }
 
+
+
 // Filtro 3: se veio do dashboard com filtro de status, aplica (glo_filtro_status)
 // Valores (mesmos do dash MRO-123): EXECUCAO, ENCERRADAS, BLOQUEADAS ou vazio (todas)
 if (!empty([glo_filtro_status])) {
