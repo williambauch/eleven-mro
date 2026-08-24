@@ -1,0 +1,30 @@
+<?php
+
+// ====================================================================
+// form_public_sec_groups_apps -  
+// onRecord: desabilita campos de permissao conforme o tipo da app
+// (mesmo padrao da sec_form_sec_groups_apps).
+//
+// Regras por tipo de app:
+//   - form      -> todos os campos habilitados
+//   - calendar  -> desabilita priv_export e priv_print
+//   - cons      -> desabilita priv_insert, priv_delete e priv_update
+//   - demais (blank, contr, control, grid, menu, reportpdf, ...)
+//                -> desabilita todos os campos de permissao
+// ====================================================================
+
+if (isset([arr_apps][{app_name}])) {
+    switch (trim([arr_apps][{app_name}])) {
+        case 'form':
+            break;
+        case 'calendar':
+            sc_field_disabled_record("priv_export; priv_print");
+            break;
+        case 'cons':
+            sc_field_disabled_record("priv_insert; priv_delete; priv_update");
+            break;
+        default:
+            sc_field_disabled_record("priv_insert; priv_delete; priv_update; priv_export; priv_print");
+            break;
+    }
+}

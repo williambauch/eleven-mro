@@ -4,10 +4,13 @@
   "nome_tabela": "\"public\".mro_tasks",
   "descricao": "App Principal de tarefas (crud, fases, dependências e dados)",
   "login": "admin",
-  "data_alteracao": "2026-08-15 13:14",
+  "data_alteracao": "2026-08-21 12:38",
   "nomeconexao": "conn_mro",
   "tabelas": [
     "public.mro_tasks"
+  ],
+  "bibliotecas": [
+    "mro_engine.php"
   ],
   "variaveis": [
     "usr_groups",

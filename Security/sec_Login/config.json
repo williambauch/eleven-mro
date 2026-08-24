@@ -6,6 +6,9 @@
   "login": "admin",
   "data_alteracao": "2026-08-15 14:34",
   "nomeconexao": "conn_mro",
+  "bibliotecas": [
+    "sc_logged.php"
+  ],
   "variaveis": [
     "facebook_email",
     "facebook_error_code",

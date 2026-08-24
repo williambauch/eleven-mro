@@ -1,0 +1,20 @@
+<?php
+// ============================================================
+// BOTÃO DE BARRA DE AÇÃO: btn_permissao
+// ============================================================
+// Tipo    : LINK
+// Label   : Permissão
+// Ícone   : fas fa-key
+// Display : btn
+// Formato : icon_text
+// Estados:
+//   - state1 | label="Permissão" | fas fa-key | visual=olive
+//
+// ── LIGAÇÃO ──────────────────────────────────────────
+// App destino: form_public_sec_groups_apps (F)
+// Abertura    : Nova janela
+// Parâmetros:
+//   - [Global] group_id
+//   - [Campo] app_name → app_name
+//   - [Campo] app_name → glo_app_name
+// ============================================================

@@ -59,5 +59,12 @@ SELECT
     is_milestone,
     is_blocked_predecessor,
     is_predecessor_manual,
-    pending_id 
+    pending_id,
+    EXISTS (
+        SELECT 1
+        FROM mro_task_materials tm
+        JOIN mro_materials m ON m.material_id = tm.material_id
+        WHERE tm.task_id = mro_tasks.task_id
+          AND (m.is_blocking_task IS TRUE OR m.is_blocking_task IS NULL)
+    ) AS tem_provedoria
 FROM public.mro_tasks

@@ -195,10 +195,10 @@ flowchart LR
     G2(ALTERNAR BLOQUEIOS MANUAIS<br/>grid_public_mro_tasks<br/>
     btn_mat / btn_fer / btn_mao<br/>liga/desliga manual) -.-> R
     B3[BLOQUEIOS AUTOMÁTICOS<br/>
-    • <b>is_blocked_material = Compras</b>: Importação de Empenhos control_import_empenhos, MRO-115: <br/>quando um material crítico is_blocking_task=true está sem Status material_status vazio ou - na planilha,<br/> a flag é setada true. O checkin da provedoria blank_mro_provedoria_bip só libera tasks sem este bloqueio.<br/>
+    • <b>is_blocked_material</b>: 3 gatilhos:<br/>1. Importação de Empenhos control_import_empenhos MRO-115: material crítico is_blocking_task=true sem Status vazio ou - na planilha;<br/>2. Mecânico reporta Falta de Material control_pause_task motivo 3;<br/>3. Manual btn_mat na grid_public_mro_tasks.<br/>A provedoria blank_mro_provedoria_bip só processa tasks sem este bloqueio.<br/>
     • <b>is_blocked_tool</b>: A ligação é sempre manual btn_fer, e a liberação acontece quando a ferramenta é devolvida.<br/>
-    • <b>is_blocked_labor</b>: dois gatilhos: <br/>1. NRC impeditiva — abertura de NRC blank_abertura_nrc marca is_blocked_labor=true quando o achado é impeditivo;<br/> 2. Impedimento do mecânico — control_pause_task motivo 3/4/5 material, ferramenta, qualidade/eng seta as flags correspondentes. <br/>É desligado na passagem de serviço último mecânico → is_blocked_labor=FALSE.<br/>
-    • <b>btn_predecessor</b>: bloqueio por dependência de tarefa predecessora automático via trigger MRO-119<br/> + manual via form de dependências.] -.-> R
+    • <b>is_blocked_labor</b>: 2 gatilhos: <br/>1. NRC impeditiva — abertura de NRC blank_abertura_nrc marca is_blocked_labor=true quando o achado é impeditivo;<br/> 2. Impedimento do mecânico — control_pause_task motivo 3/4/5 material, ferramenta, qualidade/eng seta as flags correspondentes. <br/>É desligado na passagem de serviço último mecânico → is_blocked_labor=FALSE.<br/>
+    • <b>btn_predecessor</b>: bloqueio por predecessora com 2 flags independentes:<br/>1. Automática is_blocked_predecessor — trigger MRO-119 recalcula<br/>quando a predecessora muda de status ou vínculo;<br/>2. Manual is_predecessor_manual — btn_predecessor na grid MRO-124,<br/>independe do cálculo automático.] -.-> R
 
     style A fill:#e3f2fd,stroke:#1565c0,color:#000
     style B fill:#e3f2fd,stroke:#1565c0,color:#000
@@ -232,31 +232,26 @@ flowchart LR
         <div class="zoom-viewport" id="zoom_viewport_prog">
             <div class="mermaid">
 flowchart LR
-    %% ===================== PROGRAMACAO - NRC (Fase 4) =====================
-    N(ENTRADA<br/>NRC em PENDING_PROG<br/>Fase 4 - Task) --> D[PENDING_PROG<br/>Task]
-    D -- btn_validar_prog<br/>valida no P6<br/>+ log PROGRAMMING_OK --> Z{Dentro do CAP<br/>do contrato?<br/>motor O&A}
-    Z -- Sim auto-approve<br/>cria assignments --> H[RELEASED<br/>Task]
-    Z -- Não estourou CAP --> OA[PENDING_OA<br/>dispara O&A<br/>aguarda cliente]
-    D -- btn_enviar_coord<br/>precisa reavaliar --> C[PENDING_COORD<br/>Task]
-    D -- btn_cancelar<br/>não viável --> X[CANCELLED<br/>Task]
-
     %% ===================== PROGRAMACAO - ROTINA (MRO-120) =====================
-    P(ENTRADA<br/>Rotina em PENDING_PROG<br/>passagem de serviço<br/>último mecânico<br/>is_nrc = vazio) --> V[btn_validar_prog_rotina<br/>sem O&A<br/>calcula saldo HH por skill]
+    P(ENTRADA<br/>Rotina em PENDING_PROG<br/>passagem de serviço<br/>último mecânico<br/>is_nrc = não) --> V[btn_validar_prog_rotina<br/>sem O&A<br/>calcula saldo HH por skill]
     V --> V2{HH dentro do<br/>orçado?}
     V2 -- Sim --> R2[RELEASED<br/>sem O&A<br/>cria/atualiza assignments<br/>sem pendência de MO]
-    V2 -- Não estouro HH --> AJ[Somente alerta<br/>bloqueia liberação<br/>ajuste recursos no P6]
+    V2 -- Não, estouro HH/skill --> AJ[Somente alerta<br/>Não permite RELEASED<br/>lista skills estouradas<br/>ajuste recursos no P6]
     AJ -. reprograma e<br/>tenta validar de novo .-> V
 
-    %% ===================== PROGRAMACAO - ACESSOS =====================
-    G3(DEPENDÊNCIAS<br/>form_public_mro_task_dependencies<br/>CRUD total) -.-> H
-    G4(PACK JIC<br/>blank_pdf_pack_jic<br/>export / print) -.-> H
-    G5(ACESSOS AUXILIARES<br/>form_public_mro_tasks CRUD<br/>recursos / WBS / Gantt<br/>abertura NRC) -.-> H
+    %% ===================== PROGRAMACAO - NRC (Fase 4) =====================
+    N(ENTRADA<br/>Não Rotina - NRC<br/> em PENDING_PROG<br/>Fase 4 - Task) --> D[PENDING_PROG<br/>Task]
+    D -- btn_validar_prog<br/>valida no P6<br/>+ log PROGRAMMING_OK --> Z{Estourou o CAP<br/>do contrato?<br/>decisão do motor O&A}
+    Z -- Sim, estourou CAP --> OA[PENDING_OA<br/>dispara O&A<br/>aguarda cliente]
+    Z -- Não, dentro do CAP<br/>auto-approve status PENDING_PROG<br/>cria assignments --> H[RELEASED<br/>Task]
+    D -- btn_enviar_coord<br/>precisa reavaliar --> C[PENDING_COORD<br/>Task]
+    D -- btn_cancelar<br/>não viável --> X[CANCELLED<br/>Task]
 
     style N fill:#e3f2fd,stroke:#1565c0,color:#000
     style D fill:#fff3e0,stroke:#e65100,color:#000
     style Z fill:#fff8e1,stroke:#f9a825,color:#000
     style H fill:#e8f5e9,stroke:#2e7d32,color:#000
-    style OA fill:#e8f5e9,stroke:#2e7d32,color:#000
+    style OA fill:#fff3e0,stroke:#e65100,color:#000
     style C fill:#fff3e0,stroke:#e65100,color:#000
     style X fill:#fce4ec,stroke:#c62828,color:#000
     style P fill:#e3f2fd,stroke:#1565c0,color:#000
@@ -264,9 +259,6 @@ flowchart LR
     style V2 fill:#fff8e1,stroke:#f9a825,color:#000
     style R2 fill:#e8f5e9,stroke:#2e7d32,color:#000
     style AJ fill:#fce4ec,stroke:#c62828,color:#000
-    style G3 fill:#f5f5f5,stroke:#9e9e9e,color:#000
-    style G4 fill:#f5f5f5,stroke:#9e9e9e,color:#000
-    style G5 fill:#f5f5f5,stroke:#9e9e9e,color:#000
 
     %% Retorno tracejado laranja: AJ->V
     linkStyle 8 stroke:#ff6f00,stroke-width:2px,stroke-dasharray: 5 5

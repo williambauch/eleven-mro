@@ -1,5 +1,13 @@
 // ============================================================
 // sc_form_onload — JavaScript do formulário (Geral Form > Onload)
+// O Scriptcase executa esta função com o DOM pronto, tanto no load
+// inicial quanto nas navegações Ajax. Não usar DOMContentLoaded aqui.
+// Local na IDE: Formulário > Javascript > Selecionar "Geral Form"
+//               > Evento "Onload" > Editar
+// ============================================================
+
+// ============================================================
+// sc_form_onload — JavaScript do formulário (Geral Form > Onload)
 // MRO-127: marca todos os checkboxes de paginas por padrao.
 // Usa o metodo nativo do campo checkbox (mesmo do icone "marcar todos").
 // Local na IDE: Controle > Javascript > Selecionar "Geral Form"

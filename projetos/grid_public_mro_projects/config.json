@@ -3,7 +3,7 @@
   "tipo": "Grid",
   "nome_tabela": "public.mro_projects",
   "login": "admin",
-  "data_alteracao": "2026-08-14 14:30",
+  "data_alteracao": "2026-08-21 12:45",
   "nomeconexao": "conn_mro",
   "tabelas": [
     "public.mro_projects"

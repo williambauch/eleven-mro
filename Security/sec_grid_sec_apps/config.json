@@ -4,6 +4,7 @@
   "nome_tabela": "public.sec_apps",
   "descricao": "SECURITY MODULE :: Show apps",
   "login": "admin",
+  "data_alteracao": "2026-08-20 09:42",
   "nomeconexao": "conn_mro",
   "tabelas": [
     "public.sec_apps"

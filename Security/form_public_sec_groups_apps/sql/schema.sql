@@ -1,0 +1,1 @@
+SELECT * FROM "public".sec_groups_apps WHERE app_name = '[glo_app_name]'

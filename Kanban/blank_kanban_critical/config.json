@@ -3,7 +3,7 @@
   "tipo": "Blank",
   "nome_tabela": "blank_kanban_critical",
   "login": "admin",
-  "data_alteracao": "2026-08-14 15:14",
+  "data_alteracao": "2026-08-19 14:37",
   "nomeconexao": "conn_mro",
   "variaveis": [
     "glo_project_id",

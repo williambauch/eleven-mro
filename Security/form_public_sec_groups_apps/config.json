@@ -1,0 +1,66 @@
+{
+  "nome": "form_public_sec_groups_apps",
+  "tipo": "Form",
+  "nome_tabela": "\"public\".sec_groups_apps",
+  "login": "william",
+  "data_alteracao": "2026-08-21 08:14",
+  "nomeconexao": "conn_mro",
+  "tabelas": [
+    "public.sec_groups_apps"
+  ],
+  "variaveis": [
+    "glo_app_name",
+    "arr_apps",
+    "arr_apps_desc"
+  ],
+  "campos": [
+    {
+      "nome": "app_name",
+      "tipo": "varchar",
+      "required": false,
+      "pk": true
+    },
+    {
+      "nome": "group_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": true
+    },
+    {
+      "nome": "priv_access",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "priv_delete",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "priv_export",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "priv_insert",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "priv_print",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "priv_update",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    }
+  ]
+}

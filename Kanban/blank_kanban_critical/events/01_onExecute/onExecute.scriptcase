@@ -488,10 +488,10 @@ $var_link_voltar = sc_make_link(grid_public_mro_projects);
 
                 columns: [
                     { headerText: 'A Fazer', keyField: 'NOT_STARTED, PLANNED, PLANNING, APPROVED, PENDING_PLANNING', allowToggle: true },
-                    { headerText: 'Aguard. Aprovacao NRC', keyField: 'PENDING_ENG, PENDING_COORD, PENDING_PROG', allowToggle: true },
+                    { headerText: 'Aguardando', keyField: 'PENDING_ENG, PENDING_COORD, PENDING_PROG', allowToggle: true },
                     { headerText: 'Liberada', keyField: 'RELEASED', allowToggle: true },
                     { headerText: 'Em Execucao', keyField: 'IN_PROGRESS', allowToggle: true },
-                    { headerText: 'Aguard. Supervisor / OA', keyField: 'SUPSIG, PENDING_OA, COMMERCIAL_REVIEW', allowToggle: true },
+                    { headerText: 'Supervisor / OA', keyField: 'SUPSIG, PENDING_OA, COMMERCIAL_REVIEW', allowToggle: true },
                     { headerText: 'Inspecao RII', keyField: 'PENDING_INSP1, PENDING_INSP2', allowToggle: true },
                     { headerText: 'Finalizado', keyField: 'COMPLETED', allowToggle: true }
                 ],

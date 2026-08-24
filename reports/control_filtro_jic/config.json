@@ -1,23 +1,24 @@
 {
   "nome": "control_filtro_jic",
   "tipo": "Control",
-  "descricao": "Tela de configuração do filtro de impressão do Pack JIC",
   "nome_tabela": "control_filtro_jic",
+  "descricao": "Tela de configuração da impressão em lote do Pack JIC.",
   "login": "william",
-  "data_alteracao": "2026-08-18 15:18",
+  "data_alteracao": "2026-08-18 18:01",
   "nomeconexao": "conn_mro",
   "variaveis": [
-    "glo_jic_ids"
+    "glo_jic_ids",
+    "glo_jic_where"
   ],
   "campos": [
     {
-      "nome": "filtro_resume",
+      "nome": "filtro_page",
       "tipo": "varchar",
       "required": false,
       "pk": false
     },
     {
-      "nome": "filtro_page",
+      "nome": "filtro_resume",
       "tipo": "varchar",
       "required": false,
       "pk": false

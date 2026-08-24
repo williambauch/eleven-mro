@@ -98,43 +98,62 @@ if (isset($_POST['action_gantt'])) {
         // possiveis e valida se ALGUMA existe na tabela de fases.
         if ($var_parent != '') {
             if (preg_match('/^F\d+_(.+)$/', $var_parent, $var_m)) {
-                // NRC nao pode mudar de fase pelo arrasto: segue a fase da rotina-mae
-                if ($var_task_eh_nrc) {
-                    echo json_encode(array('status' => 'error', 'msg' => 'Nao rotina nao pode ser movida de fase pelo Gantt - ela segue a fase da rotina de origem.'));
-                    die();
-                }
+                // ===================================================================
+                // CORRECAO (MRO-126): arrasto HORIZONTAL da barra (mover datas) envia
+                // o parent da linha atual. Se a fase recebida == fase atual da task
+                // (ou UNASSIGNED p/ task sem fase), NAO e mudanca de fase — segue
+                // apenas com datas. So trata como mudanca de fase quando difere.
+                // ===================================================================
+                $var_fase_linha_raw = $var_m[1]; // fase sanitizada recebida (ex: UNASSIGNED, INDUCTI)
+                $var_fase_atual = (!empty({rs_task_atual[0][2]})) ? trim({rs_task_atual[0][2]}) : '';
 
-                // Variacoes possiveis do phase_code (o id chegou com '_' no lugar de espaco/barra)
-                $var_fase_raw = $var_m[1];
-                $var_fase_candidatos = array(
-                    $var_fase_raw,
-                    str_replace('_', ' ', $var_fase_raw),
-                    str_replace('_', '/', $var_fase_raw)
-                );
-                $var_fase_candidatos_esc = array_map('addslashes', $var_fase_candidatos);
+                // Converte a fase atual para o mesmo formato sanitizado do Gantt
+                // (espaco e barra -> '_') para comparar com o que chegou.
+                $var_fase_atual_san = str_replace(array(' ', '/'), '_', $var_fase_atual);
 
-                // Valida contra a tabela de fases (mesmo lookup do form)
-                $var_sql_fase = "SELECT phase_code
-                                 FROM mro_project_phases
-                                 WHERE phase_code IN ('" . implode("','", $var_fase_candidatos_esc) . "')
-                                 LIMIT 1";
-                sc_lookup(rs_fase, $var_sql_fase);
+                // Fase UNASSIGNED e virtual (task sem phase_code) - nunca e mudanca real
+                $var_eh_mesma_fase = (strcasecmp($var_fase_linha_raw, $var_fase_atual_san) === 0)
+                                  || (strcasecmp($var_fase_linha_raw, 'UNASSIGNED') === 0 && empty($var_fase_atual));
 
-                if ({rs_fase} === false) {
-                    echo json_encode(array('status' => 'error', 'msg' => 'Erro ao validar a fase da tarefa.'));
-                    die();
-                }
+                if (!$var_eh_mesma_fase) {
+                    // NRC nao pode mudar de fase pelo arrasto: segue a fase da rotina-mae
+                    if ($var_task_eh_nrc) {
+                        echo json_encode(array('status' => 'error', 'msg' => 'Nao rotina nao pode ser movida de fase pelo Gantt - ela segue a fase da rotina de origem.'));
+                        die();
+                    }
 
-                if (empty({rs_fase})) {
-                    echo json_encode(array('status' => 'error', 'msg' => 'Fase invalida para a tarefa.'));
-                    die();
-                }
+                    // Variacoes possiveis do phase_code (o id chegou com '_' no lugar de espaco/barra)
+                    $var_fase_raw = $var_m[1];
+                    $var_fase_candidatos = array(
+                        $var_fase_raw,
+                        str_replace('_', ' ', $var_fase_raw),
+                        str_replace('_', '/', $var_fase_raw)
+                    );
+                    $var_fase_candidatos_esc = array_map('addslashes', $var_fase_candidatos);
 
-                // Usa o phase_code REAL existente na tabela de fases
-                $var_phase_code = addslashes({rs_fase[0][0]});
-                $var_sets[] = "phase_code = '" . $var_phase_code . "'";
-                $var_campos_alterados[] = 'fase';
-            }
+                    // Valida contra a tabela de fases (mesmo lookup do form)
+                    $var_sql_fase = "SELECT phase_code
+                                     FROM mro_project_phases
+                                     WHERE phase_code IN ('" . implode("','", $var_fase_candidatos_esc) . "')
+                                     LIMIT 1";
+                    sc_lookup(rs_fase, $var_sql_fase);
+
+                    if ({rs_fase} === false) {
+                        echo json_encode(array('status' => 'error', 'msg' => 'Erro ao validar a fase da tarefa.'));
+                        die();
+                    }
+
+                    if (empty({rs_fase})) {
+                        echo json_encode(array('status' => 'error', 'msg' => 'Fase invalida para a tarefa.'));
+                        die();
+                    }
+
+                    // Usa o phase_code REAL existente na tabela de fases
+                    $var_phase_code = addslashes({rs_fase[0][0]});
+                    $var_sets[] = "phase_code = '" . $var_phase_code . "'";
+                    $var_campos_alterados[] = 'fase';
+                } // fim: mudanca de fase real
+            } // fim: parent com formato F{projeto}_{fase}
         }
 
         if (empty($var_sets)) {
@@ -394,7 +413,13 @@ $json_datasource = json_encode($data) ?: '[]';
         .badge-status.status-in-progress { background: #fefcbf; color: #744210; }
         .badge-status.status-hint { background: #bee3f8; color: #2a4365; }
 
-        #GanttContainer { height: calc(100vh - 140px); width: 100%; }
+        /* Altura do container: header (51px) + sub (21px) + gap (10px) + folga (~24px).
+           Antes usava calc(100vh - 140px) mas o container NAO comeca no topo da pagina
+           (comeca em ~86px) — a altura antiga fazia a scrollbar horizontal ficar
+           FORA do viewport, invisivel. O Syncfusion injeta style="height:100%" inline
+           no container ao fazer appendTo, entao a regra precisa de !important para
+           prevalecer e o container terminar dentro da tela. */
+        #GanttContainer { height: calc(100vh - 106px) !important; width: 100% !important; }
     </style>
 </head>
 <body>
@@ -573,6 +598,29 @@ $json_datasource = json_encode($data) ?: '[]';
         }
 
         // =========================================================================
+        // BLOQUEAR DRAG DE LINHAS NAO EDITAVEIS (PROJECT/PHASE)
+        // As barras de PROJETO (P..) e FASE (F..) sao linhas de agrupamento com
+        // datas derivadas das tasks — nao podem ser movidas. O Syncfusion permite
+        // arrastar visualmente (allowTaskbarEditing global), mas o backend bloqueia
+        // com alert de erro. Solucao: pointer-events none na taskbar dessas linhas,
+        // eliminando o arrasto visual e o alert indesejado. TASK/NRC (id numerico)
+        // continuam arrastaveis normalmente.
+        // =========================================================================
+        function bloquearDragLinhasNaoEditaveis() {
+            var css = '';
+            for (var i = 0; i < ganttData.length; i++) {
+                if (ganttData[i].IsEditable === false) {
+                    css += '[rowuniqueid="' + ganttData[i].TaskId + '"] { pointer-events: none !important; }';
+                }
+            }
+            if (css) {
+                var style = document.createElement('style');
+                style.textContent = css;
+                document.head.appendChild(style);
+            }
+        }
+
+        // =========================================================================
         // RENDERIZACAO DEFENSIVA (padrao blank_dash_encerramento)
         // =========================================================================
         function renderizarGantt() {
@@ -745,6 +793,49 @@ $json_datasource = json_encode($data) ?: '[]';
                         && !document.getElementById('ganttModalTask')) {
                         abrirModalTask(args.rowData.FormTaskUrl);
                     }
+                },
+
+                // =========================================================================
+                // SCROLL INICIAL: ao abrir, posiciona a timeline na data mais relevante.
+                // Com multi-projeto o range pode comecar em datas antigas (ex: 01/02/2026)
+                // e as barras de abril/maio ficam fora da viewport. Regra:
+                //   1. Se a data de HOJE estiver dentro do range das tarefas -> rola ate hoje
+                //   2. Senao -> rola ate o inicio do PROJETO mais recente (onde ha barras)
+                //   3. Fallback -> inicio da timeline
+                // =========================================================================
+                dataBound: function() {
+                    try {
+                        var hoje = new Date();
+                        var minData = null, maxData = null, projRecente = null;
+
+                        for (var i = 0; i < ganttData.length; i++) {
+                            var d = ganttData[i].StartDate ? new Date(ganttData[i].StartDate) : null;
+                            if (d && !isNaN(d.getTime())) {
+                                if (!minData || d < minData) { minData = d; }
+                                if (!maxData || d > maxData) { maxData = d; }
+                                if (ganttData[i].Type === 'PROJECT' && (!projRecente || d > projRecente)) {
+                                    projRecente = d;
+                                }
+                            }
+                        }
+
+                        var alvo = null;
+                        if (minData && maxData) {
+                            if (hoje >= minData && hoje <= maxData) {
+                                alvo = hoje;               // projeto em andamento -> data atual
+                            } else if (projRecente) {
+                                alvo = projRecente;        // hoje fora do range -> projeto mais recente
+                            } else {
+                                alvo = minData;
+                            }
+                        }
+                        if (alvo) {
+                            // Nesta versao do Syncfusion o metodo de scroll por data e scrollToDate()
+                            ganttChart.scrollToDate(alvo);
+                        }
+                    } catch (e) {
+                        // scroll inicial e apenas conveniencia; nao deve quebrar o Gantt
+                    }
                 }
             });
 
@@ -756,11 +847,13 @@ $json_datasource = json_encode($data) ?: '[]';
                 renderizarGantt();
                 configurarOcultarProgress();
                 configurarDuploCliqueModal();
+                bloquearDragLinhasNaoEditaveis();
             });
         } else {
             renderizarGantt();
             configurarOcultarProgress();
             configurarDuploCliqueModal();
+            bloquearDragLinhasNaoEditaveis();
         }
     </script>
 </body>

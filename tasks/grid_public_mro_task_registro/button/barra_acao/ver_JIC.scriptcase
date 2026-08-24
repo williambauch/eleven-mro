@@ -1,0 +1,18 @@
+<?php
+// ============================================================
+// BOTÃO DE BARRA DE AÇÃO: ver_JIC
+// ============================================================
+// Tipo    : LINK
+// Label   : VER JIC
+// Ícone   : far fa-file-pdf
+// Display : btn
+// Formato : icon_text
+// Estados:
+//   - state1 | label="VER JIC" | far fa-file-pdf | visual=blue
+//
+// ── LIGAÇÃO ──────────────────────────────────────────
+// App destino: blank_pdf_pack_jic (B)
+// Abertura    : Mesma janela
+// Parâmetros:
+//   - [Campo] task_id → glo_task_id
+// ============================================================

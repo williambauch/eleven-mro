@@ -22,6 +22,11 @@ if (empty({report_id})) {
     {project_id}      = [v_proj];
     {transaction_id}  = [v_trans];
     {report_date}     = date('Y-m-d H:i:s');
+	sc_btn_display ('new', 'on');
+	sc_btn_display ('delete', 'off');
+} else {
+	sc_btn_display ('new', 'off');	
+	sc_btn_display ('delete', 'off');
 }
 
 // ====================================================================

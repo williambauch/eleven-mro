@@ -51,10 +51,10 @@ if (!empty([glo_aviso_run])) {
 ?>
 <script>
 // MRO-119: Desabilitar checkbox RUN se a task estiver bloqueada por predecessora
-// MRO-126: desabilita tambem quando o status da linha nao permite liberacao
-// (so liberam: PLANNING, NOT_STARTED, PLANNED, APPROVED)
+// MRO-126: na grid da PROVEDORIA o unico status liberavel e PENDING_PROVIDER
+// (a provedoria libera a JIC para RELEASED) - o SQL da grid so lista esse status.
 function esconderCheckboxRun() {
-  const statusPermitidos = ['PLANNING', 'NOT_STARTED', 'PLANNED', 'APPROVED'];
+  const statusPermitidos = ['PENDING_PROVIDER'];
   const predSpans = document.querySelectorAll("span[id^='id_sc_field_btn_predecessor_']");
   predSpans.forEach(span => {
     const match = span.id.match(/id_sc_field_btn_predecessor_(\d+)$/);

@@ -387,28 +387,59 @@ function fn_liberar_task_para_execucao($v_task_id, $v_projeto_atual, $v_status, 
     }
 
     // ====================================================================
-    // 3. ATUALIZA O STATUS PARA RELEASED
+    // 2.3 MRO-126: DETECTA SE A TASK TEM MATERIAL BLOQUEANTE
+    //      Somente material is_blocking_task = true (nao aplicado) conta.
+    //      Se origem PLANEJADOR e tem material -> PENDING_PROVIDER.
+    //      Se origem PROVEDORIA ou nao tem material -> RELEASED.
     // ====================================================================
-    sc_exec_sql("UPDATE mro_tasks SET status_code = 'RELEASED' WHERE task_id = $v_task_id");
+    sc_lookup(rs_tem_material, "SELECT COUNT(*)
+                                FROM mro_task_materials tm
+                                JOIN mro_materials m ON m.material_id = tm.material_id
+                                WHERE tm.task_id = $v_task_id
+                                  AND (m.is_blocking_task IS TRUE OR m.is_blocking_task IS NULL)");
+
+    $var_tem_material = (!empty({rs_tem_material}) && (int){rs_tem_material[0][0]} > 0);
 
     // ====================================================================
-    // 4. AUDIT LOG (diferencia a origem)
+    // 3. ATUALIZA O STATUS (PENDING_PROVIDER ou RELEASED)
+    // ====================================================================
+    $var_novo_status = 'RELEASED';
+    $var_status_msg  = 'Task liberada para execucao (btn_liberar_para_execucao): ' . $v_status . ' -> RELEASED';
+
+    if ($v_origem == 'PLANEJADOR' && $var_tem_material) {
+        // JIC COM material bloqueante: vai para a fila da provedoria (sem assignments)
+        $var_novo_status = 'PENDING_PROVIDER';
+        $var_status_msg  = 'Task com material bloqueante - aguardando liberacao da provedoria (btn_liberar_para_execucao): ' . $v_status . ' -> PENDING_PROVIDER';
+    }
+
+    sc_exec_sql("UPDATE mro_tasks SET status_code = '$var_novo_status' WHERE task_id = $v_task_id");
+
+    // ====================================================================
+    // 4. AUDIT LOG (diferencia a origem e o destino)
     // ====================================================================
     if ($v_origem == 'PROVEDORIA') {
         $v_action  = 'RELEASED_BY_PROVEDORIA';
         $v_remarks = 'Gated Process: 100% dos materiais disponiveis no estoque fisico - liberado para o hangar (grid_provedoria_release)';
+        // Liberacao final da provedoria: desmarca o bloqueio de material
+        sc_exec_sql("UPDATE mro_tasks SET is_blocked_material = false WHERE task_id = $v_task_id");
+    } elseif ($var_novo_status == 'PENDING_PROVIDER') {
+        $v_action  = 'PENDING_PROVIDER';
+        $v_remarks = $var_status_msg;
     } else {
         $v_action  = 'RELEASED';
-        $v_remarks = 'Task liberada para execucao (btn_liberar_para_execucao): ' . $v_status . ' -> RELEASED';
+        $v_remarks = $var_status_msg;
     }
     sc_exec_sql("INSERT INTO mro_task_history (task_id, action_taken, user_login, remarks)
                  VALUES ($v_task_id, '$v_action', '$var_user_logado', '$v_remarks')");
 
     // ====================================================================
     // 5. CRIA OS ASSIGNMENTS POR SKILL (LABOR do P6)
-    //    Reaproveita fn_criar_assignments_por_skill com protecao de duplicidade
+    //    SOMENTE quando for para RELEASED final - NUNCA em PENDING_PROVIDER
+    //    (evita slot fantasma na fila da provedoria)
     // ====================================================================
-    fn_criar_assignments_por_skill($v_task_id, $v_projeto_atual);
+    if ($var_novo_status == 'RELEASED') {
+        fn_criar_assignments_por_skill($v_task_id, $v_projeto_atual);
+    }
 
     return true;
 }

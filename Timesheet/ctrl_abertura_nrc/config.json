@@ -2,6 +2,7 @@
   "nome": "ctrl_abertura_nrc",
   "tipo": "Form",
   "nome_tabela": "ctrl_abertura_nrc",
+  "descricao": "-- APP DESCONTINUADO --",
   "login": "admin",
   "data_alteracao": "2026-07-27 11:28",
   "nomeconexao": "conn_mro",

@@ -1,44 +1,14 @@
 <?php
 
-// ====================================================================
-// grid_mro_reports_mechanic (MRO-126)
-// Painel do mecanico - Ferramentas com avaria sob sua responsabilidade.
-// Para cada devolucao com DANO/PERDA:
-//   - com relatorio (report_id)  -> badge de status + botao "Ver Relatorio"
-//   - sem relatorio              -> botao "Preencher Relatorio"
-// ====================================================================
+{var_tipo_condition_on_return} = ({condition_on_return} == 'PERDA') ? 'TF-60-041' : 'TF-60-013';
 
-// --------------------------------------------------------------------
-// 1. Badge de status (situacao da devolucao)
-// --------------------------------------------------------------------
-$var_cond = {condition_on_return};
-
-if ($var_cond == 'DANO') {
-    {btn_status} = "<span style='background:#dc3545; color:#fff; padding:3px 8px; border-radius:10px; font-size:11px; font-weight:bold; white-space:nowrap;'><i class='fa-solid fa-triangle-exclamation'></i> DANO</span>";
-} elseif ($var_cond == 'PERDA') {
-    {btn_status} = "<span style='background:#212529; color:#fff; padding:3px 8px; border-radius:10px; font-size:11px; font-weight:bold; white-space:nowrap;'><i class='fa-solid fa-ban'></i> PERDA</span>";
-} else {
-    {btn_status} = "<span style='background:#e9ecef; color:#495057; padding:3px 8px; border-radius:10px; font-size:11px; font-weight:bold; white-space:nowrap;'>" . $var_cond . "</span>";
-}
-
-// --------------------------------------------------------------------
-// 2. Botao de acao: Ver Relatorio ou Preencher Relatorio
-// --------------------------------------------------------------------
-if (!empty({report_id})) {
-    // Tem relatorio: abre o resumo (usa glo_report_id via URL)
-    $var_status_report = (!empty({report_status})) ? {report_status} : 'PENDING_REVIEW';
-    $var_url_resume = "blank_mro_reports_resume/index.php?glo_report_id=" . (int){report_id};
-
-    {btn_acao} = "<a href='../" . $var_url_resume . "' target='_blank' style='background:#198754; color:#fff; padding:5px 10px; border-radius:6px; font-size:11px; font-weight:bold; text-decoration:none; white-space:nowrap;'><i class='fa-solid fa-file-lines'></i> Ver Relatório (" . $var_status_report . ")</a>";
-} else {
-    // Sem relatorio: monta a URL do form em nova janela (insert pre-preenchido)
-    $var_tipo = ({condition_on_return} == 'PERDA') ? 'TF-60-041' : 'TF-60-013';
-    $var_url = "form_mro_reports/index.php?v_tipo=" . $var_tipo .
-               "&v_tool=" . (int){tool_id} .
-               "&v_emp=" . (int){employee_id} .
-               "&v_task=" . (int){task_id} .
-               "&v_proj=" . (int){project_id} .
-               "&v_trans=" . (int){transaction_id};
-
-    {btn_acao} = "<a href='../" . $var_url . "' target='_blank' style='background:#0d6efd; color:#fff; padding:5px 10px; border-radius:6px; font-size:11px; font-weight:bold; text-decoration:none; white-space:nowrap;'><i class='fa-solid fa-pen-to-square'></i> Preencher Relatório</a>";
+switch({condition_on_return}) {
+	
+	case 'DANO':
+		sc_change_css('sc_badge', 'yellow', 'condition_on_return');
+		break;
+		
+	case 'PERDA':
+		sc_change_css('sc_badge', 'red', 'condition_on_return');
+		break;
 }

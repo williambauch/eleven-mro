@@ -4,7 +4,7 @@
   "nome_tabela": "\"public\".mro_task_assignments",
   "descricao": "Cronômetro para Atribuições (assignments) do Mecânico",
   "login": "admin",
-  "data_alteracao": "2026-08-15 10:23",
+  "data_alteracao": "2026-08-20 12:15",
   "nomeconexao": "conn_mro",
   "tabelas": [
     "public.mro_task_assignments"

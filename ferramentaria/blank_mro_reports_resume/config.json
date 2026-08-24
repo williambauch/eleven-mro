@@ -2,10 +2,11 @@
   "nome": "blank_mro_reports_resume",
   "tipo": "Blank",
   "nome_tabela": "blank_mro_reports_resume",
-  "login": "admin",
+  "login": "william",
+  "data_alteracao": "2026-08-17 19:41",
   "nomeconexao": "conn_mro",
   "variaveis": [
-    "report_id"
+    "glo_report_id"
   ],
   "campos": []
 }

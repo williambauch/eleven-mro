@@ -47,6 +47,10 @@ function mExibirCardStatus()
                         $var_grupo = 'Programacao';
                         break;
 
+                    case 'PENDING_PROVIDER':
+                        $var_grupo = 'Provedoria';
+                        break;
+
                     case 'PENDING_OA':
                         $var_grupo = 'Comercial / Cliente';
                         break;

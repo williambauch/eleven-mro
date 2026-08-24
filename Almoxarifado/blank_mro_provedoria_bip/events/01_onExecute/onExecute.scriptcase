@@ -40,12 +40,13 @@ if (isset($_POST['action_prov'])) {
         }
 
         // Valida a JIC: so as que passaram no Gated Process
-        // (PLANNED/NOT_STARTED, sem bloqueio operacional de material)
+        // (PENDING_PROVIDER = aguardando separacao da provedoria,
+        // sem bloqueio operacional de material)
         $sql_jic = "SELECT t.task_id, t.task_code, t.task_name, p.p6_proj_id
                     FROM mro_tasks t
                     JOIN mro_projects p ON p.project_id = t.project_id
                     WHERE t.task_code = '" . addslashes($jic) . "'
-                      AND t.status_code IN ('PLANNED', 'NOT_STARTED')
+                      AND t.status_code IN ('PENDING_PROVIDER')
                       AND t.is_blocked_material IS NOT TRUE
                     ORDER BY p.p6_proj_id";
         sc_lookup(rs_jic, $sql_jic);
@@ -107,7 +108,7 @@ if (isset($_POST['action_prov'])) {
             if ($var_qtd_status > 0 && $var_qtd_block == 0) {
                 $var_status_msg = implode(' / ', $var_status_lista);
                 echo json_encode(['status' => 'error',
-                    'msg' => "JIC $jic esta no status $var_status_msg. A separacao so e permitida para JICs em PLANNED ou NOT_STARTED. Consulte o Planejamento se precisar ajustar o status."
+                    'msg' => "JIC $jic esta no status $var_status_msg. A separacao so e permitida para JICs em PENDING_PROVIDER (aguardando provedoria). Consulte o Planejamento se precisar ajustar o status."
                 ]); die();
             }
 
@@ -161,7 +162,7 @@ if (isset($_POST['action_prov'])) {
                     FROM mro_tasks t
                     JOIN mro_projects p ON p.project_id = t.project_id
                     WHERE t.task_id = $var_task_id
-                      AND t.status_code IN ('PLANNED', 'NOT_STARTED')
+                      AND t.status_code IN ('PENDING_PROVIDER')
                       AND t.is_blocked_material IS NOT TRUE";
         sc_lookup(rs_jic2, $sql_jic);
 
@@ -182,7 +183,7 @@ if (isset($_POST['action_prov'])) {
             }
             if (!empty($var_diag2_status)) {
                 echo json_encode(['status' => 'error',
-                    'msg' => 'O status desta JIC mudou para ' . $var_diag2_status . '. A separacao so e permitida em PLANNED ou NOT_STARTED. Recarregue a lista e, se persistir, consulte o Planejamento.'
+                    'msg' => 'O status desta JIC mudou para ' . $var_diag2_status . '. A separacao so e permitida em PENDING_PROVIDER. Recarregue a lista e, se persistir, consulte o Planejamento.'
                 ]); die();
             }
             echo json_encode(['status' => 'error',

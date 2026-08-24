@@ -4,7 +4,7 @@
   "nome_tabela": "\"public\".mro_task_assignments",
   "descricao": "Lista de ASSIGNMENT em NOT_STARTED, PLANNED, RELEASED",
   "login": "admin",
-  "data_alteracao": "2026-08-15 14:55",
+  "data_alteracao": "2026-08-19 10:16",
   "nomeconexao": "conn_mro",
   "tabelas": [
     "public.mro_task_assignments"

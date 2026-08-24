@@ -1,0 +1,31 @@
+{
+  "nome": "control_simular_usuario",
+  "tipo": "Control",
+  "nome_tabela": "control_simular_usuario",
+  "descricao": "Simula a sessao de um usuario especifico (impersonation)",
+  "login": "william",
+  "data_alteracao": "2026-08-20 10:07",
+  "nomeconexao": "conn_mro",
+  "variaveis": [
+    "sett_group_administrator",
+    "usr_email",
+    "usr_employee_id",
+    "usr_groups",
+    "usr_is_inspector",
+    "usr_is_supervisor",
+    "usr_login",
+    "usr_name",
+    "usr_phone",
+    "usr_picture",
+    "usr_priv_admin",
+    "usr_skill_id"
+  ],
+  "campos": [
+    {
+      "nome": "usuario",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    }
+  ]
+}

@@ -54,15 +54,6 @@ SELECT
 ), 1
     ) AS pct_separado
 FROM public.mro_tasks t
-WHERE t.task_id IN (
-    SELECT tm.task_id
-    FROM mro_task_materials tm
-    JOIN mro_materials m ON m.material_id = m.material_id
-    WHERE tm.is_applied IS NOT TRUE
-      AND (m.is_blocking_task IS TRUE OR m.is_blocking_task IS NULL)
-    GROUP BY tm.task_id
-    HAVING COUNT(*) FILTER (WHERE COALESCE(tm.committed_qty, 0) >= tm.planned_qty) = COUNT(*)
-)
-  AND t.status_code IN ('PLANNED', 'NOT_STARTED')
+WHERE t.status_code = 'PENDING_PROVIDER'
   AND t.is_blocked_material IS NOT TRUE
 ORDER BY pct_separado DESC, t.task_code

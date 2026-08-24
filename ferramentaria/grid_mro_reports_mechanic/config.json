@@ -2,64 +2,29 @@
   "nome": "grid_mro_reports_mechanic",
   "tipo": "Grid",
   "nome_tabela": "grid_mro_reports_mechanic",
-  "descricao": "Painel do mecanico - Ferramentas com avaria (com ou sem relatorio)",
-  "login": "admin",
-  "data_alteracao": "2026-08-17",
+  "descricao": "Avarias do Mecânico",
+  "login": "william",
+  "data_alteracao": "2026-08-18 08:11",
   "nomeconexao": "conn_mro",
   "tabelas": [
-    "mro_tool_transactions",
-    "mro_tools",
+    "mro_projects",
     "mro_tasks",
-    "mro_tool_reports"
+    "mro_tool_reports",
+    "mro_tool_transactions",
+    "mro_tools"
   ],
   "variaveis": [
     "usr_employee_id"
   ],
   "campos": [
     {
-      "nome": "transaction_id",
-      "tipo": "int4",
-      "required": false,
-      "pk": true
-    },
-    {
-      "nome": "tool_id",
-      "tipo": "int4",
+      "nome": "checkin_time",
+      "tipo": "datetime",
       "required": false,
       "pk": false
     },
     {
-      "nome": "employee_id",
-      "tipo": "int4",
-      "required": false,
-      "pk": false
-    },
-    {
-      "nome": "task_id",
-      "tipo": "int4",
-      "required": false,
-      "pk": false
-    },
-    {
-      "nome": "project_id",
-      "tipo": "int4",
-      "required": false,
-      "pk": false
-    },
-    {
-      "nome": "project_desc",
-      "tipo": "varchar",
-      "required": false,
-      "pk": false
-    },
-    {
-      "nome": "task_desc",
-      "tipo": "varchar",
-      "required": false,
-      "pk": false
-    },
-    {
-      "nome": "part_number",
+      "nome": "condition_on_return",
       "tipo": "varchar",
       "required": false,
       "pk": false
@@ -71,32 +36,26 @@
       "pk": false
     },
     {
-      "nome": "tool_desc",
-      "tipo": "varchar",
-      "required": false,
-      "pk": false
-    },
-    {
-      "nome": "task_id",
+      "nome": "employee_id",
       "tipo": "int4",
       "required": false,
       "pk": false
     },
     {
-      "nome": "task_code",
+      "nome": "part_number",
       "tipo": "varchar",
       "required": false,
       "pk": false
     },
     {
-      "nome": "checkin_time",
-      "tipo": "datetime",
+      "nome": "project_desc",
+      "tipo": "text",
       "required": false,
       "pk": false
     },
     {
-      "nome": "condition_on_return",
-      "tipo": "varchar",
+      "nome": "project_id",
+      "tipo": "int4",
       "required": false,
       "pk": false
     },
@@ -119,13 +78,43 @@
       "pk": false
     },
     {
-      "nome": "btn_status",
+      "nome": "task_code",
       "tipo": "varchar",
       "required": false,
       "pk": false
     },
     {
-      "nome": "btn_acao",
+      "nome": "task_desc",
+      "tipo": "text",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "task_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "tool_desc",
+      "tipo": "text",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "tool_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "transaction_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "var_tipo_condition_on_return",
       "tipo": "varchar",
       "required": false,
       "pk": false

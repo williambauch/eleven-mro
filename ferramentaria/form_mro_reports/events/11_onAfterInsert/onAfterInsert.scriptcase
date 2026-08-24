@@ -7,6 +7,5 @@ if ($var_report_id <= 0) {
     sc_error_exit();
 }
 
+sc_commit_trans();
 sc_redir('blank_mro_reports_resume', glo_report_id=$var_report_id, '_self');
-
- 

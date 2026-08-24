@@ -4,7 +4,7 @@
   "nome_tabela": "public.mro_tasks",
   "descricao": "Provedoria — Tela de Monitoramento de Liberação (Gated Process)",
   "login": "william",
-  "data_alteracao": "2026-08-17 13:36",
+  "data_alteracao": "2026-08-20 10:54",
   "nomeconexao": "conn_mro",
   "tabelas": [
     "mro_materials",
@@ -20,55 +20,25 @@
   ],
   "campos": [
     {
-      "nome": "task_id",
-      "tipo": "int4",
-      "required": false,
-      "pk": true
-    },
-    {
-      "nome": "task_code",
+      "nome": "btn_fer",
       "tipo": "varchar",
       "required": false,
       "pk": false
     },
     {
-      "nome": "task_name",
-      "tipo": "text",
-      "required": false,
-      "pk": false
-    },
-    {
-      "nome": "task_type",
+      "nome": "btn_mao",
       "tipo": "varchar",
       "required": false,
       "pk": false
     },
     {
-      "nome": "status_code",
+      "nome": "btn_mat",
       "tipo": "varchar",
       "required": false,
       "pk": false
     },
     {
-      "nome": "target_start",
-      "tipo": "datetime",
-      "required": false,
-      "pk": false
-    },
-    {
-      "nome": "target_end",
-      "tipo": "datetime",
-      "required": false,
-      "pk": false
-    },
-    {
-      "nome": "project_id",
-      "tipo": "int4",
-      "required": false,
-      "pk": false
-    },
-    {
-      "nome": "skill_code",
+      "nome": "btn_predecessor",
       "tipo": "varchar",
       "required": false,
       "pk": false
@@ -98,14 +68,8 @@
       "pk": false
     },
     {
-      "nome": "total_separar",
-      "tipo": "int8",
-      "required": false,
-      "pk": false
-    },
-    {
-      "nome": "separados",
-      "tipo": "int8",
+      "nome": "nr",
+      "tipo": "varchar",
       "required": false,
       "pk": false
     },
@@ -116,31 +80,19 @@
       "pk": false
     },
     {
-      "nome": "btn_fer",
-      "tipo": "varchar",
+      "nome": "project_id",
+      "tipo": "int4",
       "required": false,
       "pk": false
     },
     {
-      "nome": "btn_mao",
-      "tipo": "varchar",
+      "nome": "separados",
+      "tipo": "int8",
       "required": false,
       "pk": false
     },
     {
-      "nome": "btn_mat",
-      "tipo": "varchar",
-      "required": false,
-      "pk": false
-    },
-    {
-      "nome": "btn_predecessor",
-      "tipo": "varchar",
-      "required": false,
-      "pk": false
-    },
-    {
-      "nome": "nr",
+      "nome": "skill_code",
       "tipo": "varchar",
       "required": false,
       "pk": false
@@ -148,6 +100,54 @@
     {
       "nome": "status_badge",
       "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "status_code",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "target_end",
+      "tipo": "datetime",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "target_start",
+      "tipo": "datetime",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "task_code",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "task_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": true
+    },
+    {
+      "nome": "task_name",
+      "tipo": "text",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "task_type",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "total_separar",
+      "tipo": "int8",
       "required": false,
       "pk": false
     },

@@ -184,8 +184,9 @@ if (empty({is_nrc})) {
         sc_btn_display('delete', 'on');
     }
     
-    // Update liberado na maioria dos status, exceto RELEASED (ja processado)
-    if ({status_code} != 'RELEASED' && {status_code} != 'COMPLETED' && {status_code} != 'CANCELLED') {
+    // Update liberado na maioria dos status, exceto RELEASED (ja processado),
+    // COMPLETED/CANCELLED (finais) e PENDING_PROVIDER (fila da provedoria)
+    if ({status_code} != 'RELEASED' && {status_code} != 'COMPLETED' && {status_code} != 'CANCELLED' && {status_code} != 'PENDING_PROVIDER') {
         sc_btn_display('update', 'on');
     }
 }

@@ -10,13 +10,48 @@
 
 ## Tarefa do Modulo 03 — Logística & Ferramentaria (Almoxarifado)
 
-Provedoria — Tela de Monitoramento de Liberação (Gated Process):
+### Provedoria — Tela de Monitoramento de Liberação (Gated Process):
 
 Regra: Grid dedicada que lista apenas as JICs/tarefas que estejam com 100% dos materiais necessários liberados no estoque físico, permitindo ao planejador liberar as tarefas de forma segura para o hangar.
 
 Informação POO: a disponibilidade dos materiais está na tabela mro_task_materials, committed_qty >= planned_qty isso pq pode ter saldo no estoque, mas compras que determina em qual projeto vai aplicar o produto (pode ter mais de um projeto na casa, se não tiver saldo disponível o suficiente para suprir todos os projetos, eles determinam qual a prioridade). esse campo é alimentado na importação da planilha de material pro sistema.
 
-Provedoria — Fluxo de Recolhimento de Material (Bip de Saída):
+Duvida William Bauch 02: 
+Estava revisando o fluxo do Planejamento, Esse perfil tem acesso ao botão "Liberar para Execução" que muda o status para RELEASED. 
+Recentemente a gente criou esse item grid_provedoria_release. Eu tinha entendido que o liberar as tarefas seria essa mesma ação. Mas agora estou na dúvida se é isso mesmo.
+
+Informação POO 02:
+vdd, não ficou claro isso...
+o que ocorre... quando não tem material, o planejamento libera pra execução e vai para REALEASED.  
+quando tem material, tem que ir para um novo status onde vai pra o painel da provedoria.
+aí a provedoria verifica, se tem material libera.
+acredito que possa usar essa flag is_blocked_material nesse momento do planejamento liberar a task, se tiver material marca como is_blocked_material , daí a provedoria quando liberar desmarca essa flag.
+
+SOLUÇÃO PLANEJADA:
+
+JIC SEM material = Planejamento libera → vai direto para RELEASED (comportamento atual)
+JIC COM material = Planejamento libera → NÃO vai para RELEASED; vai para um novo status intermediário que aparece no painel da provedoria. A provedoria verifica se o material está disponível e só então libera (desmarcando a flag is_blocked_material)
+
+Planejamento clica "Liberar para Execução"
+    ├── JIC SEM material → status = RELEASED (direto, como hoje)
+    └── JIC COM material (is_blocking_task true) → status = PENDING_PROVIDER (novo status)                                 
+
+Provedoria
+    ├── grid_provedoria_release lista PENDING_PROVIDER
+    ├── bip de saída: separa os materiais (blank_mro_provedoria_bip)
+    └── provedoria libera → status = RELEASED + is_blocked_material = false
+
+USAR O Botão "Liberar" na grid_provedoria_release (RUN, que já existe) Separado do bip de saída (2 passos manuais DOUBLE CHECK).
+
+OBS: Não criar assignments na ida para PENDING_PROVIDER (só cria em RELEASED final)
+
+### Decisões da solução (validadas)
+
+- **Critério "tem material"**: somente material **bloqueante** (`is_blocking_task = true`) em `mro_task_materials` — materiais não bloqueantes não levam a JIC para PENDING_PROVIDER.
+- **Kanban/Gantt — status `PENDING_PROVIDER`**: entra na coluna **"Aguardando"** (renomear "Aguard. Aprovacao NRC"). **Nos cards deve mostrar o status real da task** (ex.: badge com `PENDING_PROVIDER`, `PENDING_ENG`, etc.).
+- **Assignments**: **não criar** na ida para `PENDING_PROVIDER`; criar **somente no `RELEASED` final** (evita slot fantasma).
+
+### Provedoria — Fluxo de Recolhimento de Material (Bip de Saída):
 
 Regra: No balcão da provedoria, o almoxarife deve realizar a baixa física das peças via leitura do código de barras, atrelando logicamente o lote do componente entregue ao código da JIC correspondente e ao ID do mecânico que realizou a retirada (Rastreabilidade As-Built).
 
@@ -42,22 +77,25 @@ No painel do mecânico, criar listagem de ferramentas com avaria pra o ele preen
 
 ## `Almoxarifado/grid_provedoria_release` (Grid)
 
-### Monitoramento de Liberacao (Gated Process)
+### Monitoramento de Liberacao (Gated Process) — status intermediario PENDING_PROVIDER
 
 **`sql/schema.sql`**
-- Regra de negocio: lista apenas JICs/tarefas `PLANNED`/`NOT_STARTED` com 100% dos materiais bloqueantes disponiveis no estoque fisico (`stock_balance >= planned_qty`), permitindo ao planejador liberar com seguranca para o hangar.
-- Filtro via subquery com `HAVING COUNT(*) FILTER (WHERE m.stock_balance < tm.planned_qty) = 0`; alias em todos os campos expostos.
+- Regra de negocio: lista apenas JICs/tarefas em **`PENDING_PROVIDER`** (novo status intermediario) — JICs com material bloqueante liberadas pelo planejamento e aguardando a provedoria.
+- A provedoria separa os materiais (bip de saida) e libera via botao RUN para `RELEASED`.
 - Abordagem: duplicata da `grid_public_mro_tasks` na IDE (herda campos, botoes, filtros e layout).
 
 **`events/onRecord`**
 - Span do `btn_predecessor` inclui `data-status='{status_code}'` (campo da linha) para o JS controlar o checkbox RUN.
 
 **`events/onScriptInit`**
-- Funcao `esconderCheckboxRun()` desabilita o checkbox RUN (esmaecido) quando o status nao esta em `PLANNING`/`NOT_STARTED`/`PLANNED`/`APPROVED` ou quando bloqueada por predecessora.
+- Funcao `esconderCheckboxRun()` habilita o checkbox RUN para `PENDING_PROVIDER` (status liberavel pela provedoria), mantendo compatibilidade com os demais status da grid geral.
+
+**`button/btn_liberar_para_execucao/onFinish`**
+- Mensagem atualizada: JICs `PENDING_PROVIDER` liberadas para o hangar (RELEASED), flag de material desmarcada e assignments criados.
 
 **Menu:** `item_50` em `Security/sec_menu/menu_tree.md` — Logística e Ferramentaria > Provedoria - Liberação de Materiais.
 
-- Observacao de dados: os 509 materiais estao com `stock_balance = 0.00`, portanto a grid nasce vazia — comportamento correto da regra.
+- Observacao: com o novo fluxo, a grid passa a listar as JICs que o planejamento enviou para `PENDING_PROVIDER` (antes listava `PLANNED`/`NOT_STARTED` prontas).
 - Nota: a grid `grid_mro_material_release` (primeira abordagem) foi removida — substituida pela duplicata.
 
 ---
@@ -69,6 +107,7 @@ No painel do mecânico, criar listagem de ferramentas com avaria pra o ele preen
 **`events/onExecute`**
 - Regra de negocio (ajustada pelo POO): sem cracha nem lote individual — o almoxarife bipa a JIC, bipa os materiais e finaliza o pacote; grava apenas `separated_at`/`separated_by` no material.
 - Acoes AJAX: `LOAD_JIC`, `LOAD_JIC_ID`, `SEPARAR`, `FINALIZAR`; elegibilidade igual ao Gated Process (`is_applied IS NOT TRUE` + `is_blocking_task` + `committed_qty >= planned_qty`).
+- Regra de negocio: JIC elegivel apenas em **`PENDING_PROVIDER`** (aguardando separacao da provedoria) — mensagens de diagnostico atualizadas.
 - Trava de sessao (`[usr_login]` vazio bloqueia), botao Enter ao lado do campo material, materiais separados vao para o final da lista, aviso de JIC ja separada.
 - Regra de negocio: o botao Finalizar Separação (Pacote) nao permite finalizar com pendentes — bloqueia com aviso.
 - Diagnostico de JIC nao elegivel aprimorado: percorre TODAS as ocorrencias do mesmo `task_code` (em varios projetos) e consolida os motivos (bloqueio de material / status nao liberado / motivos mistos) em mensagem orientativa — antes usava apenas a primeira linha e podia mostrar motivo enganoso.
@@ -154,7 +193,9 @@ No painel do mecânico, criar listagem de ferramentas com avaria pra o ele preen
 ### Refatoracao — liberacao unica (Gated Process)
 
 **`_Bibliotecas_Internas/mro_engine.php`**
-- Regra de negocio: nova funcao `fn_liberar_task_para_execucao()` centraliza validacao de predecessora, critica de status, validacao de skill/labor, `UPDATE status_code='RELEASED'`, audit log e criacao de assignments por skill.
+- Regra de negocio: nova funcao `fn_liberar_task_para_execucao()` centraliza validacao de predecessora, critica de status, validacao de skill/labor, `UPDATE status_code`, audit log e criacao de assignments por skill.
+- Regra de negocio (MRO-126): se a origem e `PLANEJADOR` e a task tem **material bloqueante** (`is_blocking_task`), o status vai para **`PENDING_PROVIDER`** (fila da provedoria) — **sem criar assignments** (evita slot fantasma).
+- Se origem `PROVEDORIA` (ou sem material), vai para `RELEASED` final; na liberacao pela provedoria, desmarca `is_blocked_material = false` e cria os assignments.
 - `btn_liberar_para_execucao` da `grid_public_mro_tasks` virou thin wrapper chamando a funcao com origem `'PLANEJADOR'`; a duplicata da provedoria reutiliza a mesma funcao.
 
 ---

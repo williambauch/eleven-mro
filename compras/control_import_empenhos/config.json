@@ -3,8 +3,11 @@
   "tipo": "Control",
   "nome_tabela": "control_import_empenhos",
   "login": "admin",
-  "data_alteracao": "2026-08-12 13:22",
+  "data_alteracao": "2026-08-20 10:48",
   "nomeconexao": "conn_mro",
+  "bibliotecas": [
+    "mro_engine.php"
+  ],
   "variaveis": [
     "MODO_DEBUG",
     "var_project_id"

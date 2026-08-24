@@ -52,4 +52,3 @@ if ($var_estado == 'state2') {
     sc_actionbar_state('btn_marcar_impressao_JIC', 'state2');
    // sc_ajax_message("JIC " . $var_task_id . " marcada para impressão.  Todas: ".[glo_jic_ids]);
 }
-

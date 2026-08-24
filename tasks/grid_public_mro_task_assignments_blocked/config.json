@@ -4,7 +4,7 @@
   "nome_tabela": "grid_public_mro_task_assignments_blocked",
   "descricao": "Lista de ASSIGNMENT em BLOCKED",
   "login": "william",
-  "data_alteracao": "2026-08-15 14:30",
+  "data_alteracao": "2026-08-20 13:19",
   "nomeconexao": "conn_mro",
   "tabelas": [
     "public.mro_employees",
@@ -15,6 +15,7 @@
   ],
   "variaveis": [
     "usr_employee_id",
+    "usr_name",
     "usr_skill_id"
   ],
   "campos": [

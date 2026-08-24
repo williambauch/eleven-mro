@@ -2,8 +2,9 @@
   "nome": "blank_gantt",
   "tipo": "Blank",
   "nome_tabela": "blank_gantt",
+  "descricao": "Gantt de Fases",
   "login": "admin",
-  "data_alteracao": "2026-08-14 15:14",
+  "data_alteracao": "2026-08-21 13:02",
   "nomeconexao": "conn_mro",
   "variaveis": [
     "glo_project_id",

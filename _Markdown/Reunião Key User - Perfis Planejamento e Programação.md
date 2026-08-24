@@ -52,12 +52,13 @@ O perfil é o **filtro interno de validação**, responsável por conferir se a 
 
 | Responsabilidade | Onde (App) | Detalhe |
 |------------------|-----------|---------|
-| **Validar NRC (Fase 4 — PENDING_PROG)** | `form_public_mro_tasks` → `btn_validar_prog` | Dispara a lógica de Over & Above (O&A); status vai para `PENDING_OA` (aguardando cliente) |
+| **Validar NRC (Fase 4 — PENDING_PROG)** | `form_public_mro_tasks` → `btn_validar_prog` | Grava log `PROGRAMMING_OK` e chama o **motor O&A** (`fn_calcular_oa_nrc`), que decide: dentro do CAP → **auto-approve** (`RELEASED` + cria assignments) ou estourou CAP → `PENDING_OA` (aguardando cliente) |
 | **Enviar NRC de volta ao Coordenador** | `form_public_mro_tasks` → `btn_enviar_coord` | Quando a NRC precisa de reavaliação |
 | **Cancelar NRC** | `form_public_mro_tasks` → `btn_cancelar` | Quando não é viável |
-| **Validar Rotina em Passagem de Serviço (MRO-120)** | `form_public_mro_tasks` → `btn_validar_prog_rotina` | Rotinas vindas da passagem de serviço (`PENDING_PROG`, `is_nrc` vazio) são validadas pela Programação e vão direto para `RELEASED` **sem O&A** |
+| **Validar Rotina em Passagem de Serviço (MRO-120)** | `form_public_mro_tasks` → `btn_validar_prog_rotina` | Rotinas vindas da passagem de serviço (`PENDING_PROG`, `is_nrc` vazio) são validadas pela Programação: calcula saldo de HH por skill; **se alguma skill estourou o orçamento P6, bloqueia com alerta**; se OK, vai direto para `RELEASED` **sem O&A** e cria/atualiza assignments |
 | **Gerenciar Dependências** | `form_public_mro_task_dependencies_{predecessoras,sucessoras}` | Mesmo acesso do PLANEJAMENTO (insert/update/delete) |
 | **Impressão Pack JIC** | `blank_pdf_pack_jic` | Acesso liberado (export/print) |
+| **Consultar Apontamentos** | `grid_mro_timesheet_consolidado` | Consulta de apontamentos consolidados (MRO-120) — útil para verificar HH consumido por skill |
 | **Campo instruction_text** | `form_public_mro_tasks` | Read-only — não altera o relato original |
 
 **Em resumo:** A PROGRAMACAO é o **último filtro interno** — valida a NRC no P6 e dispara o O&A para aprovação do cliente (NRC) ou valida a rotina de passagem de serviço liberando direto para execução (sem O&A).
@@ -121,12 +122,13 @@ flowchart LR
 |---|-------|------|--------------------|
 | 1 | Login | Acessar o sistema com o perfil PROGRAMACAO | Acessa normalmente; não enxerga telas sem permissão (ex: dependências do MECANICO não aplicáveis) |
 | 2 | Abrir NRC em PENDING_PROG | `form_public_mro_tasks` → abrir NRC com status `PENDING_PROG` | Campo `instruction_text` read-only; vê os botões `btn_validar_prog`, `btn_enviar_coord`, `btn_cancelar`, `update` |
-| 3 | **Validar NRC** | Clicar em `btn_validar_prog` | Dispara lógica de O&A; status muda para `PENDING_OA` (aguardando cliente) |
+| 3 | **Validar NRC** | Clicar em `btn_validar_prog` | Grava log `PROGRAMMING_OK`; motor O&A decide: **dentro do CAP → auto-approve `RELEASED`** (cria assignments) **ou estourou → `PENDING_OA`** (aguarda cliente) |
 | 4 | Validar outra NRC com retorno | Abrir outra NRC em `PENDING_PROG` → `btn_enviar_coord` | NRC volta para o Coordenador (`PENDING_COORD`) |
-| 5 | **Validar Rotina (Passagem de Serviço)** | Abrir uma **rotina** (não NRC) com status `PENDING_PROG` (vinda da passagem de serviço) → `btn_validar_prog_rotina` | Status vai direto para `RELEASED` **sem O&A**; não gera pendência de mão de obra |
+| 5 | **Validar Rotina (Passagem de Serviço)** | Abrir uma **rotina** (não NRC) com status `PENDING_PROG` (vinda da passagem de serviço) → `btn_validar_prog_rotina` | Calcula saldo HH por skill: **skill estourada → bloqueia com alerta listando as skills**; se OK → `RELEASED` **sem O&A**, cria/atualiza assignments, sem pendência de mão de obra |
 | 6 | Dependentes | Verificar acesso a `form_public_mro_task_dependencies_*` | Insert/update/delete liberados (igual ao form mestre) |
 | 7 | Pack JIC | Abrir `blank_pdf_pack_jic` em uma tarefa | Consegue gerar/exportar o pack (JIC, JEC, JMC, Shift Turnover, Calibrated Tool) |
-| 8 | Bloco financeiro | Abrir NRC em `PENDING_OA` | Como não é MECANICO, enxerga o `bloco_financeiro` (valores O&A) |
+| 8 | Consultar apontamentos | Abrir `grid_mro_timesheet_consolidado` | Consegue consultar HH consumido por skill/projeto/JIC (MRO-120) |
+| 9 | Bloco financeiro | Abrir NRC em `PENDING_OA` | Como não é MECANICO, enxerga o `bloco_financeiro` (valores O&A) |
 
 **Pontos de atenção (perguntar ao key user):**
 - A regra da passagem de serviço (MRO-120) está correta — rotina validada vai direto para `RELEASED` sem O&A?
@@ -140,7 +142,8 @@ flowchart LR
 - [ ] Validar acessos/apps visíveis para PLANEJAMENTO e PROGRAMACAO (nada a mais, nada a menos)
 - [ ] Testar liberação de rotina pelo PLANEJAMENTO (assignments por skill)
 - [ ] Testar liberação de NRC aprovada pelo cliente (MRO-122)
-- [ ] Testar validação de NRC pela PROGRAMACAO (→ PENDING_OA / O&A)
-- [ ] Testar validação de rotina em passagem de serviço (→ RELEASED sem O&A)
+- [ ] Testar validação de NRC pela PROGRAMACAO (motor O&A: auto-approve vs PENDING_OA)
+- [ ] Testar validação de rotina em passagem de serviço (→ RELEASED sem O&A; skill estourada bloqueia)
+- [ ] Testar consulta de apontamentos (grid_mro_timesheet_consolidado)
 - [ ] Alinhar dúvidas: Gantt (datas), dependências, pack JIC, bloco financeiro
 - [ ] Registrar pontos de melhoria / abertos para novas tarefas

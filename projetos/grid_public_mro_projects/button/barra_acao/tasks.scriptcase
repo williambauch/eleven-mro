@@ -9,10 +9,12 @@
 // Formato : icon_text
 // Estados:
 //   - task | fas fa-list-check | cor=#2825e6
+//       hint: Ver Tarefas desse Projeto
 //
 // ── LIGAÇÃO ──────────────────────────────────────────
 // App destino: grid_public_mro_tasks (C)
-// Abertura    : Nova janela
+// Abertura    : Mesma janela
+// Abre em aba : Sim
 // Parâmetros:
 //   - [Campo] project_id → var_project_id
 //   - [Global] glo_aviso_run

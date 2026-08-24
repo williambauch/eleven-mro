@@ -3,7 +3,7 @@
   "tipo": "Form",
   "nome_tabela": "\"public\".mro_task_resources",
   "login": "admin",
-  "data_alteracao": "2026-08-04 15:17",
+  "data_alteracao": "2026-08-16 14:15",
   "nomeconexao": "conn_mro",
   "tabelas": [
     "mro_skills",

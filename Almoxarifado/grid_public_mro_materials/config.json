@@ -10,6 +10,24 @@
   ],
   "campos": [
     {
+      "nome": "description",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "is_blocking_task",
+      "tipo": "bool",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "is_consumable",
+      "tipo": "bool",
+      "required": false,
+      "pk": false
+    },
+    {
       "nome": "material_id",
       "tipo": "int4",
       "required": false,
@@ -22,37 +40,7 @@
       "pk": false
     },
     {
-      "nome": "description",
-      "tipo": "varchar",
-      "required": false,
-      "pk": false
-    },
-    {
-      "nome": "unit_measure",
-      "tipo": "varchar",
-      "required": false,
-      "pk": false
-    },
-    {
-      "nome": "is_consumable",
-      "tipo": "bool",
-      "required": false,
-      "pk": false
-    },
-    {
-      "nome": "unit_cost",
-      "tipo": "numeric",
-      "required": false,
-      "pk": false
-    },
-    {
       "nome": "product_code",
-      "tipo": "varchar",
-      "required": false,
-      "pk": false
-    },
-    {
-      "nome": "stock_location",
       "tipo": "varchar",
       "required": false,
       "pk": false
@@ -64,8 +52,20 @@
       "pk": false
     },
     {
-      "nome": "is_blocking_task",
-      "tipo": "bool",
+      "nome": "stock_location",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "unit_cost",
+      "tipo": "numeric",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "unit_measure",
+      "tipo": "varchar",
       "required": false,
       "pk": false
     }

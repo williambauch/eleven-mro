@@ -7,7 +7,12 @@ foreach($_arr_apps as $k => $v)
 {
 	if(substr($v, -12) != "_mob_ini.php")
 	{
-		$arr_apps[] = substr($v, 0, -8);
+		$var_app_nome = substr($v, 0, -8);
+		// Ignora apps de backup (contem "bkp" no nome) — nao sincronizar
+		if (stripos($var_app_nome, 'bkp') !== false) {
+			continue;
+		}
+		$arr_apps[] = $var_app_nome;
 	}
 }
 

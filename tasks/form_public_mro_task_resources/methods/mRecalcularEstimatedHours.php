@@ -32,6 +32,6 @@ function mRecalcularEstimatedHours($var_task_id)
         sc_exec_sql($var_update);
 
         // Retorna com separador decimal pt-BR (virgula) para o sc_master_value
-        // exibir no form mestre, preservando as casas decimais do banco.
-        return str_replace('.', ',', (string)$var_total);
+            // exibir no form mestre, preservando as casas decimais do banco.
+            return str_replace('.', ',', (string)$var_total);
 }

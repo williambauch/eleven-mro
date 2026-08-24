@@ -1,0 +1,102 @@
+<?php
+
+// ====================================================================
+// CTRL SIMULAR USUARIO - Impersonation
+// onValidateSuccess: sobrescreve as variaveis de sessao ([usr_*])
+// exatamente como o login real faz (sec_Login/07_onValidate), para
+// que as aplicacoes filtrem pelos dados do usuario simulado.
+//
+// Regra de negocio:
+//  - Busca sec_users pelo login escolhido (login, name, email, phone)
+//  - Busca grupos do usuario em sec_users_groups -> [usr_groups]
+//  - Busca mro_employees (login ativo) -> employee_id, skill_id,
+//    is_supervisor, is_inspector (zeros/false se nao for mecanico)
+//  - Salva tudo via sc_set_global e redireciona para o sec_menu
+// ====================================================================
+
+$var_login_alvo = trim({usuario});
+
+if (empty($var_login_alvo)) {
+    sc_error_message("Selecione um usuario para simular.");
+    sc_error_exit();
+}
+
+$var_login_esc = sc_sql_injection($var_login_alvo);
+
+// 1. Dados do usuario em sec_users
+$var_sql_user = "SELECT priv_admin, active, name, email, phone, login
+                 FROM public.sec_users
+                 WHERE login = " . $var_login_esc;
+sc_lookup(rs_user, $var_sql_user);
+
+if ({rs_user} === false) {
+    sc_error_message("Erro ao consultar o usuario: " . {rs_user_erro});
+    sc_error_exit();
+}
+
+if (empty({rs_user})) {
+    sc_error_message("Usuario nao encontrado: " . $var_login_alvo);
+    sc_error_exit();
+}
+
+// 2. Monta as variaveis base da sessao
+[usr_login]     = {rs_user[0][5]};
+[usr_priv_admin] = ({rs_user[0][0]} == 'Y') ? TRUE : FALSE;
+[usr_name]      = {rs_user[0][2]};
+[usr_email]     = {rs_user[0][3]};
+[usr_phone]     = {rs_user[0][4]};
+[usr_picture]   = '';
+
+// 3. Grupos do usuario (sec_users_groups) -> array
+$var_usr_grp = array();
+sc_lookup(rs_groups, "SELECT group_id FROM public.sec_users_groups WHERE login = " . $var_login_esc);
+
+if ({rs_groups} !== false && !empty({rs_groups})) {
+    foreach ({rs_groups} as $var_r) {
+        $var_usr_grp[] = $var_r[0];
+    }
+}
+[usr_groups] = $var_usr_grp;
+
+// Se pertencer ao grupo de administradores, garante priv_admin
+if (isset([sett_group_administrator]) && in_array([sett_group_administrator], $var_usr_grp)) {
+    [usr_priv_admin] = TRUE;
+}
+
+// 4. Dados do colaborador (mro_employees) — se existir login ativo
+$var_sql_emp = "SELECT employee_id, skill_id, is_supervisor, is_inspector
+                FROM mro_employees
+                WHERE login = " . $var_login_esc . " AND is_active = TRUE";
+sc_lookup(rs_emp, $var_sql_emp);
+
+if ({rs_emp} !== false && !empty({rs_emp})) {
+    [usr_employee_id]   = {rs_emp[0][0]};
+    // skill_id pode ser lista CSV (MRO-126)
+    [usr_skill_id]      = {rs_emp[0][1]};
+    [usr_is_supervisor] = ({rs_emp[0][2]} == 't');
+    [usr_is_inspector]  = ({rs_emp[0][3]} == 't');
+} else {
+    // Usuario sem colaborador vinculado (admin/comercial, etc.)
+    [usr_employee_id]   = 0;
+    [usr_skill_id]      = 0;
+    [usr_is_supervisor] = false;
+    [usr_is_inspector]  = false;
+}
+
+// 5. Persiste as variaveis na sessao
+sc_set_global([usr_login]);
+sc_set_global([usr_name]);
+sc_set_global([usr_email]);
+sc_set_global([usr_phone]);
+sc_set_global([usr_priv_admin]);
+sc_set_global([usr_groups]);
+sc_set_global([usr_employee_id]);
+sc_set_global([usr_skill_id]);
+sc_set_global([usr_is_supervisor]);
+sc_set_global([usr_is_inspector]);
+sc_set_global([usr_picture]);
+
+sc_log_add("simular_usuario", "Sessao simulada para o usuario: " . $var_login_alvo);
+
+// 6. Redireciona para o menu (ou tela de origem)
+sc_redir('sec_menu','','_parent');

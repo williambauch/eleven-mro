@@ -12,7 +12,9 @@
             margin: 0;
             padding: 0;
             height: 100%;
+            overflow: hidden;
         }
+        body { display: flex; flex-direction: column; }
 
         .page-header {
             font-size: 20px;
@@ -70,6 +72,34 @@
 
         .separator { width: 1px; height: 22px; background: #e2e8f0; margin: 0 2px; }
 
+        /* ===== ABAS ===== */
+        .tabs {
+            display: flex;
+            gap: 4px;
+            margin: 0 15px 10px 15px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        .tab {
+            border: 1px solid #cbd5e0;
+            border-bottom: none;
+            background: #f7fafc;
+            color: #4a5568;
+            border-radius: 6px 6px 0 0;
+            padding: 8px 18px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .tab:hover { background: #e2e8f0; }
+        .tab.active {
+            background: #fff;
+            color: #1a202c;
+            border-color: #1565c0;
+            border-bottom: 2px solid #fff;
+            margin-bottom: -2px;
+        }
+        .diagram-box.hidden { display: none; }
+
         .diagram-box {
             background: #fff;
             border-radius: 6px;
@@ -77,13 +107,31 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.02);
             padding: 20px;
             margin: 0 15px 15px 15px;
-            /* altura minima para cada area de diagrama */
-            min-height: 400px;
+            /* ocupa toda a altura restante da pagina */
+            flex: 1;
+            min-height: 0;
             /* overflow oculto: a navegacao e feita pelo pan (arrastar) */
             overflow: hidden;
+            /* conteudo interno ocupa 100% */
+            display: flex;
+        }
+        .diagram-box:not(.hidden) {
+            /* garante preencher a altura restante mesmo com conteudo menor */
+            align-self: stretch;
         }
 
-        .zoom-viewport { transition: transform 0.15s ease; transform-origin: top left; }
+        .zoom-viewport {
+            transition: transform 0.15s ease;
+            transform-origin: top left;
+            /* ocupa 100% do box */
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+        }
+        /* o conteudo do mermaid dentro do viewport fica no topo, recortado pelo overflow */
+        .zoom-viewport .mermaid svg {
+            max-width: none !important;
+        }
 
         /* FUNDO BRANCO NOS LABELS DAS ARESTAS (antes era roxo) */
         .diagram-box .edgeLabel {
@@ -101,7 +149,7 @@
 </head>
 <body>
     <div class="page-header">
-        MRO System - Fluxo de Trabalho (NRC e Rotina Padrão)
+        MRO System - Fluxo de Trabalho (Rotina Padrão e Não Rotina) -> PROJETO > TAREFAS > ATRIBUIÇÕES > TIMESHEETS
     </div>
 
     <div class="legend">
@@ -116,6 +164,11 @@
 
 
 
+    <div class="tabs">
+        <button type="button" class="tab active" id="tab_rotina" onclick="mroShowTab('rotina')">Rotina Padrão</button>
+        <button type="button" class="tab" id="tab_nrc" onclick="mroShowTab('nrc')">Não Rotina</button>
+    </div>
+
     <div class="zoom-toolbar">
         <button type="button" onclick="mroZoomOut()">−</button>
         <button type="button" onclick="mroZoomIn()">+</button>
@@ -127,9 +180,11 @@
         <button type="button" onclick="mroZoomSet(2)">200%</button>
         <button type="button" onclick="mroZoomSet(2.3)">230%</button>
         <button type="button" onclick="mroZoomSet(2.5)">250%</button>
+        <button type="button" onclick="mroZoomSet(3)">300%</button>
+        <button type="button" onclick="mroZoomSet(3.5)">350%</button>
     </div>
 
-    <div class="diagram-box">
+    <div class="diagram-box" id="box_rotina">
         <div class="zoom-viewport" id="zoom_viewport">
             <div class="mermaid">
 flowchart LR
@@ -137,7 +192,12 @@ flowchart LR
     A2(ROTINA <BR/> Importação P6 / Cadastro<br/>ctrl_import_excel / form_public_mro_tasks) --> B2[PLANNED<br/>Task]
     B2 --> B3[NOT_STARTED<br/>Task]
 
-    B3 -- btn_liberar_para_execucao<br/>(grid) --> R1[RELEASED<br/>Task]
+    B3 -- btn_liberar_para_execucao<br/>(grid) --> LIB{Planejamento:<br/>JIC tem material?}
+    LIB -- Não (SEM material) --> R1[RELEASED<br/>Task]
+    %% OBS: nao criar assignments na ida para PENDING_PROVIDER (so cria em RELEASED final)
+    LIB -- Sim (COM material<br/>is_blocking_task) --> PP[PENDING_PROVIDER<br/>Task]
+    PP -- grid_provedoria_release<br/>(lista PENDING_PROVIDER) --> BIP([bip de saída<br/>blank_mro_provedoria_bip<br/>separa materiais])
+    BIP -- botão 'Liberar' (RUN)<br/>grid_provedoria_release<br/>is_blocked_material=false --> R1[RELEASED<br/>Task]
     R1 -. cria slots NOT_STARTED<br/>por skill (LABOR),<br/>sem mecânico .-> SV{menu_supervisor<br/>A Distribuir<br/>👤 Supervisor}
 
     %% Abas do menu_supervisor: Em Andamento (grid_public_mro_task_assignments_progress),
@@ -166,10 +226,16 @@ flowchart LR
     M -- impedimento<br/>(material, ferramenta<br/>qualidade/eng) --> BL([BLOCKED<br/>Assignment])
     P -- retomar (clock-in,<br/>volta a executar) --> M
 
+    %% MRO-122: achado impeditivo -> mecanico abre a Não Rotina (blank_abertura_nrc)
+    %% Consequencias: pausa timesheet, BLOCKED assignment, is_blocked_labor task pai
+    M -- "⚠️ Abrir Não Rotina<br/>(achado impeditivo)<br/>blank_abertura_nrc" --> ANRC([Não Rotina criada<br/>DRAFT])
+    ANRC -. pausa timesheet (se houver)<br/>+ BLOCKED assignment<br/>+ is_blocked_labor (task pai) .-> NBLR([BLOQUEADA<br/>p/ avaliação da Não Rotina])
+    NBLR -. desbloqueio pós-liberação<br/>(supervisor) .-> M
+
     H2 -- passagem de serviço<br/>(apenas quando é<br/>último mecânico) --> PG[PENDING_PROG<br/>Task]
 
     PG -- btn_validar_prog_rotina --> V{HH dentro do<br/>orçado?}
-    V -- Não (estouro HH) --> AJ[Somente alerta<br/>ajuste recursos P6<br/>orçamento]
+    V -- Não (estouro HH/skill) --> AJ[Não permite RELEASED<br/>alerta de estouro<br/>ajuste recursos P6<br/>orçamento]
     AJ -- reprograma e<br/>tenta validar de novo --> PG
     V -- Sim --> R2[RELEASED novamente<br/>cria/atualiza slots<br/>NOT_STARTED<br/>Task]
     R2 -. redistribui slots<br/>de trabalho .-> SV
@@ -177,6 +243,9 @@ flowchart LR
     style A2 fill:#e3f2fd,stroke:#1565c0,color:#000
     style B2 fill:#fff3e0,stroke:#e65100,color:#000
     style B3 fill:#fff3e0,stroke:#e65100,color:#000
+    style LIB fill:#fff8e1,stroke:#f9a825,color:#000
+    style PP fill:#fff3e0,stroke:#e65100,color:#000
+    style BIP fill:#e3f2fd,stroke:#1565c0,color:#000
     style R1 fill:#e8f5e9,stroke:#2e7d32,color:#000
     style SV fill:#fff8e1,stroke:#f9a825,color:#000
     style AS fill:#e8f5e9,stroke:#2e7d32,color:#000
@@ -185,6 +254,8 @@ flowchart LR
     style H2 fill:#fff3e0,stroke:#e65100,color:#000
     style P fill:#fff3e0,stroke:#e65100,color:#000
     style BL fill:#fce4ec,stroke:#c62828,color:#000
+    style ANRC fill:#e3f2fd,stroke:#1565c0,color:#000
+    style NBLR fill:#fce4ec,stroke:#c62828,color:#000
     style PG fill:#fff3e0,stroke:#e65100,color:#000
     style V fill:#fff8e1,stroke:#f9a825,color:#000
     style R2 fill:#e8f5e9,stroke:#2e7d32,color:#000
@@ -198,18 +269,22 @@ flowchart LR
     style CM fill:#e8f5e9,stroke:#2e7d32,color:#000
     style REG fill:#f3e5f5,stroke:#6a1b9a,color:#000
 
-    %% Retorno tracejado laranja: AJ->PG(25)
-    linkStyle 25 stroke:#ff6f00,stroke-width:2px,stroke-dasharray: 5 5
+    %% Retorno tracejado laranja: AJ->PG(32)
+    linkStyle 32 stroke:#ff6f00,stroke-width:2px,stroke-dasharray: 5 5
+    %% Desbloqueio pos-liberacao NBLR->M (28) - cor Reavaliar (vermelho tracejado)
+    linkStyle 28 stroke:#c62828,stroke-width:2px,stroke-dasharray: 5 5
+    %% Provedoria libera (bip -> RELEASED): BIP->R1 (6) verde
+    linkStyle 6 stroke:#2e7d32,stroke-width:2px
             </div>
         </div>
     </div>
 
-    <div class="diagram-box">
+    <div class="diagram-box" id="box_nrc">
         <div class="zoom-viewport" id="zoom_viewport_nrc">
             <div class="mermaid">
 flowchart LR
     %% ===================== NÃO ROTINA (EMBAIXO) =====================
-    A(NÃO ROTINA <br/> blank_abertura_nrc<br/>abertura direta de NRC - MRO-122) --> B[DRAFT<br/>Task]
+    A(NÃO ROTINA <br/> blank_abertura_nrc<br/>abertura direta de Não Rotina - MRO-122) --> B[DRAFT<br/>Task]
 
     %% btn_enviar_eng: DRAFT e PENDING_COORD -> PENDING_ENG
     B --> BE[btn_enviar_eng]
@@ -259,7 +334,7 @@ flowchart LR
     style D fill:#fff3e0,stroke:#e65100,color:#000
     style E fill:#fff3e0,stroke:#e65100,color:#000
     style Z fill:#fff8e1,stroke:#f9a825,color:#000
-    style G fill:#e8f5e9,stroke:#2e7d32,color:#000
+    style G fill:#fff3e0,stroke:#e65100,color:#000
     style AP fill:#e8f5e9,stroke:#2e7d32,color:#000
     style H fill:#e8f5e9,stroke:#2e7d32,color:#000
     style I fill:#fce4ec,stroke:#c62828,color:#000
@@ -272,7 +347,7 @@ flowchart LR
     linkStyle 18 stroke:#2e7d32,stroke-width:2px
     %% Auto-approve motor O&A G->H (verde - cria assignments, MRO-122)
     linkStyle 22 stroke:#2e7d32,stroke-width:2px,stroke-dasharray: 5 5
-    %% NRC liberada -> Painel Supervisor (alocacao de mecanicos)
+    %% Não Rotina liberada -> Painel Supervisor (alocacao de mecanicos)
     linkStyle 24 stroke:#2e7d32,stroke-width:2px,stroke-dasharray: 5 5
             </div>
         </div>
@@ -280,26 +355,77 @@ flowchart LR
 
     <script>
         // Zoom via transform CSS (Mermaid e SVG estatico)
-        var mroZoomAtual = 1;
-        var mroPanX = 0;
-        var mroPanY = 0;
+        // Zoom INDIVIDUAL por diagrama: cada viewport guarda seu proprio zoom e pan
+        var mroZooms = {
+            zoom_viewport: 1,
+            zoom_viewport_nrc: 1
+        };
+        var mroPans = {
+            zoom_viewport: { x: 0, y: 0 },
+            zoom_viewport_nrc: { x: 0, y: 0 }
+        };
+
+        // ===== ABAS: exibir um diagrama por vez =====
+        function mroShowTab(nome) {
+            var ativaRotina = (nome === 'rotina');
+            document.getElementById('box_rotina').classList.toggle('hidden', !ativaRotina);
+            document.getElementById('box_nrc').classList.toggle('hidden', ativaRotina);
+            document.getElementById('tab_rotina').classList.toggle('active', ativaRotina);
+            document.getElementById('tab_nrc').classList.toggle('active', !ativaRotina);
+            mroAtualizarLabel();
+        }
+
+        // Retorna o id do viewport do diagrama atualmente visivel
+        function mroVpAtivoId() {
+            var boxRotina = document.getElementById('box_rotina');
+            if (boxRotina && !boxRotina.classList.contains('hidden')) return 'zoom_viewport';
+            return 'zoom_viewport_nrc';
+        }
+
+        function mroAtualizarLabel() {
+            var lbl = document.getElementById('mro_zoom_label');
+            if (lbl) {
+                var vpId = mroVpAtivoId();
+                lbl.textContent = Math.round(mroZooms[vpId] * 100) + '%';
+            }
+        }
 
         function mroAplicarZoom() {
-            // Aplica o transform a todos os viewports (ROTINA + NRC)
+            // Aplica o transform a TODOS os viewports, cada um com SEU zoom e pan
             var vps = document.querySelectorAll('.zoom-viewport');
             if (vps.length) {
                 vps.forEach(function (vp) {
-                    vp.style.transform = 'translate(' + mroPanX + 'px, ' + mroPanY + 'px) scale(' + mroZoomAtual + ')';
+                    var z = mroZooms[vp.id] || 1;
+                    var pan = mroPans[vp.id] || { x: 0, y: 0 };
+                    vp.style.transform = 'translate(' + pan.x + 'px, ' + pan.y + 'px) scale(' + z + ')';
                 });
             }
-            var lbl = document.getElementById('mro_zoom_label');
-            if (lbl) lbl.textContent = Math.round(mroZoomAtual * 100) + '%';
+            mroAtualizarLabel();
         }
 
-        function mroZoomIn() { mroZoomAtual = Math.min(3, mroZoomAtual + 0.1); mroAplicarZoom(); }
-        function mroZoomOut() { mroZoomAtual = Math.max(0.2, mroZoomAtual - 0.1); mroAplicarZoom(); }
-        function mroZoomReset() { mroZoomAtual = 1; mroPanX = 0; mroPanY = 0; mroAplicarZoom(); }
-        function mroZoomSet(v) { mroZoomAtual = Math.min(3, Math.max(0.2, v)); mroPanX = 0; mroPanY = 0; mroAplicarZoom(); }
+        // Opera no diagrama ATIVO (visivel)
+        function mroZoomIn() {
+            var vpId = mroVpAtivoId();
+            mroZooms[vpId] = Math.min(4, (mroZooms[vpId] || 1) + 0.1);
+            mroAplicarZoom();
+        }
+        function mroZoomOut() {
+            var vpId = mroVpAtivoId();
+            mroZooms[vpId] = Math.max(0.2, (mroZooms[vpId] || 1) - 0.1);
+            mroAplicarZoom();
+        }
+        function mroZoomReset() {
+            var vpId = mroVpAtivoId();
+            mroZooms[vpId] = 1;
+            mroPans[vpId] = { x: 0, y: 0 };
+            mroAplicarZoom();
+        }
+        function mroZoomSet(v) {
+            var vpId = mroVpAtivoId();
+            mroZooms[vpId] = Math.min(4, Math.max(0.2, v));
+            mroPans[vpId] = { x: 0, y: 0 };
+            mroAplicarZoom();
+        }
 
         function mroZoomFit() {
             var svg = document.querySelector('.mermaid svg');
@@ -307,14 +433,14 @@ flowchart LR
             if (!svg || !box) return;
             var sw = svg.getBoundingClientRect().width;
             var bw = box.clientWidth - 40;
-            mroZoomAtual = Math.min(3, Math.max(0.2, bw / sw));
-            mroPanX = 0;
-            mroPanY = 0;
+            var vpId = mroVpAtivoId();
+            mroZooms[vpId] = Math.min(4, Math.max(0.2, bw / sw));
+            mroPans[vpId] = { x: 0, y: 0 };
             mroAplicarZoom();
         }
 
         // =========================================================================
-        // PAN: ARRASTAR QUALQUER DIAGRAMA COM O MOUSE
+        // PAN: ARRASTAR CADA DIAGRAMA INDEPENDENTEMENTE
         // =========================================================================
         (function () {
             var boxes = document.querySelectorAll('.diagram-box');
@@ -322,7 +448,8 @@ flowchart LR
 
             var arrastando = false;
             var iniX = 0, iniY = 0;
-            var panIniX = 0, panIniY = 0;
+            var panIni = { x: 0, y: 0 };   // pan do diagrama que esta sendo arrastado
+            var vpAtivo = null;            // viewport do diagrama que esta sendo arrastado
 
             boxes.forEach(function (box) {
                 box.style.cursor = 'grab';
@@ -333,8 +460,10 @@ flowchart LR
                     arrastando = true;
                     iniX = e.clientX;
                     iniY = e.clientY;
-                    panIniX = mroPanX;
-                    panIniY = mroPanY;
+                    // Descobre o viewport deste diagrama (o primeiro .zoom-viewport dentro do box)
+                    vpAtivo = box.querySelector('.zoom-viewport');
+                    var panAtual = (vpAtivo && mroPans[vpAtivo.id]) || { x: 0, y: 0 };
+                    panIni = { x: panAtual.x, y: panAtual.y };
                     box.style.cursor = 'grabbing';
                     e.preventDefault();
                 });
@@ -348,11 +477,11 @@ flowchart LR
             });
 
             window.addEventListener('mousemove', function (e) {
-                if (!arrastando) return;
+                if (!arrastando || !vpAtivo) return;
                 var dx = e.clientX - iniX;
                 var dy = e.clientY - iniY;
-                mroPanX = panIniX + dx;
-                mroPanY = panIniY + dy;
+                // Atualiza SOMENTE o pan do diagrama que esta sendo arrastado
+                mroPans[vpAtivo.id] = { x: panIni.x + dx, y: panIni.y + dy };
                 mroAplicarZoom();
             });
 
@@ -365,8 +494,10 @@ flowchart LR
 
         // Mermaid com fundo branco nos labels das arestas
         // htmlLabels: false -> labels SVG puros (sem foreignObject duplicado)
+        // startOnLoad: false + run() manual -> renderiza TODOS antes de esconder
+        // (diagramas em display:none nao calculam layout -> geraria NaN nos transform)
         mermaid.initialize({
-            startOnLoad: true,
+            startOnLoad: false,
             theme: 'base',
             flowchart: { htmlLabels: false },
             themeVariables: {
@@ -374,7 +505,13 @@ flowchart LR
                 fontFamily: 'Roboto, Segoe UI, Tahoma, sans-serif'
             }
         });
+
+        (async function () {
+            await mermaid.run();
+            // Apos renderizar tudo, aplica o estado inicial das abas
+            document.getElementById('box_nrc').classList.add('hidden');
+            document.getElementById('tab_rotina').classList.add('active');
+        })();
     </script>
 </body>
 </html>
->

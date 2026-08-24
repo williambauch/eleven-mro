@@ -2,8 +2,9 @@
   "nome": "grid_mro_task_log",
   "tipo": "Grid",
   "nome_tabela": "grid_mro_task_log",
+  "descricao": "Histórico de Edições da Task",
   "login": "william",
-  "data_alteracao": "2026-08-15 12:05",
+  "data_alteracao": "2026-08-19 08:12",
   "nomeconexao": "conn_mro",
   "tabelas": [
     "mro_attachments",

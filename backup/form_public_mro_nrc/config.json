@@ -4,10 +4,13 @@
   "nome_tabela": "\"public\".mro_tasks",
   "descricao": "-- APP DESCONTINUADO --",
   "login": "admin",
-  "data_alteracao": "2026-08-12 13:22",
+  "data_alteracao": "2026-08-20 10:48",
   "nomeconexao": "conn_mro",
   "tabelas": [
     "public.mro_tasks"
+  ],
+  "bibliotecas": [
+    "mro_engine.php"
   ],
   "variaveis": [
     "parent_task_id",
