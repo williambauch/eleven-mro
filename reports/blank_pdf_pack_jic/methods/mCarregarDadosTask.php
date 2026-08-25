@@ -1,0 +1,189 @@
+<?php
+
+function mCarregarDadosTask($var_task_id)
+{
+    // ============================================================
+    // mCarregarDadosTask — Carrega todos os dados de uma task
+    // para o Pack JIC em um array associativo.
+    // MRO-127: extraido do onExecute original para reuso
+    // (individual e lote).
+    // ============================================================
+
+        $var_task_id = (int)$var_task_id;
+
+        if ($var_task_id <= 0) {
+            return false;
+        }
+
+        $var_sql = "SELECT 
+            t.task_id, t.task_code, t.task_type, t.task_name AS discrepancy_title,
+            t.instruction_text AS corrective_action_description,
+            COALESCE(t.origin_document, t.task_code) AS origin_document,
+            t.document_reference, t.ata_chapter, t.zone_area,
+            t.access_panels, t.is_rii, t.estimated_hours, t.status_code,
+            t.skill_code, t.corrective_action, t.deferment_reason,
+            t.deferment_status, t.amm_reference, t.tools_required,
+            p.work_order AS ac_work_order,
+            p.p6_proj_id AS project,
+            a.registration AS aircraft_registration,
+            a.msn AS aircraft_esn, a.model, a.customer_name,
+            e.full_name AS originated_by_name,
+            CASE WHEN t.is_nrc IS true THEN 'NON ROUTINE JOB INSTRUCTION CARD'
+                 ELSE 'JOB INSTRUCTION CARD' END AS type,
+            t.is_nrc AS is_nrc,
+            (SELECT COUNT(*) FROM mro_task_tools WHERE task_id = t.task_id) AS has_tools,
+            t.project_id AS project_id,
+            t.parent_task_id AS parent_task_id,
+            t.phase_code,
+            t.frequency
+        FROM mro_tasks t
+        INNER JOIN mro_projects p ON t.project_id = p.project_id
+        LEFT JOIN mro_aircraft a ON p.aircraft_id = a.aircraft_id
+        LEFT JOIN mro_employees e ON t.created_by = e.login
+        WHERE t.task_id = " . $var_task_id;
+
+        sc_lookup(ds_pack, $var_sql);
+
+        if ({ds_pack} === false) {
+            return false;
+        }
+
+        if (empty({ds_pack})) {
+            return false;
+        }
+
+        $data = array(
+            'task_id'                     => {ds_pack[0][0]},
+            'task_code'                   => {ds_pack[0][1]},
+            'task_type'                   => {ds_pack[0][2]},
+            'discrepancy_title'           => {ds_pack[0][3]},
+            'corrective_action_description' => {ds_pack[0][4]},
+            'origin_document'             => {ds_pack[0][5]},
+            'document_reference'          => {ds_pack[0][6]},
+            'ata_chapter'                 => {ds_pack[0][7]},
+            'zone_area'                   => {ds_pack[0][8]},
+            'access_panels'               => {ds_pack[0][9]},
+            'is_rii'                      => {ds_pack[0][10]},
+            'estimated_hours'             => {ds_pack[0][11]},
+            'status_code'                 => {ds_pack[0][12]},
+            'skill_code'                  => {ds_pack[0][13]},
+            'corrective_action'           => {ds_pack[0][14]},
+            'deferment_reason'            => {ds_pack[0][15]},
+            'deferment_status'            => {ds_pack[0][16]},
+            'amm_reference'               => {ds_pack[0][17]},
+            'tools_required'              => {ds_pack[0][18]},
+            'ac_work_order'               => {ds_pack[0][19]},
+            'project'                     => {ds_pack[0][20]},
+            'aircraft_registration'       => {ds_pack[0][21]},
+            'aircraft_esn'                => {ds_pack[0][22]},
+            'model'                       => {ds_pack[0][23]},
+            'customer_name'               => {ds_pack[0][24]},
+            'originated_by_name'          => {ds_pack[0][25]},
+            'type'                        => {ds_pack[0][26]},
+            'is_nrc'                      => {ds_pack[0][27]},
+            'has_tools'                   => {ds_pack[0][28]},
+            'project_id'                  => {ds_pack[0][29]},
+            'parent_task_id'              => {ds_pack[0][30]},
+            'phase_code'                  => {ds_pack[0][31]},
+            'frequency'                   => {ds_pack[0][32]},
+        );
+
+        // MRO-125: barcode de 40/41 caracteres conforme regras do cliente
+        $data['barcode'] = mMontarBarcode($data);
+
+        // Recursos (skills)
+        $var_sql_res = "SELECT COALESCE(string_agg(resource_code || ' -- ' ||
+                        CASE WHEN COALESCE(budgeted_hours, 0) = 0 THEN '0h'
+                             ELSE budgeted_hours::text || 'h'
+                        END, ', '
+                        ORDER BY resource_code), '') AS skill_list
+                        FROM mro_task_resources
+                        WHERE task_id = " . $var_task_id . "
+                        AND resource_code IN (SELECT DISTINCT skill_code FROM mro_skills)";
+        sc_lookup(ds_resources, $var_sql_res);
+
+        $var_skill_list = '';
+        if ({ds_resources} !== false && !empty({ds_resources})) {
+            $var_skill_list = {ds_resources[0][0]};
+        }
+        // Verifica se o skill_code padrao esta na lista
+        if (!empty($data['skill_code'])) {
+            $var_default_skill = $data['skill_code'];
+            if (strpos($var_skill_list, $var_default_skill) === false) {
+                if ($var_skill_list != '') $var_skill_list .= ', ';
+                $var_skill_list .= $var_default_skill . ' - 0h';
+            }
+        }
+        $data['skill_resources'] = $var_skill_list;
+
+        // Materiais (P/N, S/N instalado/removido)
+        $var_sql_mat = "SELECT
+            COALESCE(string_agg(CASE WHEN tm.is_applied = true THEN m.part_number END, ', '), '') AS pn_instalado,
+            COALESCE(string_agg(CASE WHEN tm.is_applied = true THEN tm.batch_sn END, ', '), '') AS sn_instalado,
+            COALESCE(string_agg(CASE WHEN tm.is_applied = false THEN m.part_number END, ', '), '') AS pn_removido,
+            COALESCE(string_agg(CASE WHEN tm.is_applied = false THEN tm.batch_sn END, ', '), '') AS sn_removido
+        FROM mro_task_materials tm
+        LEFT JOIN mro_materials m ON tm.material_id = m.material_id
+        WHERE tm.task_id = " . $var_task_id;
+        sc_lookup(ds_materials, $var_sql_mat);
+
+        $data['pn_instalado'] = ({ds_materials} !== false && !empty({ds_materials})) ? {ds_materials[0][0]} : '';
+        $data['sn_instalado'] = ({ds_materials} !== false && !empty({ds_materials})) ? {ds_materials[0][1]} : '';
+        $data['pn_removido'] = ({ds_materials} !== false && !empty({ds_materials})) ? {ds_materials[0][2]} : '';
+        $data['sn_removido'] = ({ds_materials} !== false && !empty({ds_materials})) ? {ds_materials[0][3]} : '';
+
+        // Executor da tarefa
+        $var_sql_exec = "SELECT DISTINCT e.full_name
+        FROM mro_task_assignments ta
+        LEFT JOIN mro_employees e ON ta.employee_id = e.employee_id
+        WHERE ta.task_id = " . $var_task_id . "
+        AND e.full_name IS NOT NULL
+        LIMIT 1";
+        sc_lookup(ds_executor, $var_sql_exec);
+
+        $var_executor_name = '';
+        if ({ds_executor} !== false && !empty({ds_executor})) {
+            $var_executor_name = {ds_executor[0][0]};
+        }
+        $data['executor_name'] = $var_executor_name;
+
+        // NRCs anteriores (campos 01/02 List if applicable)
+        // Cada documento mostra apenas seus filhos diretos:
+        // - Rotina: mostra NRCs N- filhas
+        // - N-: mostra NRCs NN filhas
+        // - NN: mostra NRCs NNN filhas
+        $var_sql_prev = "SELECT
+            COALESCE(MIN(task_id), 0) AS first_nrc_id,
+            COALESCE(MAX(task_id), 0) AS last_nrc_id
+        FROM mro_tasks
+        WHERE parent_task_id = " . $var_task_id . "
+        AND is_nrc = true
+        AND task_id != " . $var_task_id;
+        sc_lookup(ds_prev_nrc, $var_sql_prev);
+
+        $data['prev_nrc_first'] = '';
+        $data['prev_nrc_last'] = '';
+
+        if ({ds_prev_nrc} !== false && !empty({ds_prev_nrc})) {
+            $var_first_id = (int){ds_prev_nrc[0][0]};
+            $var_last_id = (int){ds_prev_nrc[0][1]};
+
+            if ($var_first_id > 0) {
+                $var_sql_first = "SELECT task_code FROM mro_tasks WHERE task_id = " . $var_first_id;
+                sc_lookup(ds_first, $var_sql_first);
+                if ({ds_first} !== false && !empty({ds_first})) {
+                    $data['prev_nrc_first'] = {ds_first[0][0]};
+                }
+            }
+
+            if ($var_last_id > 0 && $var_last_id != $var_first_id) {
+                $var_sql_last = "SELECT task_code FROM mro_tasks WHERE task_id = " . $var_last_id;
+                sc_lookup(ds_last, $var_sql_last);
+                if ({ds_last} !== false && !empty({ds_last})) {
+                    $data['prev_nrc_last'] = {ds_last[0][0]};
+                }
+            }
+        }
+
+        return $data;
+}

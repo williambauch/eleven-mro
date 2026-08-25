@@ -34,7 +34,8 @@
     ],
     "MRO-127": [
       "grid_public_mro_tasks",
-      "control_filtro_jic"
+      "control_filtro_jic",
+      "blank_pdf_pack_jic"
     ]
   },
   "shortcuts": {

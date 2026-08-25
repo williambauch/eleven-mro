@@ -20,6 +20,10 @@ $var_limiar_volume = 300;
 $var_ids_raw = trim([glo_jic_ids]);
 $var_where = trim([glo_jic_where]);
 
+// Origem dos dados (para o aviso ao usuario)
+$var_origem_where = !empty($var_where);
+$var_origem_ids = !empty($var_ids_raw);
+
 $var_codigos = array();
 $var_total = 0;
 
@@ -83,11 +87,28 @@ if ($var_total > $var_limiar_volume) {
         . "A geração do PDF em lote pode levar vários minutos. Clique em Gerar PDF somente após conferir a seleção.</div>";
 }
 
+// ============ AVISO DE ORIGEM DOS DADOS ============
+// Orienta o usuario sobre a procedencia da lista: ids marcados na grid
+// ou o filtro completo aplicado na grid_public_mro_tasks.
+$var_aviso_origem = "";
+if ($var_origem_where) {
+    // Modo "todas do filtro": veio do WHERE da grid
+    $var_aviso_origem = "<div style='background:#e3f2fd; color:#0d47a1; border:1px solid #90caf9; border-radius:4px; padding:8px; margin-top:8px; font-size:12px;'>"
+        . "<b>Origem dos dados:</b> lista obtida pelo <b>filtro aplicado na grid</b> (todas as JICs do filtro atual da grid_public_mro_tasks). "
+        . "Confira o resumo antes de gerar.</div>";
+} elseif ($var_origem_ids) {
+    // Modo ids explicitos: veio da marcacao na grid
+    $var_aviso_origem = "<div style='background:#e8f5e9; color:#1b5e20; border:1px solid #a5d6a7; border-radius:4px; padding:8px; margin-top:8px; font-size:12px;'>"
+        . "<b>Origem dos dados:</b> JICs <b>marcadas manualmente</b> na grid (via botão de seleção). "
+        . "Confira o resumo antes de gerar.</div>";
+}
+
 // ============ RESUMO ============
 // Exibe TODOS os codigos (sem LIMIT) com scroll — mostrar o volume
 // que sera gerado e o objetivo.
 $var_html = "<div style='font-size:12px; line-height:1.6;'>";
-$var_html .= "<b>" . $var_total . " Task(s) selecionada(s):</b>";
+$var_html .= $var_aviso_origem;
+$var_html .= "<div style='margin-top:12px;'><b>" . $var_total . " Task(s) selecionada(s):</b></div>";
 
 if (count($var_codigos) > 0) {
     $var_html .= "<div style='max-height:220px; overflow-y:auto; border:1px solid #dee2e6; border-radius:4px; padding:6px; margin-top:6px; background:#f8f9fa;'>";

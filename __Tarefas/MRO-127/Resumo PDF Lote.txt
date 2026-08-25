@@ -1,0 +1,51 @@
+
+
+Implementação final (25/08/2026) — resumo da regra de negócio
+
+# Objetivo
+
+A implementação permite gerar os PDFs das tarefas JIC de forma individual ou em lote, dando ao usuário a opção de definir quais tarefas serão processadas, quais páginas serão incluídas e se os arquivos devem ser agrupados em um único PDF ou entregues em um ZIP.
+
+# Fluxo de negócio
+
+Definição das tarefas
+O usuário pode escolher entre:
+- processar as tarefas que foram marcadas na grid; ou
+- processar todas as tarefas que atendem aos filtros aplicados na grid.
+
+# Configuração da impressão
+
+Antes de gerar os arquivos, o usuário define:
+- quais páginas deseja imprimir: JIC, JEC, JMC, SHIFT e/ou CALIBRATED;
+- se deseja gerar os documentos de forma agrupada ou individual;
+- e visualiza um resumo da seleção, incluindo a origem dos dados e a quantidade de tarefas que serão processadas.
+
+É obrigatório selecionar pelo menos uma página.
+
+# Geração dos documentos
+
+Após a confirmação, o sistema processa cada tarefa selecionada e gera o respectivo PDF.
+
+A entrega depende da opção escolhida:
+- Agrupado: todos os PDFs são reunidos em um único arquivo PDF, com as páginas das tarefas processadas em sequência.
+- Não agrupado: os PDFs individuais são reunidos em um arquivo ZIP.
+
+# Acompanhamento do processamento
+
+- O sistema registra o processamento das tarefas, permitindo identificar o lote, a tarefa processada, o usuário responsável, o status e o arquivo gerado.
+- Download - Ao finalizar o processamento em lote, o usuário recebe uma tela com a opção de Baixar arquivo e de Fechar a janela.
+- No processamento individual, o PDF é disponibilizado diretamente para download.
+- Limpeza dos arquivos temporários
+
+Os arquivos utilizados durante o processamento são temporários e são removidos automaticamente após 60 minutos, evitando o acúmulo de arquivos no ambiente.
+
+Resumo da regra
+Em termos de negócio, o fluxo ficou:
+- Selecionar tarefas → definir páginas → escolher se será agrupado → processar → gerar PDF/ZIP → disponibilizar para download → registrar o processamento.
+
+
+TESTES DE PERFORMACE
+Qtd Task: 145 (725 páginas) após 00:35 segundos = Lote PDF SEPARADO COM ZIP 
+Qtd Task: 145 (725 páginas) após 00:33 segundos = Lote AGRUPADO UNICO 
+Qtd Task: 550 (2750 páginas) após 02:43 = Lote SEPARADO Sucesso (417MB)
+Qtd Task: 1140 (5700 páginas) após 5min = Reason: Error reading from remote server

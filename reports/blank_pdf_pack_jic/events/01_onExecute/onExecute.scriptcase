@@ -1,17 +1,267 @@
 <?php
 
+// ============================================================
+// BLANK PDF PACK JIC — MRO-127
+// onExecute: orquestra a impressao do Pack JIC.
+//
+// Dois modos:
+//  - Individual: [glo_task_id] preenchido -> gera o PDF da task
+//    (paginas selecionadas via [glo_jic_paginas]; padrao: todas).
+//  - Lote: [glo_pack_jic_ids] preenchido (CSV de task_id ja filtrados
+//    pela grid_public_mro_tasks / control_filtro_jic) -> gera cada
+//    PDF no diretorio temporario e no final empacota (1 PDF | merge
+//    | ZIP) e disponibiliza download.
+//
+// A logica pesada (dados, paginas, empacotar, log) fica nos
+// methods da propria blank; aqui fica apenas a orquestracao.
+// ============================================================
+
 sc_include_lib("tcpdf");
 
-// 1. Inicializacao (padrao documentacao ScriptCase: new TCPDF() sem subclasse)
-$pdf = new TCPDF('P', 'mm', array(215.9, 279.4), true, 'UTF-8', false);
-$pdf->SetAutoPageBreak(false);
-$pdf->SetMargins(0, 0, 0);
-$pdf->setPrintHeader(false);
-$pdf->setPrintFooter(false);
+// Usuario logado (variavel de seguranca do ScriptCase, gerada no login)
+$var_usuario = (isset([usr_login]) && !empty([usr_login])) ? trim([usr_login]) : '';
 
-// =========================================================
-// CARREGAR DADOS DA TAREFA
-// =========================================================
+// ============================================================
+// MODO DOWNLOAD (apos geracao com botao "Baixar")
+// ============================================================
+// Serve o arquivo do diretorio temporario para download APENAS quando
+// [glo_jic_baixar] vier pela URL (clique no botao "Baixar").
+// Se o valor estiver apenas na sessao (residuo de execucao anterior),
+// limpa e segue para gerar normalmente — evita servir arquivo antigo
+// quando o usuario volta pela control com outras JICs.
+$var_baixar_url = isset($_GET['glo_jic_baixar']) ? trim($_GET['glo_jic_baixar']) : '';
+$var_baixar = trim([glo_jic_baixar]);
+
+if (!empty($var_baixar_url)) {
+    // Veio pela URL (clique no botao "Baixar") -> serve o arquivo
+    $var_baixar = $var_baixar_url;
+} elseif (!empty($var_baixar)) {
+    // Residuo de sessao sem URL -> limpa e segue para gerar
+    [glo_jic_baixar] = '';
+    $var_baixar = '';
+}
+
+if (!empty($var_baixar)) {
+    $var_temp_dir_dl = __DIR__ . '/tmp_downloads';
+    $var_arquivo_dl = $var_temp_dir_dl . '/' . basename($var_baixar);
+
+    // Limpa as globais de origem ANTES do download (o mDisponibilizarDownload
+    // termina com exit, entao a limpeza do lote nao roda neste request).
+    // Evita que [glo_pack_jic_ids] fique residuo na sessao apos o fluxo.
+    [glo_pack_jic_ids] = '';
+
+    if (file_exists($var_arquivo_dl)) {
+        [glo_jic_baixar] = '';
+        mDisponibilizarDownload($var_arquivo_dl);
+    } else {
+        [glo_jic_baixar] = '';
+        sc_error_message("Arquivo não encontrado ou expirado. Gere a impressão novamente.");
+        sc_error_exit();
+    }
+}
+
+// Limpeza por idade: apaga arquivos do temp com mais de 60 minutos
+// (etapa 05 ajustada — o arquivo precisa ficar disponivel para o download)
+mDiretorioTemp('limpar_antigos');
+
+// ============================================================
+// MODO LOTE
+// ============================================================
+// Entrada: glo_pack_jic_ids (CSV final montado pela control_filtro_jic).
+// Nome separado de glo_jic_ids (que e da selecao da grid/control).
+$var_ids_raw = trim([glo_pack_jic_ids]);
+$var_paginas_str = trim([glo_jic_paginas]);
+$var_agrupado = trim([glo_jic_agrupado]);
+
+if (!empty($var_ids_raw)) {
+    // Paginas selecionadas na control_filtro_jic (multi-check)
+    // Ex.: 'JIC', 'JEC', 'JMC' (aceita com/sem aspas, separado por virgula)
+    $var_paginas = array();
+    if (!empty($var_paginas_str)) {
+        foreach (explode(',', $var_paginas_str) as $var_item) {
+            $var_item = trim(str_replace(array("'", '"'), '', $var_item));
+            if (in_array($var_item, array('JIC', 'JEC', 'JMC', 'SHIFT', 'CALIBRATED'))) {
+                $var_paginas[] = $var_item;
+            }
+        }
+    }
+    if (count($var_paginas) <= 0) {
+        $var_paginas = array('JIC', 'JEC', 'JMC', 'SHIFT', 'CALIBRATED');
+    }
+
+    // Agrupado: 'S' = merge em um unico PDF; padrao = ZIP
+    $var_agrupado = trim([glo_jic_agrupado]);
+
+    // 1. Monta a lista de tasks (ids ja filtrados pela grid/control)
+    $var_lista = mMontarListaTasks($var_ids_raw);
+    if ($var_lista === false) {
+        sc_error_message("Erro ao montar a lista de JICs para impressao.");
+        sc_error_exit();
+    }
+
+    if (count($var_lista) <= 0) {
+        sc_error_message("Nenhuma JIC encontrada para impressao.");
+        sc_error_exit();
+    }
+
+    // Batch ID unico para esta solicitacao (agrupa os logs)
+    $var_batch_id = 'JIC_' . date('Ymd_His') . '_' . substr(md5(uniqid('', true)), 0, 6);
+
+    // 2. Registra log "em_andamento" para cada task
+    foreach ($var_lista as $var_task_id) {
+        $var_task_code = '';
+        $var_sql_tc = "SELECT task_code FROM mro_tasks WHERE task_id = " . (int)$var_task_id;
+        sc_lookup(ds_tc, $var_sql_tc);
+        if ({ds_tc} !== false && !empty({ds_tc})) {
+            $var_task_code = {ds_tc[0][0]};
+        }
+        mRegistrarLogImpressao($var_batch_id, (int)$var_task_id, $var_task_code, $var_usuario, 'em_andamento');
+    }
+
+    // 3. Gera cada PDF no diretorio temporario
+    $var_temp_dir = mDiretorioTemp('criar');
+    if ($var_temp_dir === false) {
+        sc_error_message("Sem permissao de escrita no diretorio temporario da blank (tmp_downloads).");
+        sc_error_exit();
+    }
+    $var_arquivos_pdf = array();
+    $var_erros = 0;
+
+    foreach ($var_lista as $var_task_id) {
+        $var_task_code = '';
+        $var_sql_tc = "SELECT task_code FROM mro_tasks WHERE task_id = " . (int)$var_task_id;
+        sc_lookup(ds_tc2, $var_sql_tc);
+        if ({ds_tc2} !== false && !empty({ds_tc2})) {
+            $var_task_code = {ds_tc2[0][0]};
+        }
+
+        $var_data = mCarregarDadosTask($var_task_id);
+        if ($var_data === false) {
+            mRegistrarLogImpressao($var_batch_id, (int)$var_task_id, $var_task_code, $var_usuario, 'erro', 'Falha ao carregar dados da task');
+            $var_erros++;
+            continue;
+        }
+
+        // Gera o PDF da task e salva no diretorio temporario
+        $var_pdf_lote = mGerarPdfTask($var_data, $var_paginas);
+
+        if (ob_get_length()) {
+            ob_clean();
+        }
+
+        $var_pdf_bin = $var_pdf_lote->Output('', 'S');
+
+        if ($var_pdf_bin === false || empty($var_pdf_bin)) {
+            mRegistrarLogImpressao($var_batch_id, (int)$var_task_id, $var_task_code, $var_usuario, 'erro', 'Falha ao gerar PDF da task');
+            $var_erros++;
+            continue;
+        }
+
+        $var_pdf_nome = 'pack_jic_' . preg_replace('/[^A-Za-z0-9\-_]/', '_', trim($var_data['task_code'])) . '.pdf';
+        $var_destino = $var_temp_dir . '/' . $var_pdf_nome;
+
+        $var_gravou = file_put_contents($var_destino, $var_pdf_bin);
+
+        if ($var_gravou === false || !file_exists($var_destino)) {
+            mRegistrarLogImpressao($var_batch_id, (int)$var_task_id, $var_task_code, $var_usuario, 'erro', 'Falha ao gerar PDF da task');
+            $var_erros++;
+            continue;
+        }
+
+        $var_pdf_path = $var_destino;
+
+        $var_arquivos_pdf[] = $var_pdf_path;
+        mRegistrarLogImpressao($var_batch_id, (int)$var_task_id, $var_task_code, $var_usuario, 'concluida', '', $var_pdf_path);
+        sc_log_add("pack_jic_lote", "PDF gerado: task_id=" . $var_task_id . " code=" . $var_task_code);
+    }
+
+    // 4. Verifica se gerou pelo menos um PDF
+    if (count($var_arquivos_pdf) <= 0) {
+        mDiretorioTemp('limpar');
+        sc_error_message("Nenhum PDF foi gerado no lote. Verifique os logs de impressao.");
+        sc_error_exit();
+    }
+
+    // 5. Empacota: merge real (agrupado=S) | ZIP (padrao) | 1 PDF
+    $var_arquivo_final = '';
+
+    if ($var_agrupado == 'S' && count($var_lista) > 0) {
+        // Merge REAL: um unico TCPDF com as paginas de todas as tasks
+        $var_bin_merge = mGerarPdfLoteAgrupado($var_lista, $var_paginas);
+
+        if ($var_bin_merge === false || empty($var_bin_merge)) {
+            $var_arquivo_final = false;
+        } else {
+            $var_destino_merge = $var_temp_dir . '/pack_jic_lote_' . date('Ymd_His') . '_merge.pdf';
+            $var_gravou_merge = file_put_contents($var_destino_merge, $var_bin_merge);
+            if ($var_gravou_merge !== false && file_exists($var_destino_merge)) {
+                $var_arquivo_final = $var_destino_merge;
+            } else {
+                $var_arquivo_final = false;
+            }
+        }
+    } else {
+        // ZIP (padrao) ou 1 PDF unico
+        $var_arquivo_final = mEmpacotarPdfs($var_arquivos_pdf, $var_agrupado, $var_temp_dir);
+    }
+
+    // 6. Registra log geral do lote (task_id=0)
+    $var_status_final = ($var_arquivo_final !== false && $var_arquivo_final != '') ? 'concluida' : 'erro';
+    $var_msg_final = ($var_status_final == 'erro') ? 'Falha ao gerar arquivo final do lote' : '';
+    $var_arquivo_log = ($var_arquivo_final !== false && $var_arquivo_final != '') ? $var_arquivo_final : '';
+    mRegistrarLogImpressao($var_batch_id, 0, 'LOTE', $var_usuario, $var_status_final, $var_msg_final, $var_arquivo_log);
+
+    if ($var_arquivo_final === false || $var_arquivo_final == '') {
+        mDiretorioTemp('limpar');
+        sc_error_message("Falha ao gerar o arquivo final do lote. Verifique os logs de impressao.");
+        sc_error_exit();
+    }
+
+    sc_log_add("pack_jic_lote", "Lote " . $var_batch_id . " finalizado: " . basename($var_arquivo_final) . " (" . count($var_arquivos_pdf) . " PDFs, " . $var_erros . " erros)");
+
+    // 7. Renderiza a tela de resultado com botao "Baixar arquivo"
+    //    (nao faz download automatico — evita o spinner orfao do modal)
+    [glo_jic_baixar] = $var_arquivo_final;
+
+    // Limpa as globais de origem (nao deixar residuo na sessao):
+    // o download usa [glo_jic_baixar]; glo_pack_jic_ids nao e mais necessario.
+    [glo_pack_jic_ids] = '';
+
+    // $var_mostrar_baixar ja veio do GET/global no inicio do modo lote
+    // SEMPRE mostra o botao "Baixar" no lote (nao depende do flag que
+    // pode nao chegar pelo sc_redir).
+    $var_mostrar_baixar = true;
+
+    $var_html_res = "<div style='font-family:Arial,Helvetica,sans-serif;text-align:center;padding:30px 20px;'>";
+    $var_html_res .= "<h2 style='color:#2e7d32;margin-bottom:10px;'>Lote concluído com sucesso</h2>";
+    $var_html_res .= "<p style='font-size:14px;color:#333;margin:6px 0;'>"
+        . count($var_arquivos_pdf) . " PDF(s) gerado(s)";
+    if ($var_erros > 0) {
+        $var_html_res .= " · <span style='color:#c62828;'>" . $var_erros . " erro(s)</span>";
+    }
+    $var_html_res .= "</p>";
+    $var_html_res .= "<p style='font-size:13px;color:#666;'>" . basename($var_arquivo_final) . "</p>";
+    $var_html_res .= "<p style='font-size:13px;color:#666;margin:14px 0 20px;'>O arquivo fica disponível por 60 minutos.</p>";
+
+    if ($var_mostrar_baixar) {
+        $var_html_res .= "<a href='" . $_SERVER['PHP_SELF'] . "?nmgp_outra_jan=true&nmgp_start=SC&glo_jic_baixar=" . urlencode(basename($var_arquivo_final)) . "' "
+            . "style='display:inline-block;background:#1565c0;color:#fff;text-decoration:none;padding:12px 28px;border-radius:6px;font-size:15px;font-weight:bold;'>"
+            . "Baixar arquivo</a>";
+    }
+
+    $var_html_res .= "<p style='font-size:12px;color:#888;margin-top:18px;'>Você já pode fechar esta janela e voltar ao filtro.</p>";
+    $var_html_res .= "<button type='button' onclick=\"if(window.tb_remove){window.tb_remove()}else if(parent.tb_remove){parent.tb_remove()}else{window.close()}\" "
+        . "style='display:inline-block;background:#c62828;color:#fff;border:1px solid #b71c1c;padding:10px 24px;border-radius:6px;font-size:14px;cursor:pointer;margin-left:8px;font-weight:bold;'>"
+        . "Fechar</button>";
+    $var_html_res .= "</div>";
+
+    echo $var_html_res;
+    return;
+}
+
+// ============================================================
+// MODO INDIVIDUAL
+// ============================================================
 $var_task_id = (int)[glo_task_id];
 
 if ($var_task_id <= 0) {
@@ -19,227 +269,51 @@ if ($var_task_id <= 0) {
     sc_error_exit();
 }
 
-// SQL baseado no pdf_pack_jic (fonte da verdade)
-$var_sql = "SELECT 
-    t.task_id, t.task_code, t.task_type, t.task_name AS discrepancy_title,
-    t.instruction_text AS corrective_action_description,
-    COALESCE(t.origin_document, t.task_code) AS origin_document,
-    t.document_reference, t.ata_chapter, t.zone_area,
-    t.access_panels, t.is_rii, t.estimated_hours, t.status_code,
-    t.skill_code, t.corrective_action, t.deferment_reason,
-    t.deferment_status, t.amm_reference, t.tools_required,
-    p.work_order AS ac_work_order,
-    p.p6_proj_id AS project,
-    a.registration AS aircraft_registration,
-    a.msn AS aircraft_esn, a.model, a.customer_name,
-    e.full_name AS originated_by_name,
-    CASE WHEN t.is_nrc IS true THEN 'NON ROUTINE JOB INSTRUCTION CARD'
-         ELSE 'JOB INSTRUCTION CARD' END AS type,
-    t.is_nrc AS is_nrc,
-    (SELECT COUNT(*) FROM mro_task_tools WHERE task_id = t.task_id) AS has_tools,
-    t.project_id AS project_id,
-    t.parent_task_id AS parent_task_id,
-    t.phase_code,
-    t.frequency
-FROM mro_tasks t
-INNER JOIN mro_projects p ON t.project_id = p.project_id
-LEFT JOIN mro_aircraft a ON p.aircraft_id = a.aircraft_id
-LEFT JOIN mro_employees e ON t.created_by = e.login
-WHERE t.task_id = " . $var_task_id;
+$var_data = mCarregarDadosTask($var_task_id);
 
-sc_lookup(ds_pack, $var_sql);
-
-if ({ds_pack} === false) {
-    sc_error_message("Erro na consulta da tarefa: " . {ds_pack_erro});
+if ($var_data === false) {
+    sc_error_message("Falha ao carregar os dados da tarefa: " . $var_task_id);
     sc_error_exit();
 }
 
-if (empty({ds_pack})) {
-    sc_error_message("Tarefa nao encontrada: " . $var_task_id);
+// Paginas a imprimir (padrao: todas)
+// Ex.: 'JIC', 'JEC', 'JMC' (aceita com/sem aspas, separado por virgula)
+$var_paginas = array();
+if (!empty([glo_jic_paginas])) {
+    foreach (explode(',', [glo_jic_paginas]) as $var_item) {
+        $var_item = trim(str_replace(array("'", '"'), '', $var_item));
+        if (in_array($var_item, array('JIC', 'JEC', 'JMC', 'SHIFT', 'CALIBRATED'))) {
+            $var_paginas[] = $var_item;
+        }
+    }
+}
+if (count($var_paginas) <= 0) {
+    $var_paginas = array('JIC', 'JEC', 'JMC', 'SHIFT', 'CALIBRATED');
+}
+
+sc_log_add("pack_jic", "Gerando PDF para task_id=" . $var_task_id . " code=" . $var_data['task_code']);
+
+// Batch ID individual (task unica) para registrar o log
+$var_batch_id = 'JIC_' . date('Ymd_His') . '_' . substr(md5(uniqid('', true)), 0, 6);
+mRegistrarLogImpressao($var_batch_id, $var_task_id, $var_data['task_code'], $var_usuario, 'em_andamento');
+
+$pdf = mGerarPdfTask($var_data, $var_paginas);
+
+if (ob_get_length()) {
+    ob_clean();
+}
+
+$var_pdf_bin = $pdf->Output('', 'S');
+
+if ($var_pdf_bin === false || empty($var_pdf_bin)) {
+    mRegistrarLogImpressao($var_batch_id, $var_task_id, $var_data['task_code'], $var_usuario, 'erro', 'Falha ao gerar o binario do PDF');
+    sc_error_message("Falha ao gerar o PDF da tarefa.");
     sc_error_exit();
 }
 
-// Mapeia o resultado da consulta para um array associativo
-$data = array(
-    'task_id'                     => {ds_pack[0][0]},
-    'task_code'                   => {ds_pack[0][1]},
-    'task_type'                   => {ds_pack[0][2]},
-    'discrepancy_title'           => {ds_pack[0][3]},
-    'corrective_action_description' => {ds_pack[0][4]},
-    'origin_document'             => {ds_pack[0][5]},
-    'document_reference'          => {ds_pack[0][6]},
-    'ata_chapter'                 => {ds_pack[0][7]},
-    'zone_area'                   => {ds_pack[0][8]},
-    'access_panels'               => {ds_pack[0][9]},
-    'is_rii'                      => {ds_pack[0][10]},
-    'estimated_hours'             => {ds_pack[0][11]},
-    'status_code'                 => {ds_pack[0][12]},
-    'skill_code'                  => {ds_pack[0][13]},
-    'corrective_action'           => {ds_pack[0][14]},
-    'deferment_reason'            => {ds_pack[0][15]},
-    'deferment_status'            => {ds_pack[0][16]},
-    'amm_reference'               => {ds_pack[0][17]},
-    'tools_required'              => {ds_pack[0][18]},
-    'ac_work_order'               => {ds_pack[0][19]},
-    'project'                     => {ds_pack[0][20]},
-    'aircraft_registration'       => {ds_pack[0][21]},
-    'aircraft_esn'                => {ds_pack[0][22]},
-    'model'                       => {ds_pack[0][23]},
-    'customer_name'               => {ds_pack[0][24]},
-    'originated_by_name'          => {ds_pack[0][25]},
-    'type'                        => {ds_pack[0][26]},
-    'is_nrc'                      => {ds_pack[0][27]},
-    'has_tools'                   => {ds_pack[0][28]},
-    'project_id'                  => {ds_pack[0][29]},
-    'parent_task_id'              => {ds_pack[0][30]},
-    'phase_code'                  => {ds_pack[0][31]},
-    'frequency'                   => {ds_pack[0][32]},
-);
+// Registra o log como concluida (sem arquivo em diretorio, pois vai direto pro browser)
+mRegistrarLogImpressao($var_batch_id, $var_task_id, $var_data['task_code'], $var_usuario, 'concluida', '', '');
 
-// MRO-125: Monta o barcode de 40 caracteres conforme regras do cliente
-$data['barcode'] = mMontarBarcode($data);
-
-// =========================================================
-// CARREGAR RECURSOS (SKILLS) DA TAREFA
-// =========================================================
-// Usa string_agg do PostgreSQL para montar a string formatada
-// diretamente no SQL, evitando acesso a indices com variavel PHP
-$var_sql_res = "SELECT COALESCE(string_agg(resource_code || ' -- ' ||
-                CASE WHEN COALESCE(budgeted_hours, 0) = 0 THEN '0h'
-                     ELSE budgeted_hours::text || 'h'
-                END, ', '
-                ORDER BY resource_code), '') AS skill_list
-                FROM mro_task_resources
-                WHERE task_id = " . $var_task_id . "
-                AND resource_code IN (SELECT DISTINCT skill_code FROM mro_skills)";
-sc_lookup(ds_resources, $var_sql_res);
-
-$var_skill_list = '';
-if ({ds_resources} !== false && !empty({ds_resources})) {
-    $var_skill_list = {ds_resources[0][0]};
-}
-// Verifica se o skill_code padrao esta na lista
-if (!empty($data['skill_code'])) {
-    $var_default_skill = $data['skill_code'];
-    if (strpos($var_skill_list, $var_default_skill) === false) {
-        if ($var_skill_list != '') $var_skill_list .= ', ';
-        $var_skill_list .= $var_default_skill . ' - 0h';
-    }
-}
-$data['skill_resources'] = $var_skill_list;
-
-// =========================================================
-// CARREGAR MATERIAIS (P/N, S/N) DA TAREFA
-// =========================================================
-$var_sql_mat = "SELECT
-    COALESCE(string_agg(CASE WHEN tm.is_applied = true THEN m.part_number END, ', '), '') AS pn_instalado,
-    COALESCE(string_agg(CASE WHEN tm.is_applied = true THEN tm.batch_sn END, ', '), '') AS sn_instalado,
-    COALESCE(string_agg(CASE WHEN tm.is_applied = false THEN m.part_number END, ', '), '') AS pn_removido,
-    COALESCE(string_agg(CASE WHEN tm.is_applied = false THEN tm.batch_sn END, ', '), '') AS sn_removido
-FROM mro_task_materials tm
-LEFT JOIN mro_materials m ON tm.material_id = m.material_id
-WHERE tm.task_id = " . $var_task_id;
-sc_lookup(ds_materials, $var_sql_mat);
-
-$data['pn_instalado'] = ({ds_materials} !== false && !empty({ds_materials})) ? {ds_materials[0][0]} : '';
-$data['sn_instalado'] = ({ds_materials} !== false && !empty({ds_materials})) ? {ds_materials[0][1]} : '';
-$data['pn_removido'] = ({ds_materials} !== false && !empty({ds_materials})) ? {ds_materials[0][2]} : '';
-$data['sn_removido'] = ({ds_materials} !== false && !empty({ds_materials})) ? {ds_materials[0][3]} : '';
-
-// =========================================================
-// CARREGAR EXECUTOR DA TAREFA
-// =========================================================
-$var_sql_exec = "SELECT DISTINCT e.full_name
-FROM mro_task_assignments ta
-LEFT JOIN mro_employees e ON ta.employee_id = e.employee_id
-WHERE ta.task_id = " . $var_task_id . "
-AND e.full_name IS NOT NULL
-LIMIT 1";
-sc_lookup(ds_executor, $var_sql_exec);
-
-$var_executor_name = '';
-if ({ds_executor} !== false && !empty({ds_executor})) {
-    $var_executor_name = {ds_executor[0][0]};
-}
-$data['executor_name'] = $var_executor_name;
-
-// =========================================================
-// CARREGAR NRCs ANTERIORES (para campos 01/02 List if applicable)
-// =========================================================
-// Na capa JIC, os campos "01 List if applicable" e "02 List if applicable"
-// devem exibir o codigo da primeira e da ultima NRC filhas do documento atual.
-// Cada documento mostra apenas seus filhos diretos:
-// - Rotina: mostra NRCs N- filhas
-// - N-: mostra NRCs NN filhas
-// - NN: mostra NRCs NNN filhas
-
-// Busca a primeira e a ultima NRC filha do documento atual, excluindo a atual
-$var_sql_prev = "SELECT
-    COALESCE(MIN(task_id), 0) AS first_nrc_id,
-    COALESCE(MAX(task_id), 0) AS last_nrc_id
-FROM mro_tasks
-WHERE parent_task_id = " . $var_task_id . "
-AND is_nrc = true
-AND task_id != " . $var_task_id;
-sc_lookup(ds_prev_nrc, $var_sql_prev);
-
-$data['prev_nrc_first'] = '';
-$data['prev_nrc_last'] = '';
-
-if ({ds_prev_nrc} !== false && !empty({ds_prev_nrc})) {
-    $var_first_id = (int){ds_prev_nrc[0][0]};
-    $var_last_id = (int){ds_prev_nrc[0][1]};
-
-    if ($var_first_id > 0) {
-        $var_sql_first = "SELECT task_code FROM mro_tasks WHERE task_id = " . $var_first_id;
-        sc_lookup(ds_first, $var_sql_first);
-        if ({ds_first} !== false && !empty({ds_first})) {
-            $data['prev_nrc_first'] = {ds_first[0][0]};
-        }
-    }
-
-    if ($var_last_id > 0 && $var_last_id != $var_first_id) {
-        $var_sql_last = "SELECT task_code FROM mro_tasks WHERE task_id = " . $var_last_id;
-        sc_lookup(ds_last, $var_sql_last);
-        if ({ds_last} !== false && !empty({ds_last})) {
-            $data['prev_nrc_last'] = {ds_last[0][0]};
-        }
-    }
-}
-
-sc_log_add("pack_jic", "Gerando PDF para task_id=" . $var_task_id . " code=" . {ds_pack[0][1]});
-
-// =========================================================
-// PAGINA 01 — Capa JIC (Job Instruction Card)
-// Se for NRC usa capa Não Rotina, senao usa capa Padrão
-// =========================================================
-if ($data['is_nrc']) {
-    mGerarPagina1NR($pdf, $data);
-} else {
-    mGerarPagina1JIC($pdf, $data);
-}
-
-// =========================================================
-// PAGINA 02 — JEC (Job Equipment and Tool Card)
-// =========================================================
-mGerarPagina2JEC($pdf, $data);
-
-// =========================================================
-// PAGINA 03 — JMC (Job Material Card)
-// =========================================================
-mGerarPagina3JMC($pdf, $data);
-
-// =========================================================
-// PAGINA 04 — Shift Turnover
-// =========================================================
-mGerarPagina4Shift($pdf, $data);
-
-// =========================================================
-// PAGINA 05 — Calibrated Tool
-// =========================================================
-mGerarPagina5Calibrated($pdf, $data);
-
-// Evita erro "Some data has already been output"
 if (ob_get_length()) {
     ob_clean();
 }

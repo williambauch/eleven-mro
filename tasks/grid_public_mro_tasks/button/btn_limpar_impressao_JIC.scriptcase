@@ -1,3 +1,5 @@
 <?php
 
-sc_redir('grid_public_mro_tasks', glo_jic_ids="");
+// Limpa e redireciona
+[glo_jic_ids] = "";
+sc_redir('grid_public_mro_tasks');

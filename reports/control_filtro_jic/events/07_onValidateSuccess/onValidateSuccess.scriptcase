@@ -1,0 +1,135 @@
+<?php
+
+// ====================================================================
+// CONTROL FILTRO JIC - MRO-127
+// onValidateSuccess: monta as globais da impressao e redireciona
+// para a blank_pdf_pack_jic.
+//
+// Fluxo:
+//  1. Resolve a lista final de task_id:
+//     - Modo ids explicitos ([glo_jic_ids]): usa o CSV recebido.
+//     - Modo "todas do filtro" ([glo_jic_where]): consulta o banco
+//       usando o WHERE salvo pelo btn_config_impressao_JIC e monta
+//       o CSV de ids (decisao (a): envia ids, nao o WHERE).
+//  2. [glo_jic_ids]      = CSV final (sem espacos)
+//  3. [glo_jic_paginas]  = CSV com virgula, SEM aspas (ex: JIC,JEC)
+//  4. [glo_jic_agrupado] = S (merge real) ou N (ZIP, padrao)
+//  5. Limpa [glo_jic_where] (nao acumular)
+//  6. sc_redir para a blank_pdf_pack_jic
+// ====================================================================
+
+// ============ 1. RESOLVE A LISTA FINAL DE IDS ============
+$var_ids_raw = trim([glo_jic_ids]);
+$var_where = trim([glo_jic_where]);
+
+$var_lista_ids = array();
+
+if (!empty($var_where)) {
+    // Modo "todas do filtro": consulta os task_id pelo WHERE
+    $var_where = preg_replace('/^\s*where\s*/i', '', $var_where);
+    if (empty($var_where)) {
+        $var_where = '1=1';
+    }
+
+    $var_sql = "SELECT task_id FROM mro_tasks
+                WHERE " . $var_where . "
+                ORDER BY task_code";
+    sc_lookup(ds_final, $var_sql);
+
+    if ({ds_final} === false) {
+        sc_error_message("Erro ao montar a lista de JICs para impressao.");
+        sc_error_exit();
+    }
+
+    if (!empty({ds_final})) {
+        foreach ({ds_final} as $var_linha) {
+            $var_lista_ids[] = (int)$var_linha[0];
+        }
+    }
+} else {
+    // Modo ids explicitos: usa o CSV recebido
+    if (!empty($var_ids_raw)) {
+        foreach (explode(',', $var_ids_raw) as $var_item) {
+            $var_item = trim($var_item);
+            if ($var_item !== '') {
+                $var_lista_ids[] = (int)$var_item;
+            }
+        }
+    }
+}
+
+// Deduplica e valida se sobrou algo
+$var_lista_ids = array_values(array_unique($var_lista_ids));
+
+if (count($var_lista_ids) <= 0) {
+    sc_error_message("Nenhuma JIC encontrada para impressao. Volte a grid e ajuste o filtro.");
+    sc_error_exit();
+}
+
+// ============ 2. GLO_PACK_JIC_IDS (CSV final - enviado a blank) ============
+// Usa nome DIFERENTE de glo_jic_ids (que e da selecao da grid/control)
+// para evitar residuo/confusao de contexto entre control e blank.
+[glo_pack_jic_ids] = implode(',', $var_lista_ids);
+
+// ============ 3. GLO_JIC_PAGINAS (CSV com virgula, sem aspas) ============
+// O multi-check {filtro_page} chega como array -> converte com implode(',')
+$var_paginas = {filtro_page};
+
+if (!is_array($var_paginas)) {
+    // Tolerancia: caso venha como string
+    $var_paginas = array_filter(array_map('trim', preg_split('/[;,]/', (string)$var_paginas)));
+}
+
+$var_paginas_limpas = array();
+if (count($var_paginas) > 0) {
+    foreach ($var_paginas as $var_item) {
+        $var_item = trim(str_replace(array("'", '"'), '', $var_item));
+        if (in_array($var_item, array('JIC', 'JEC', 'JMC', 'SHIFT', 'CALIBRATED'))) {
+            $var_paginas_limpas[] = $var_item;
+        }
+    }
+}
+
+if (count($var_paginas_limpas) <= 0) {
+    sc_error_message("Selecione pelo menos 1 pagina para gerar o PDF.");
+    sc_error_exit();
+}
+
+[glo_jic_paginas] = implode(',', $var_paginas_limpas);
+
+// ============ 4. GLO_JIC_AGRUPADO (S ou N) ============
+// Fonte PRIMARIA: o campo do form {filtro_agrupado} (o que o usuario
+// marcou na tela). A global [glo_jic_agrupado] pode ter residuo de
+// execucao anterior (ex: 'N' setado por padrao), entao NAO pode
+// sobrepor a escolha do usuario.
+$var_agrupado = trim({filtro_agrupado});
+if (empty($var_agrupado)) {
+    $var_agrupado = {filtro_agrupado};
+}
+if ($var_agrupado != 'S') {
+    $var_agrupado = 'N';
+}
+[glo_jic_agrupado] = $var_agrupado;
+
+// ============ 5. NAO LIMPAR GLO_JIC_IDS/GLO_JIC_WHERE AQUI ============
+// O onValidateSuccess pode ser re-executado (disparo do modal/redirect).
+// Se limparmos as globais de origem aqui, a 2a execucao encontra tudo
+// vazio e cai em "Nenhuma JIC". Elas sao redefinidas pelo
+// btn_config_impressao_JIC a cada acesso pela grid, entao nao ha
+// risco de residuo.
+
+// ============ 5.1 LIMPA GLO_JIC_BAIXAR (evita residuo de download
+// de execucao anterior — senao a blank serviria arquivo antigo) ============
+[glo_jic_baixar] = '';
+
+// ============ 6. REDIRECIONA PARA A BLANK (modal) ============
+// Passa os valores pelos PARAMETROS do sc_redir (padrao ScriptCase:
+// nome_do_parametro=valor, separados por ';'). No destino, o ScriptCase
+// os disponibiliza como variaveis globais: [glo_pack_jic_ids],
+// [glo_jic_paginas], [glo_jic_agrupado].
+// O botao "Baixar" no resultado e FIXO (sempre aparece no lote);
+// no PDF unico nem se aplica.
+$var_pars_redir = 'glo_pack_jic_ids=' . implode(',', $var_lista_ids)
+    . ';glo_jic_paginas=' . implode(',', $var_paginas_limpas)
+    . ';glo_jic_agrupado=' . $var_agrupado;
+sc_redir('blank_pdf_pack_jic', $var_pars_redir, "modal", '', '800', '600');
