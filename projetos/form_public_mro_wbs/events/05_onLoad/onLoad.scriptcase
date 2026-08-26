@@ -1,0 +1,8 @@
+<?php
+
+if ({wbs_level} == 'NIVEL') {
+    // Esconde o campo parent_wbs_id  
+    sc_field_display({parent_wbs_id}, off);
+} else {
+	sc_field_display({parent_wbs_id}, on);
+}

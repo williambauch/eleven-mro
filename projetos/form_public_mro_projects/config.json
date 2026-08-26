@@ -3,83 +3,23 @@
   "tipo": "Form",
   "nome_tabela": "\"public\".mro_projects",
   "login": "admin",
-  "data_alteracao": "2026-08-04 10:09",
+  "data_alteracao": "2026-08-25 15:59",
   "nomeconexao": "conn_mro",
   "tabelas": [
     "public.mro_projects"
   ],
   "campos": [
     {
-      "nome": "aircraft_id",
+      "nome": "project_id",
       "tipo": "int4",
       "required": false,
-      "pk": false
-    },
-    {
-      "nome": "cap_hh_limit",
-      "tipo": "numeric",
-      "required": false,
-      "pk": false
-    },
-    {
-      "nome": "cap_material_limit",
-      "tipo": "numeric",
-      "required": false,
-      "pk": false
-    },
-    {
-      "nome": "cap_material_type",
-      "tipo": "varchar",
-      "required": false,
-      "pk": false
-    },
-    {
-      "nome": "created_at",
-      "tipo": "datetime",
-      "required": false,
-      "pk": false
-    },
-    {
-      "nome": "critical_notes",
-      "tipo": "text",
-      "required": false,
-      "pk": false
-    },
-    {
-      "nome": "csn_records",
-      "tipo": "int4",
-      "required": false,
-      "pk": false
-    },
-    {
-      "nome": "detalhe_attachments",
-      "tipo": "varchar",
-      "required": false,
-      "pk": false
-    },
-    {
-      "nome": "end_date",
-      "tipo": "date",
-      "required": false,
-      "pk": false
-    },
-    {
-      "nome": "is_cap_zero",
-      "tipo": "bool",
-      "required": false,
-      "pk": false
+      "pk": true
     },
     {
       "nome": "p6_proj_id",
       "tipo": "varchar",
       "required": false,
       "pk": false
-    },
-    {
-      "nome": "project_id",
-      "tipo": "int4",
-      "required": false,
-      "pk": true
     },
     {
       "nome": "project_name",
@@ -100,8 +40,14 @@
       "pk": false
     },
     {
-      "nome": "tsn_records",
-      "tipo": "numeric",
+      "nome": "end_date",
+      "tipo": "date",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "created_at",
+      "tipo": "datetime",
       "required": false,
       "pk": false
     },
@@ -112,13 +58,61 @@
       "pk": false
     },
     {
-      "nome": "wbs",
+      "nome": "aircraft_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "is_cap_zero",
+      "tipo": "bool",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "cap_hh_limit",
+      "tipo": "numeric",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "cap_material_type",
       "tipo": "varchar",
       "required": false,
       "pk": false
     },
     {
+      "nome": "cap_material_limit",
+      "tipo": "numeric",
+      "required": false,
+      "pk": false
+    },
+    {
       "nome": "work_order",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "tsn_records",
+      "tipo": "numeric",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "csn_records",
+      "tipo": "int4",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "critical_notes",
+      "tipo": "text",
+      "required": false,
+      "pk": false
+    },
+    {
+      "nome": "detalhe_attachments",
       "tipo": "varchar",
       "required": false,
       "pk": false

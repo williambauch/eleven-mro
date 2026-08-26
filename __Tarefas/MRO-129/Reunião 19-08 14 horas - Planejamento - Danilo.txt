@@ -1,0 +1,87 @@
+# Ajuste a fazer:
+
+1) No filtro da tasks poder filtrar por Range para os campos numéricos. O range também será usado para selecionar quais JICs serão impressas (imprimir em ordem numérica). - FEITO
+2) No grid da task adicionar a quebra por WBS.
+3) O WBS deve ser um cadastro global (Uma tabela) que será usada na task como mais um status (1:1). - FEITO
+4) Nos campos de Select de predecessoras e sucessoras filtrar somente por task do mesmo projeto. - FEITO
+
+# Confirmar com o Rodrigo.
+
+a) Qual é o modelo de excel está sendo usado no "Importar Materiais Empenhados". - RODIRGO RESPONDE DEPOIS
+b) Para não rotinas como está sendo feito o importe de produtos do empenho (Sincronização do Banco de Dados do Primavera Empenho de Materiais). - RODRIGO RESPONDE DEPOIS
+
+ 
+Em confirmação: Amanhã dia 20/08 às 14 horas reunião para testes de Supervisor e Mecânico. - FEITO
+
+
+# Pendente
+Fazer testes para avaliar a viabilidade de criar PDF de JIC agrupados em um único arquivo. - FEITO
+
+
+
+Como se está completo o importe
+
+CONFIRMAR DE ONDE ESTÁ QUAL MODELO = IMPORTAR MATERIAIS EMPENHADOS 
+
+COMPRAS PRIMAVERA IMPORTAÇÃO DO  EMPENHO PLANEJAMENTO
+SINCRONICA BD COM O PRIMARERA EMPENHO DE MATERIAIS
+
+QUANDO ABRE NÃO ROTINA 
+
+
+-------------- SUPER VISAO E MECANICOS
+
+Ajustes Reunião: Planejamento 19/08 - Leonel e Danilo 
+
+Pessoal, conforme alinhado na reunião de hoje, seguem os pontos levantados e os ajustes necessários:
+
+# Ajustes a serem realizados
+
+1) Filtro das Tasks: permitir a filtragem por range nos campos numéricos. Esse range também será utilizado para selecionar quais JICs serão impressas, mantendo a impressão em ordem numérica.
+2) Grid da Task: adicionar a quebra por WBS.
+3) Cadastro de WBS: o WBS deverá ser um cadastro global, mantido em uma tabela única, e utilizado na Task como mais um status, em uma relação 1:1.
+4) Predecessoras e Sucessoras: nos campos de seleção, exibir somente as Tasks pertencentes ao mesmo projeto.
+
+# Pontos a confirmar com o Rodrigo
+
+a) Qual modelo de Excel está sendo utilizado no processo de Importar Materiais Empenhados.
+
+b) Para as rotinas, confirmar como está sendo realizado o processo de importação dos produtos do empenho, ou seja, a sincronização do banco de dados do Primavera com o Empenho de Materiais.
+
+# Próxima reunião de testes
+Fica confirmada para amanhã, 20/08, às 14h, a reunião para realização dos testes dos perfis de Supervisor e Mecânico.
+
+
+
+
+
+
+grid_provedoria_release
+
+control_filtro_jic
+grid_mro_task_log
+
+
+INSERT INTO sec_groups_apps (app_name, group_id, priv_access, priv_insert, priv_update, priv_delete, priv_export, priv_print)
+SELECT 'blank_mro_provedoria_bip', group_id, priv_access, priv_insert, priv_update, priv_delete, priv_export, priv_print
+FROM sec_groups_apps
+WHERE app_name = 'blank_mro_materials_kanban'
+ON CONFLICT (app_name, group_id) DO UPDATE SET
+    priv_access = EXCLUDED.priv_access,
+    priv_insert = EXCLUDED.priv_insert,
+    priv_update = EXCLUDED.priv_update,
+    priv_delete = EXCLUDED.priv_delete,
+    priv_export = EXCLUDED.priv_export,
+    priv_print = EXCLUDED.priv_print;
+
+
+
+	[usr_skill_id] / [usr_is_inspector]
+
+Clodoaldo José Ribeiro = Mecanico e SuperVisor
+Gabriela Santos = Mecanico e SuperVisor
+Danilo = Programação
+
+Como principalmente para mecânico e supervisor os dados vem filtrado pelo usuário (skill e id) adicionei um botão no menu "Segurança / Simular Usuário" que sobrescreve essas variáveis globais para gente ver o mesmo que eles. A app não muda permissão de página, só dados dos filtros. É útil para suporte e nessa fase de testes. Só adm pode usar. Para desfazer a troca é só fazer logoff.
+
+Pode ser útil para montar esse roteiro de teste também.

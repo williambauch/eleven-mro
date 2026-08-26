@@ -36,6 +36,12 @@
       "grid_public_mro_tasks",
       "control_filtro_jic",
       "blank_pdf_pack_jic"
+    ],
+    "MRO-129": [
+      "form_public_mro_projects",
+      "form_public_mro_wbs",
+      "grid_public_mro_wbs",
+      "reports/jobcard"
     ]
   },
   "shortcuts": {

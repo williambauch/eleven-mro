@@ -1,0 +1,24 @@
+<?php
+
+/*----------------------------------------------------
+  ScriptCase Ajax Event File
+  Application: form_public_mro_wbs
+  Field: wbs_level
+  Trigger: onChange
+  Created: 25/08/2026, 16:12:52
+  Author: WBAUCH
+----------------------------------------------------*/
+
+// Evento Ajax para o campo {wbs_level} - Trigger: onChange
+// Regra de negocio:
+//  - NIVEL (WS/TA/NR): parent_wbs_id nao se aplica -> esconde e limpa o campo
+//  - SUB-NIVEL: parent_wbs_id e obrigatorio -> mostra o campo
+
+if ({wbs_level} == 'NIVEL') {
+    // Esconde o campo parent_wbs_id e limpa para nao salvar lixo
+    sc_field_display({parent_wbs_id}, off);
+    {parent_wbs_id} = 'NULL';
+} else {
+    // SUB-NIVEL (ou vazio): mostra o campo parent_wbs_id
+    sc_field_display({parent_wbs_id}, on);
+}

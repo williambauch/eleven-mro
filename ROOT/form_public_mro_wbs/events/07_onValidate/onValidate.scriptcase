@@ -1,0 +1,36 @@
+<?php
+// Validacao do formulario de cadastro de WBS
+// Regras de negocio:
+//  - NIVEL (WS/TA/NR): parent_wbs_id deve ficar vazio (nao salvar lixo)
+//  - SUB-NIVEL: parent_wbs_id e OBRIGATORIO (bloqueia salvamento se vazio)
+
+$var_wbs_level = trim({wbs_level});
+$var_parent = (int){parent_wbs_id};
+
+if ($var_wbs_level == 'NIVEL') {
+    // Garante que o NIVEL nao tenha pai salvo
+    {parent_wbs_id} = '';
+} elseif ($var_wbs_level == 'SUB-NIVEL') {
+    // SUB-NIVEL exige um NIVEL pai valido
+    if ($var_parent <= 0) {
+        sc_error_message("Informe o WBS pai (NIVEL) para o SUB-NIVEL");
+        sc_error_exit();
+    }
+
+    // Valida que o pai informado existe e e um NIVEL
+    $var_sql = "SELECT wbs_id
+                FROM public.mro_wbs
+                WHERE wbs_id = " . $var_parent . "
+                  AND wbs_level = 'NIVEL'";
+    sc_lookup(ds_wbs_pai_valido, $var_sql);
+
+    if ({ds_wbs_pai_valido} === false) {
+        sc_error_message("Erro ao validar o WBS pai: " . {ds_wbs_pai_valido_erro});
+        sc_error_exit();
+    }
+
+    if (empty({ds_wbs_pai_valido})) {
+        sc_error_message("O WBS pai informado nao existe ou nao e um NIVEL");
+        sc_error_exit();
+    }
+}

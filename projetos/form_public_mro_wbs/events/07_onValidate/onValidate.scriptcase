@@ -1,0 +1,17 @@
+<?php
+
+// Validacao do formulario de cadastro de WBS
+// Regras de negocio:
+//  - NIVEL (WS/TA/NR): parent_wbs_id deve ficar vazio (nao salvar lixo)
+//  - SUB-NIVEL: parent_wbs_id e obrigatorio
+
+if ({wbs_level} == 'NIVEL') {
+    // Garante que o NIVEL nao tenha pai salvo
+    {parent_wbs_id} = 'NULL';
+} elseif ({wbs_level} == 'SUB-NIVEL') {
+    // SUB-NIVEL exige um NIVEL pai
+    if (empty({parent_wbs_id})) {
+        sc_error_message("Informe o WBS pai (NIVEL) para o SUB-NIVEL");
+        sc_error_exit();
+    }
+}

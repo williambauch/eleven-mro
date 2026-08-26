@@ -16,6 +16,6 @@ SELECT
     COALESCE(t.is_nrc, FALSE) as is_nrc 
 FROM mro_tasks t
 LEFT JOIN mro_wbs w ON t.wbs_id = w.wbs_id
-LEFT JOIN mro_projects p ON w.project_id = p.project_id
+LEFT JOIN mro_projects p ON t.project_id = p.project_id
 LEFT JOIN mro_aircraft a ON p.aircraft_id = a.aircraft_id
 WHERE t.task_id = [glo_task_id]
