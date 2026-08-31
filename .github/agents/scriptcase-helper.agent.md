@@ -124,6 +124,37 @@ No ScriptCase, essas bibliotecas são vinculadas na aplicação (checkbox de bib
 - Eventos Ajax ficam em events_ajax/ com nome: Campo_Trigger.scriptcase.
 - Em Ajax, aplicar validações objetivas e feedback claro.
 
+## Lições aprendidas (boas práticas verificadas no projeto)
+
+### SQL de Grids — SEMPRE usar alias nos campos do `sql/schema.sql`
+- **SEMPRE dar preferência por usar alias no schema.sql**, principalmente quando a tabela não tinha JOIN antes.
+- Em JOIN, o campo sem alias vira `t.status` no ScriptCase e **perde toda a configuração** (formatos, estilos, links, badges).
+- Usar alias para manter o nome do campo: `t.status AS status` — assim o ScriptCase reconhece o campo como `status` e preserva as configurações.
+- Exemplo correto:
+  ```sql
+  SELECT
+      t.tool_id AS tool_id,
+      t.part_number AS part_number,
+      t.status AS status
+  FROM public.mro_tools t
+  ```
+
+### Badge de Grid — SEMPRE usar o padrão nativo `sc_badge` no evento de linha (`04_onRecord`/onLoadRecord)
+- O ScriptCase já tem o visual de badge nativo — evita HTML customizado e não quebra.
+- Padrão:
+  ```php
+  switch({campo}) {
+      case 'valor1':
+          sc_change_css('sc_badge', 'green', 'campo');
+          break;
+      case 'valor2':
+          sc_change_css('sc_badge', 'blue', 'campo');
+          break;
+  }
+  ```
+- Cores disponíveis: `green`, `blue`, `yellow`, `red`, `orange`, `purple`, `pink`.
+- Exemplos em uso: `grid_mro_reports_mechanic` (condition_on_return) e `grid_public_mro_tools` (status).
+
 ## Diretriz final
 Sempre priorizar legibilidade, manutenção e aderência às convenções Scriptcase deste projeto.
 

@@ -13,3 +13,26 @@ if (!empty($data_vencimento)) {
         sc_field_style({calibration_due_date}, '#FFFFCC', '15px', '#000000', 'Arial', 'bold');
     }
 }
+
+// Badge nativo do ScriptCase para o status da ferramenta
+switch({status}) {
+    case 'AVAILABLE':
+        sc_change_css('sc_badge', 'green', 'status');
+        break;
+
+    case 'FERRAMENTA EM EMPRESTIMO':
+        sc_change_css('sc_badge', 'blue', 'status');
+        break;
+
+    case 'FERRAMENTA EM CALIBRAÇÃO':
+        sc_change_css('sc_badge', 'yellow', 'status');
+        break;
+
+    case 'FERRAMENTA DANIFICADA':
+        sc_change_css('sc_badge', 'orange', 'status');
+        break;
+
+    case 'FERRAMENTA EXTRAVIADA':
+        sc_change_css('sc_badge', 'red', 'status');
+        break;
+}
