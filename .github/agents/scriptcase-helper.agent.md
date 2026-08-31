@@ -74,6 +74,140 @@ app_name/
     └── schema.sql
 ```
 
+## Guia para Agentes — Entendendo o `config.json` das aplicações Scriptcase
+
+### O que é o `config.json`
+
+Cada pasta de aplicação importada contém um arquivo `config.json`. **Ele NÃO é um arquivo original do Scriptcase** — é um **mapeamento gerado automaticamente** pela extensão "Scriptcase Helper" durante a importação do backup/projeto (formato SC9/SC10).
+
+O objetivo desse mapeamento é te dar, em formato legível, **toda a configuração que a aplicação tinha na IDE do Scriptcase**: tipo, tabela, campos, opções de selects, textos de ajuda, variáveis globais, bibliotecas usadas, etc. **Não modifique este arquivo** — ele é apenas documentação da configuração original.
+
+### Estrutura do `config.json`
+
+```json
+{
+  "nome": "form_animal",
+  "tipo": "Form",
+  "nome_tabela": "animal",
+  "nome_banco": "...",
+  "descricao": "Cadastro de animais",
+  "login": "admin",
+  "data_alteracao": "2026-08-29 09:32",
+  "nomeconexao": "conn_aws_sistema_pet_01",
+  "tabelas": ["animal"],
+  "variaveis_globais": ["empresa_id", "usr_login", "usr_nivel_acesso", "var_pessoa_id"],
+  "bibliotecas": ["mro_engine.php"],
+  "campos": [
+    {
+      "nome": "sexo",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false,
+      "ajuda": { "tipo": "Tippy", "texto": "..." },
+      "opcoes": { ... },
+      "configuracao": { ... }
+    }
+  ]
+}
+```
+
+### Campos de nível raiz
+
+| Campo | Significado |
+|---|---|
+| `nome` | Nome da aplicação (nome da pasta) |
+| `tipo` | Tipo da app: `Form`, `Grid`, `Control`, `Blank`, `Chart`, `Menu`, etc. |
+| `nome_tabela` | Tabela principal que a app acessa |
+| `nome_banco` | Banco de dados (se conhecido) |
+| `descricao` | Descrição configurada na IDE |
+| `login` | Autor/último editor da app |
+| `data_alteracao` | Data da última alteração (ISO) |
+| `nomeconexao` | Nome da conexão usada (ex: `conn_mro`) |
+| `tabelas` | Todas as tabelas usadas (extraídas dos SQLs, incluindo JOINs) |
+| `variaveis_globais` | Variáveis globais (`glo_*`) e de usuário (`usr_*`) que a app usa |
+| `bibliotecas` | Bibliotecas internas que a app referencia (ex: `mro_engine.php`) |
+
+### Estrutura de cada campo em `campos`
+
+#### `ajuda` — Texto de ajuda do campo (Hint/Texto/Pop-up/Tippy)
+```json
+"ajuda": {
+  "tipo": "Tippy",
+  "texto": "Escala de Comportamento Animal (1 a 5)\nA Escala foi criada..."
+}
+```
+> Os `\n` no texto são quebras de linha (formato JSON).
+
+#### `opcoes` — Configuração de campos de seleção
+Para campos `SELECT`, `RADIO`, `CHECKBOX`, `DUPLO_SELECT`:
+
+```json
+"opcoes": {
+  "tipo": "radio",              // select | radio | checkbox | duplo_select | autocomplete
+  "origem": "manual",           // manual (opções fixas) ou lookup (SQL)
+  "multipla": false,            // true se permite múltipla seleção
+  "opcoes": [
+    { "label": "Fêmea", "valor": "f", "padrao": true },
+    { "label": "Macho", "valor": "m", "padrao": false }
+  ],
+  "sql": "SELECT id, nome FROM especie ORDER BY nome",
+  "conexao": "conn_mro",
+  "lookup_dependente": true,
+  "dependencia": ["empresa_id"]
+}
+```
+
+**Interpretação importante:**
+- **`origem: "manual"`** → os valores possíveis estão na lista `opcoes` (label = texto exibido, valor = valor gravado no banco, padrao = valor inicial).
+- **`origem: "lookup"`** → os valores vêm do banco via `sql` (a 1ª coluna do SELECT é o valor gravado, a 2ª é o texto exibido).
+- **`lookup_dependente: true`** → o SQL usa `[campo]` ou `{campo}` de outro campo para filtrar (ex: `WHERE empresa_id = [empresa_id]`). Os campos dos quais depende estão em `dependencia`.
+- **`tipo: "autocomplete"`** → campo de texto com sugestões do banco (TEXTO_AUTOCOMP/NUMERO_AUTOCOMP).
+
+#### `configuracao` — Configurações gerais do campo na IDE
+```json
+"configuracao": {
+  "html_tipo": "TEXT",
+  "tipo_dado": "TEXTO",
+  "html_largura": "20",
+  "tamanho_min": "0",
+  "tamanho_max": "45",
+  "obrigatorio": true,
+  "read_only": false,
+  "chave_primaria": false,
+  "formato_data": "dd/mm/aaaa",
+  "texto_transforma": "MAIUSC",
+  "validacao": "...",
+  "mensagem_validacao": "..."
+}
+```
+
+| Campo | Significado |
+|---|---|
+| `html_tipo` | Tipo do controle: `TEXT`, `TEXTAREA`, `SELECT`, `RADIO`, `CHECKBOX`, `DATA`, `HORA`, etc. |
+| `tipo_dado` | Tipo de dado da IDE: `TEXTO`, `NUMEROEDT`, `DECIMAL`, `VALOR`, `DATA`, `MULTITEXTO`, `RATINGSMILE`, etc. |
+| `obrigatorio` | Se o campo é obrigatório (`required`) |
+| `read_only` | Se o campo é somente leitura |
+| `chave_primaria` | Se o campo é PK da tabela |
+| `formato_data` | Formato de data (ex: `dd/mm/aaaa`) |
+| `texto_transforma` | Transformação de texto (MAIUSC/MINUSC/NADA) |
+| `tamanho_max` | Tamanho máximo do campo no banco |
+
+### Como usar este mapeamento no seu trabalho
+
+1. **Para gerar código correto**: use `{nome}` para campos (ex: `{sexo}`), `[glo_x]` para variáveis globais, `$var_nome` para locais. Consulte `campos[].nome` para saber os nomes exatos.
+2. **Para validar dados**: consulte `opcoes.opcoes[].valor` para saber os valores aceitos de selects/radios/checkboxes.
+3. **Para entender lookups**: consulte `opcoes.sql` — se for lookup dependente, lembre que o valor do campo `dependencia` deve ser setado antes.
+4. **Para entender fluxo entre apps**: `variaveis_globais` mostra quais globais a app recebe/envia (ex: `glo_assignment_id_split` vem de outra app).
+5. **Para saber quais tabelas estão envolvidas**: `tabelas` lista todas (inclusive de JOINs).
+
+### Regras de ouro
+
+- Se um campo tem `configuracao.obrigatorio: true`, valide antes de inserir/atualizar.
+- Se um campo é `read_only`, não tente alterá-lo no banco via INSERT/UPDATE (o Scriptcase cuida).
+- Use `{campo}` (chaves) para campos, `[global]` (colchetes) para globais, `$var` para locais. **Nunca `{$var}`.**
+
+---
+
 ## Apps de Menu (menu_tree.md)
 Aplicações do tipo **menu** possuem um arquivo `menu_tree.md` na raiz da pasta com a árvore completa de navegação do sistema. Cada linha representa um item de menu folha no formato:
 
