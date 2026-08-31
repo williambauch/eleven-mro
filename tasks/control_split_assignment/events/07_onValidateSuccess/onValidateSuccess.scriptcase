@@ -1,18 +1,20 @@
 <?php
 
 // ====================================================================
-// MRO-119: Executa o split do assignment
+// MRO-130: Executa o split do assignment com REDISTRIBUICAO PROPORCIONAL
 //
 // 1. Consulta dados completos do assignment original
-// 2. Atualiza assignment original com metade das horas
-// 3. Cria NOVO assignment com a outra metade
-// 4. Registra evento SPLIT em mro_assignment_events
-// 5. Fecha modal e recarrega a pagina do supervisor
+// 2. Calcula total alocado, consumido e saldo da task
+// 3. Redistribui o saldo igualmente entre os assignments ativos + novo
+//    (aplicando piso de consumo: ninguem fica com planned < consumido)
+// 4. Atualiza TODOS os assignments ativos da task
+// 5. Cria NOVO assignment com o valor redistribuido
+// 6. Registra evento SPLIT em mro_assignment_events
+// 7. Fecha modal e recarrega a pagina do supervisor
 // ====================================================================
 
 $var_assignment_id = (int){assignment_id};
 $var_original_hours = (float)[glo_split_original_hours];
-$var_new_hours = $var_original_hours / 2;
 
 sc_begin_trans();
 
@@ -31,7 +33,7 @@ if ({rs_orig} === false) {
 
 if (empty({rs_orig})) {
     sc_rollback_trans();
-    sc_error_message("Assignment original nao encontrado.");
+    sc_error_message("Assignment original não encontrado.");
     sc_error_exit();
 }
 
@@ -39,29 +41,80 @@ $var_task_id          = (int){rs_orig[0][0]};
 $var_skill_id         = !empty({rs_orig[0][1]}) ? (int){rs_orig[0][1]} : "NULL";
 $var_planned_skill_id = !empty({rs_orig[0][2]}) ? (int){rs_orig[0][2]} : "NULL";
 $var_project_id       = !empty({rs_orig[0][3]}) ? (int){rs_orig[0][3]} : "NULL";
-// Todo novo assignment de SPLIT nasce SEM supervisor (NULL),
-// sempre, mesmo que o assignment original tenha um supervisor.
-// O dono (supervisor) sera definido na tela de atribuicao (onBeforeUpdate),
-// quando o mecanico for atribuido ao novo assignment.
-$var_supervisor_id    = "NULL";
+// MRO-130: o novo assignment de split nasce ASSIGNED, com o supervisor
+// logado (quem faz o split) como dono da atribuicao. Nao passa pela tela
+// de atribuicao (form_public_mro_task_assignments_planned).
+$var_supervisor_id    = [usr_employee_id];
 $var_resource_id      = !empty({rs_orig[0][5]}) ? (int){rs_orig[0][5]} : "NULL";
 $var_role_id          = addslashes({rs_orig[0][6]});
 
-// 2. Atualiza assignment original com metade das horas
-$var_sql_upd = "UPDATE mro_task_assignments
-                SET planned_qty_hours = " . $var_new_hours . ",
-                    updated_at = CURRENT_TIMESTAMP,
-                    updated_by = '[usr_login]'
-                WHERE assignment_id = " . $var_assignment_id;
-sc_exec_sql($var_sql_upd);
+// ====================================================================
+// MRO-130: Calcula total alocado, consumido e saldo da task
+// Recalculado AQUI (no momento de gravar) porque o supervisor pode ficar
+// varios segundos lendo a tela; o valor exibido no onLoad pode mudar.
+// Calculo centralizado no metodo mCalculaSplit (methods/).
+// ====================================================================
+$var_calc = mCalculaSplit($var_assignment_id);
 
-if (sc_error_update) {
-    sc_rollback_trans();
-    sc_error_message("Erro ao atualizar horas do assignment original.");
-    sc_error_exit();
+$var_total_alocado = (float)$var_calc['total_alocado'];
+$var_qtd_ativos    = (int)$var_calc['qtd_ativos'];
+$var_consumido     = (float)$var_calc['consumido'];
+$var_saldo         = (float)$var_calc['saldo'];
+$var_qtd_nova      = (int)$var_calc['qtd_nova'];
+$var_novo_valor    = (float)$var_calc['novo_valor'];
+
+// ====================================================================
+// MRO-130: ATRIBUICAO ESTOURADA (consumido > novo_valor)
+// O supervisor mantem a atribuicao ativa porque o mecanico ainda precisa
+// trabalhar nela. Regra: a atribuicao estourada fica com o que ja usou
+// + uma parte do novo rateio (actual + novo_valor). Assim ela pode
+// continuar sem causar over-allocation silenciosa (o total planejado
+// nunca ultrapassa o total alocado da task).
+// ====================================================================
+
+// Carrega consumido individual dos assignments ATIVOS da task
+$var_sql_at = "SELECT assignment_id, COALESCE(actual_qty_hours, 0)
+               FROM mro_task_assignments
+               WHERE task_id = " . $var_task_id . "
+                 AND status_code IN ('NOT_STARTED','ASSIGNED','IN_PROGRESS','PAUSED','BLOCKED','PENDING_HANDOVER')
+               ORDER BY assignment_id";
+sc_lookup(rs_ativos, $var_sql_at);
+
+$var_ajustes = array(); // assignment_id => valor final (null = usa novo_valor)
+
+if (!empty({rs_ativos})) {
+    foreach ({rs_ativos} as $var_linha) {
+        $var_aid = (int)$var_linha[0];
+        $var_actual = (float)$var_linha[1];
+
+        if ($var_actual > $var_novo_valor) {
+            // Estourada: fica com o que usou + uma parte do rateio
+            $var_ajustes[$var_aid] = $var_actual + $var_novo_valor;
+        } else {
+            $var_ajustes[$var_aid] = null; // usa o novo_valor (rateio)
+        }
+    }
 }
 
-// 3. Cria NOVO assignment com a outra metade
+// 4. Atualiza TODOS os assignments ativos da task com o novo valor
+foreach ($var_ajustes as $var_aid => $var_valor_fixo) {
+    $var_valor_final = ($var_valor_fixo !== null) ? $var_valor_fixo : $var_novo_valor;
+
+    $var_sql_upd = "UPDATE mro_task_assignments
+                    SET planned_qty_hours = " . number_format($var_valor_final, 4, '.', '') . ",
+                        updated_at = CURRENT_TIMESTAMP,
+                        updated_by = '[usr_login]'
+                    WHERE assignment_id = " . $var_aid;
+    sc_exec_sql($var_sql_upd);
+
+    if (sc_error_update) {
+        sc_rollback_trans();
+        sc_error_message("Erro ao atualizar horas do assignment " . $var_aid . ".");
+        sc_error_exit();
+    }
+}
+
+// 5. Cria NOVO assignment ja ATRIBUIDO (ASSIGNED) ao mecanico escolhido
 $var_sql_ins = "INSERT INTO mro_task_assignments
                 (task_id, skill_id, planned_skill_id, project_id, status_code,
                  planned_qty_hours, supervisor_id, executed_by_employee_id,
@@ -71,15 +124,16 @@ $var_sql_ins = "INSERT INTO mro_task_assignments
                  " . $var_skill_id . ",
                  " . $var_planned_skill_id . ",
                  " . $var_project_id . ",
-                 'NOT_STARTED',
-                 " . $var_new_hours . ",
+                 'ASSIGNED',
+                 " . number_format($var_novo_valor, 4, '.', '') . ",
                  " . $var_supervisor_id . ",
                  " . (int){employee_info} . ",
                  " . $var_resource_id . ",
                  '" . $var_role_id . "',
                  '[usr_login]',
-                 CURRENT_TIMESTAMP)";
-sc_exec_sql($var_sql_ins);
+                 CURRENT_TIMESTAMP)
+                RETURNING assignment_id";
+sc_lookup(rs_novo, $var_sql_ins);
 
 if (sc_error_insert) {
     sc_rollback_trans();
@@ -87,9 +141,52 @@ if (sc_error_insert) {
     sc_error_exit();
 }
 
-// 4. Registra evento SPLIT no assignment original
-$var_desc = "Assignment dividido: " . number_format($var_original_hours, 2) .
-            "h dividido em 2 registros de " . number_format($var_new_hours, 2) . "h cada.";
+// 5b. MRO-130: evento ASSIGNMENT no novo assignment (rastreabilidade)
+$var_novo_assignment_id = !empty({rs_novo}) ? (int){rs_novo[0][0]} : 0;
+if ($var_novo_assignment_id > 0) {
+    $var_sql_ev_assign = "INSERT INTO mro_assignment_events
+                          (assignment_id, event_type, performed_by_id, new_employee_id, description, user_agent)
+                          VALUES
+                          (" . $var_novo_assignment_id . ",
+                           'ASSIGNMENT',
+                           " . $var_supervisor_id . ",
+                           " . (int){employee_info} . ",
+                           'Atribuido via split pelo supervisor.',
+                           '[usr_login]')";
+    sc_exec_sql($var_sql_ev_assign);
+}
+
+// 5c. MRO-126: se a task ainda esta RELEASED e este e o primeiro mecanico
+// atribuido, libera a execucao (RELEASED -> IN_PROGRESS).
+$var_sql_count_mec = "SELECT COUNT(*) FROM mro_task_assignments
+                      WHERE task_id = " . $var_task_id . "
+                        AND executed_by_employee_id IS NOT NULL";
+sc_lookup(rs_count_mec, $var_sql_count_mec);
+$var_total_mec = !empty({rs_count_mec}) ? (int){rs_count_mec[0][0]} : 0;
+
+if ($var_total_mec == 1) {
+    $var_sql_task_status = "SELECT status_code FROM mro_tasks WHERE task_id = " . $var_task_id;
+    sc_lookup(rs_task_status, $var_sql_task_status);
+
+    if (!empty({rs_task_status}) && {rs_task_status[0][0]} == 'RELEASED') {
+        sc_exec_sql("UPDATE mro_tasks
+                     SET status_code = 'IN_PROGRESS',
+                         updated_at = CURRENT_TIMESTAMP
+                     WHERE task_id = " . $var_task_id . "
+                       AND status_code = 'RELEASED'");
+
+        sc_log_add("task_release", "Task " . $var_task_id . " liberada para execucao: RELEASED -> IN_PROGRESS (primeiro mecanico via split)");
+
+        sc_exec_sql("INSERT INTO mro_task_history (task_id, action_taken, user_login, remarks)
+                     VALUES (" . $var_task_id . ", 'IN_PROGRESS', '[usr_login]', 'Primeiro mecanico atribuido via split: RELEASED -> IN_PROGRESS (assignment " . $var_novo_assignment_id . "')");
+    }
+}
+
+// 6. Registra evento SPLIT no assignment original
+$var_desc = "Split redistributivo: total " . number_format($var_total_alocado, 2) .
+            "h - consumido " . number_format($var_consumido, 2) .
+            "h = saldo " . number_format($var_saldo, 2) .
+            "h dividido em " . $var_qtd_nova . " registros de " . number_format($var_novo_valor, 2) . "h cada.";
 
 $var_sql_event = "INSERT INTO mro_assignment_events
                   (assignment_id, event_type, performed_by_id, new_employee_id, description, user_agent)
@@ -102,17 +199,22 @@ $var_sql_event = "INSERT INTO mro_assignment_events
                    '[usr_login]')";
 sc_exec_sql($var_sql_event);
 
-// 5. Commit final
+// 7. Commit final
 sc_commit_trans();
 
 sc_btn_disabled("ok", "on");
 
 // 6. Card de sucesso
+$var_employee_fmt = addslashes({employee_info});
 echo "<div style='max-width: 480px; margin: 20px auto; background: linear-gradient(135deg, #d4edda, #c3e6cb); 
             border: 1px solid #b8daff; color: #155724; padding: 20px 24px; border-radius: 8px; 
             text-align: center; font-size: 16px; font-weight: 500; box-shadow: 0 2px 8px rgba(0,0,0,0.08);'>
         <i class='fas fa-check-circle' style='color: #28a745; font-size: 24px; margin-bottom: 8px; display: block;'></i>
-        Assignment dividido com sucesso!
+        Atribuição dividida com sucesso!<br>
+        <span style='font-size: 13px; font-weight: 400; display: block; margin-top: 8px;'>
+            Novo atribuído a <b>$var_employee_fmt</b> com " . number_format($var_novo_valor, 2, ',', '.') . "h<br>
+            Total " . number_format($var_total_alocado, 2, ',', '.') . "h | Utilizado " . number_format($var_consumido, 2, ',', '.') . "h | Saldo " . number_format($var_saldo, 2, ',', '.') . "h
+        </span>
     </div>";
 
 

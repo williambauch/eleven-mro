@@ -84,4 +84,40 @@ Ajustes levantados na reunião de Mecânica de 20/08 (Leonel, Clodoaldo, Gabriel
 
 ---
 
-**PENDENTE**: itens 3 e 4 (filtro de projeto no painel supervisor/mecanico, redistribuicao do Split).
+## grid_painel_coordenador
+
+### Filtro inicial por projeto (Item 3)
+
+- Configurado na IDE o **filtro nativo do ScriptCase** na grid, habilitando o **filtro inicial** que permite selecionar o projeto que será trabalhado antes de listar as atribuições.
+- Regra de negocio: o filtro nativo complementa o WHERE do schema (`coordinator_id = [usr_employee_id]`), restringindo a seleção apenas aos projetos do coordenador logado.
+- Regra de negocio: item 3 da reunião (filtro inicial para selecionar o projeto antes de listar as atribuições) atendido pelo filtro nativo do ScriptCase.
+
+---
+
+## control_split_assignment
+
+### Split redistributivo — total alocado redistribuido entre todas as atribuicoes (Item 4)
+
+**`events/onLoad`**
+- Substituido calculo de "metade" (`$var_hours / 2`) pelo calculo de redistribuicao proporcional.
+- Consulta o total alocado (`SUM(planned_qty_hours)`) e a quantidade de assignments ATIVOS da task (`NOT_STARTED`, `ASSIGNED`, `IN_PROGRESS`, `PAUSED`, `BLOCKED`, `PENDING_HANDOVER`).
+- Consulta o tempo consumido: `SUM(actual_qty_hours)` de quem ja trabalhou (qualquer status) + tempo dos timesheets `IN_PROGRESS` (cronometro rodando via EPOCH).
+- `hours_split` exibe o novo valor por assignment = saldo / (qtd_ativos + 1).
+- Regra de negocio: o split nao divide mais ao meio; o saldo (total - consumido) e redistribuido igualmente.
+
+**`events/onValidateSuccess`**
+- Recalcula total, consumido e saldo da task dentro da transacao.
+- Carrega o consumido individual dos assignments ativos e aplica **PISO DE CONSUMO (Opcao A)**: nenhum assignment ativo fica com `planned_qty_hours` menor que o `actual_qty_hours`; se algum tiver consumido mais que o novo valor, recebe o piso e a sobra e redistribuida entre os demais + o novo.
+- Atualiza TODOS os assignments ativos da task com o novo valor (`UPDATE` por assignment, com arredondamento de 4 casas no SQL).
+- Cria o NOVO assignment com o valor redistribuido em **status `ASSIGNED`** (MRO-130 Opcao A):
+  - `executed_by_employee_id` = mecanico escolhido na tela
+  - `supervisor_id` = supervisor logado (quem faz o split e o dono da atribuicao)
+  - Grava evento `ASSIGNMENT` no novo assignment (rastreabilidade)
+  - Aplica regra MRO-126: se a task esta `RELEASED` e este e o primeiro mecanico, task vai para `IN_PROGRESS` + historico `IN_PROGRESS`
+- Evento `SPLIT` registrado em `mro_assignment_events` com descricao detalhada (total, consumido, saldo, qtd e valor).
+- Regra de negocio: exemplo da reuniao — 0,88 com 2 assignments vira 0,29/0,29/0,29; com trabalho ja apontado (ex: 0,10), o saldo 0,78 e dividido (0,26/0,26/0,26).
+- Regra de negocio: o novo assignment nasce ASSIGNED (nao passa pela tela de atribuicao `form_public_mro_task_assignments_planned`), eliminando passo redundante.
+
+---
+
+**PENDENTE**: nenhum item pendente da reuniao — todos os 4 itens implementados. Aguardando testes de validacao.

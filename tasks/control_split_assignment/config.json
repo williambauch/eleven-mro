@@ -2,7 +2,7 @@
   "nome": "control_split_assignment",
   "tipo": "Control",
   "nome_tabela": "control_split_assignment",
-  "descricao": "Divide uma Atribuição em Duas",
+  "descricao": "Divide uma atribuicao redistribuindo proporcionalmente o total de horas da task entre as atribuicoes existentes e a nova (MRO-130)",
   "login": "william",
   "data_alteracao": "2026-08-14 16:31",
   "nomeconexao": "conn_mro",
@@ -46,7 +46,7 @@
         "tipo": "select",
         "origem": "lookup",
         "multipla": false,
-        "sql": "SELECT employee_id, full_name FROM \"public\".mro_employees ORDER BY full_name"
+        "sql": "SELECT e.employee_id, e.full_name\nFROM mro_employees e\nJOIN mro_skills s ON s.skill_code = '{skill_info}'\nWHERE e.is_active = TRUE\n  AND s.skill_id::text = ANY(string_to_array(e.skill_id, ','))\nORDER BY e.full_name"
       },
       "configuracao": {
         "html_tipo": "SELECT",
@@ -82,6 +82,38 @@
       "ajuda": {
         "tipo": "Tippy",
         "texto": "Novas horas para cada atribuição (assignment) após a divisão (metade do original)"
+      },
+      "configuracao": {
+        "tipo_dado": "FORM_LABEL",
+        "obrigatorio": false,
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "info",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy",
+        "texto": "Resumo completo do que acontece no split: origens, usos, totais e nova distribuicao"
+      },
+      "configuracao": {
+        "tipo_dado": "FORM_LABEL",
+        "obrigatorio": false,
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "supervisor_info",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy",
+        "texto": "Supervisor responsável pela nova atribuição (assignment) criada pelo split"
       },
       "configuracao": {
         "tipo_dado": "FORM_LABEL",

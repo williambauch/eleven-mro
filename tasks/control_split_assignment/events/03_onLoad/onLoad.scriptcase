@@ -9,7 +9,7 @@ $var_assignment_id = (int)[glo_assignment_id_split];
 {assignment_id} = $var_assignment_id;
 
 if ($var_assignment_id <= 0) {
-    sc_error_message("Assignment invalido.");
+    sc_error_message("Assignment inválido.");
     sc_error_exit();
 }
 
@@ -17,7 +17,7 @@ if ($var_assignment_id <= 0) {
 $var_sql = "SELECT
                 t.task_code,
                 t.task_name,
-                COALESCE(e.full_name, 'Nao atribuido') AS employee_name,
+                COALESCE(e.full_name, 'Não atribuido') AS employee_name,
                 s.skill_code AS skill_code,
                 a.planned_qty_hours,
                 a.status_code,
@@ -39,7 +39,7 @@ if ({rs_orig} === false) {
 }
 
 if (empty({rs_orig})) {
-    sc_error_message("Assignment nao encontrado (ID: " . $var_assignment_id . ").");
+    sc_error_message("Assignment não encontrado (ID: " . $var_assignment_id . ").");
     sc_error_exit();
 }
 
@@ -50,14 +50,229 @@ $var_employee     = {rs_orig[0][2]};
 $var_skill        = {rs_orig[0][3]};
 $var_hours        = (float){rs_orig[0][4]};
 $var_status       = {rs_orig[0][5]};
-$var_hours_split  = $var_hours / 2;
+$var_task_id      = (int){rs_orig[0][7]};
 
 {task_info} = $var_task_code . " - " . $var_task_name;
 {skill_info} = $var_skill;
 {employee_info} = $var_employee;
 {hours_origin} = number_format($var_hours, 2, ',', '.');
-{hours_split} = number_format($var_hours_split, 2, ',', '.');
 {status_info} = $var_status;
+
+// MRO-130: mostra quem sera o supervisor da nova atribuicao (quem faz o split)
+$var_sql_sup = "SELECT full_name FROM mro_employees WHERE employee_id = " . (int)[usr_employee_id];
+sc_lookup(rs_sup, $var_sql_sup);
+$var_supervisor_nome = !empty({rs_sup}) ? {rs_sup[0][0]} : 'Não identificado';
+{supervisor_info} = $var_supervisor_nome;
+
+// ====================================================================
+// MRO-130: BLOQUEIO POR CLOCK-IN ABERTO
+// Se existir algum timesheet IN_PROGRESS (cronometro rodando) na task,
+// nao permite dividir: desativa o botao Confirmar e orienta o fechamento.
+// ====================================================================
+$var_sql_clock = "SELECT COUNT(*)
+                  FROM mro_timesheet ts
+                  JOIN mro_task_assignments a ON a.assignment_id = ts.assignment_id
+                  WHERE a.task_id = " . $var_task_id . "
+                    AND ts.status = 'IN_PROGRESS'";
+sc_lookup(rs_clock, $var_sql_clock);
+$var_clock_aberto = !empty({rs_clock}) ? (int){rs_clock[0][0]} : 0;
+
+if ($var_clock_aberto > 0) {
+    // Desativa o botao de confirmacao
+    sc_btn_disabled("ok", "on");
+
+    {hours_split} = '--';
+    {info} = "
+    <div style='font-family: Roboto, sans-serif; background: #fef2f2; border: 1px solid #fecaca; border-left: 5px solid #dc2626; border-radius: 6px; padding: 14px 16px; margin: 8px 0; font-size: 13px; line-height: 1.6; color: #7f1d1d;'>
+        <div style='font-weight: 800; font-size: 14px; color: #991b1b; margin-bottom: 8px;'>
+            <i class='fas fa-stopwatch'></i> Apontamento em andamento
+        </div>
+        <div>
+            Existe um <b>clock-in aberto</b> (cronômetro rodando) nesta tarefa.<br>
+            Feche o apontamento (pausa ou conclusão) antes de dividir as horas.<br>
+            O botão <b>Confirmar Divisão</b> está desabilitado até o fechamento.
+        </div>
+    </div>
+    ";
+
+    // Armazena horas originais em global para uso futuro
+    [glo_split_original_hours] = $var_hours;
+
+    return;
+}
+
+// ====================================================================
+// MRO-130: Redistribuicao proporcional do split
+// O split nao divide mais ao meio: o total alocado na task (menos o
+// tempo ja consumido) e redistribuido igualmente entre os assignments
+// ativos + o novo assignment criado.
+// Calculo centralizado no metodo mCalculaSplit (methods/).
+// ====================================================================
+$var_calc = mCalculaSplit($var_assignment_id);
+
+$var_total_alocado = (float)$var_calc['total_alocado'];
+$var_qtd_ativos    = (int)$var_calc['qtd_ativos'];
+$var_consumido     = (float)$var_calc['consumido'];
+$var_saldo         = (float)$var_calc['saldo'];
+$var_qtd_nova      = (int)$var_calc['qtd_nova'];
+$var_novo_valor    = (float)$var_calc['novo_valor'];
+
+// Formata os valores para exibicao (usados no card de bloqueio e no info)
+$var_total_fmt  = number_format($var_total_alocado, 2, ',', '.');
+$var_cons_fmt   = number_format($var_consumido, 2, ',', '.');
+$var_saldo_fmt  = number_format($var_saldo, 2, ',', '.');
+$var_novo_fmt   = number_format($var_novo_valor, 2, ',', '.');
+$var_hours_fmt  = number_format($var_hours, 2, ',', '.');
+
+// ====================================================================
+// MRO-130: BLOQUEIO POR SALDO ZERO/NEGATIVO
+// Se o tempo ja consumido >= total alocado da task, nao ha horas para
+// dividir. Desativa o botao Confirmar e orienta o usuario.
+// ====================================================================
+if ($var_saldo <= 0) {
+    sc_btn_disabled("ok", "on");
+
+    {hours_split} = '--';
+    {info} = "
+    <div style='font-family: Roboto, sans-serif; background: #fef2f2; border: 1px solid #fecaca; border-left: 5px solid #dc2626; border-radius: 6px; padding: 14px 16px; margin: 8px 0; font-size: 13px; line-height: 1.6; color: #7f1d1d;'>
+        <div style='font-weight: 800; font-size: 14px; color: #991b1b; margin-bottom: 8px;'>
+            <i class='fas fa-exclamation-triangle'></i> Tarefa sem saldo de horas
+        </div>
+        <div>
+            O tempo já utilizado (" . $var_cons_fmt . "h) <b>atingiu ou ultrapassou</b> o total alocado (" . $var_total_fmt . "h).<br>
+            Não há horas restantes para redistribuir — o split não é possível nesta tarefa.<br>
+            O botão <b>Confirmar Divisão</b> está desabilitado.
+        </div>
+    </div>
+    ";
+
+    // Armazena horas originais em global para uso futuro
+    [glo_split_original_hours] = $var_hours;
+
+    return;
+}
+
+{hours_split} = number_format($var_novo_valor, 2, ',', '.');
+
+// MRO-130: HTML explicativo completo do split (campo {info})
+// Mostra origem, uso, totais, consumido, saldo e nova distribuicao.
+// (formatacao dos valores ja feita acima, antes do bloqueio de saldo)
+
+// MRO-130: lista compacta das atribuicoes atuais da task (mecanico | horas | usado)
+$var_sql_lista = "SELECT
+                    COALESCE(e.full_name, 'Sem mecanico'),
+                    a.planned_qty_hours,
+                    a.status_code,
+                    COALESCE(a.actual_qty_hours, 0),
+                    a.assignment_id,
+                    CASE a.status_code
+                        WHEN 'IN_PROGRESS'       THEN 1
+                        WHEN 'PAUSED'            THEN 2
+                        WHEN 'ASSIGNED'          THEN 3
+                        WHEN 'BLOCKED'           THEN 4
+                        WHEN 'PENDING_HANDOVER'  THEN 5
+                        ELSE 6
+                    END AS ordem
+                  FROM mro_task_assignments a
+                  LEFT JOIN mro_employees e ON e.employee_id = a.executed_by_employee_id
+                  WHERE a.task_id = " . $var_task_id . "
+                    AND a.status_code IN ('NOT_STARTED','ASSIGNED','IN_PROGRESS','PAUSED','BLOCKED','PENDING_HANDOVER')
+                  ORDER BY ordem, a.assignment_id";
+sc_lookup(rs_lista, $var_sql_lista);
+
+// MRO-130: calcula o valor final de cada assignment apos o split
+// (mesma regra do onValidateSuccess: atribuicao estourada fica com o que
+// usou + uma parte do rateio, para poder continuar sem over-allocation)
+$var_finais = array(); // assignment_id => valor final
+
+if (!empty({rs_lista})) {
+    foreach ({rs_lista} as $var_linha) {
+        $var_aid    = (int)$var_linha[4];
+        $var_actual = (float)$var_linha[3];
+
+        if ($var_actual > $var_novo_valor) {
+            $var_finais[$var_aid] = $var_actual + $var_novo_valor;
+        }
+    }
+}
+
+$var_lista_html = '';
+if (!empty({rs_lista})) {
+    $var_rows = '';
+    foreach ({rs_lista} as $var_linha) {
+        $var_nome    = $var_linha[0];
+        $var_hrs     = number_format((float)$var_linha[1], 2, ',', '.');
+        $var_st      = $var_linha[2];
+        $var_actual  = (float)$var_linha[3];
+        $var_aid     = (int)$var_linha[4];
+        $var_final   = isset($var_finais[$var_aid]) ? $var_finais[$var_aid] : $var_novo_valor;
+
+        $var_usado_fmt = ($var_actual > 0) ? number_format($var_actual, 2, ',', '.') . "h" : '-';
+        $var_final_fmt = number_format($var_final, 2, ',', '.');
+
+        // Linha da tabela; destaca a atribuicao estourada (usado > novo valor)
+        $var_destaque = ($var_actual > $var_novo_valor) ? " style='background:#fef3c7;'" : '';
+
+        $var_rows .= "<tr$var_destaque>
+            <td style='padding:3px 8px; border-bottom:1px solid #e2e8f0; white-space:nowrap;'><b>" . $var_nome . "</b></td>
+            <td style='padding:3px 8px; border-bottom:1px solid #e2e8f0; text-align:center; color:#6b7280;'>" . $var_st . "</td>
+            <td style='padding:3px 8px; border-bottom:1px solid #e2e8f0; text-align:center;'>" . $var_hrs . "h</td>
+            <td style='padding:3px 8px; border-bottom:1px solid #e2e8f0; text-align:center; color:#b45309;'>" . $var_usado_fmt . "</td>
+            <td style='padding:3px 8px; border-bottom:1px solid #e2e8f0; text-align:center; font-weight:700;'>" . $var_final_fmt . "h</td>
+        </tr>";
+    }
+    // Linha da NOVA atribuicao (rateio)
+    $var_rows .= "<tr style='background:#eef2ff;'>
+        <td style='padding:3px 8px; border-bottom:1px solid #e2e8f0; white-space:nowrap;'><b>Nova atribuição</b></td>
+        <td style='padding:3px 8px; border-bottom:1px solid #e2e8f0; text-align:center; color:#6b7280;'>ASSIGNED</td>
+        <td style='padding:3px 8px; border-bottom:1px solid #e2e8f0; text-align:center;'>-</td>
+        <td style='padding:3px 8px; border-bottom:1px solid #e2e8f0; text-align:center; color:#b45309;'>-</td>
+        <td style='padding:3px 8px; border-bottom:1px solid #e2e8f0; text-align:center; font-weight:700;'>" . number_format($var_novo_valor, 2, ',', '.') . "h</td>
+    </tr>";
+
+    $var_lista_html = "<div style='margin:8px 0; overflow-x:auto;'>
+        <div style='font-weight:700; margin-bottom:4px;'>Atribuições atuais (planejado → ficará com):</div>
+        <table style='border-collapse:collapse; font-size:12px; min-width:100%;'>
+            <thead>
+                <tr style='background:#f1f5f9;'>
+                    <th style='padding:4px 8px; text-align:left;'>Mecânico</th>
+                    <th style='padding:4px 8px; text-align:center;'>Status</th>
+                    <th style='padding:4px 8px; text-align:center;'>Planejado</th>
+                    <th style='padding:4px 8px; text-align:center;'>Usado</th>
+                    <th style='padding:4px 8px; text-align:center;'>Ficará com</th>
+                </tr>
+            </thead>
+            <tbody>" . $var_rows . "</tbody>
+        </table>
+        <div style='font-size:11px; color:#b45309; margin-top:3px;'>(linha amarela = atribuição estourada, mantém o usado + parte do rateio)</div>
+    </div>";
+}
+
+{info} = "
+<div style='font-family: Roboto, sans-serif; background: #f8fafc; border: 1px solid #e2e8f0; border-left: 5px solid #2563eb; border-radius: 6px; padding: 14px 16px; margin: 8px 0; font-size: 13px; line-height: 1.6; color: #334155;'>
+    <div style='font-weight: 800; font-size: 14px; color: #1e293b; margin-bottom: 8px;'>
+        <i class='fas fa-arrows-split-up-and-left'></i> O que acontece neste split
+    </div>
+    <div style='margin-bottom: 6px;'><b>Atribuição original:</b> " . $var_employee . " - " . $var_hours_fmt . "h (status " . $var_status . ")</div>
+    <div style='margin-bottom: 6px;'><b>Total alocado na JIC (task):</b> " . $var_total_fmt . "h em " . $var_qtd_ativos . " atribuição(ões)</div>
+    " . $var_lista_html . "
+    <div style='margin-bottom: 6px;'><b>Tempo já utilizado:</b> " . $var_cons_fmt . "h (apontamentos + cronômetro em andamento)</div>
+    <div style='margin-bottom: 6px;'><b>Saldo restante para dividir:</b> " . $var_saldo_fmt . "h</div>
+    <div style='margin-bottom: 6px;'><b>Nova distribuição:</b> o saldo é dividido igualmente entre " . $var_qtd_nova . " atribuições (existentes + nova)</div>
+    <div style='margin-bottom: 6px;'><b>Cada atribuição ficará com:</b> " . $var_novo_fmt . "h</div>
+    <div style='margin-bottom: 6px;'><b>Nova atribuição:</b> nascerá como <b>ASSIGNED</b> (já atribuída ao mecânico selecionado, sem passar pela tela de atribuição)</div>
+    <div style='margin-top: 6px; padding-top: 8px; border-top: 1px dashed #cbd5e1; color: #64748b; font-size: 12px;'>
+        <i class='fas fa-info-circle'></i>
+        <b>Regras:</b><br>
+        - O tempo já apontado não é redistribuído: ele pertence a quem trabalhou. Apenas o saldo restante é rateado.<br>
+        - Atribuição que já consumiu mais que o novo valor (estourada) fica com <b>o que usou + uma parte do rateio</b>, para continuar trabalhando sem causar over-allocation.<br>
+        - Demais atribuições (e a nova) ficam com o valor do rateio.<br>
+        - O rateio é feito apenas entre atribuições em <b>status de trabalho</b> (NOT_STARTED, ASSIGNED, IN_PROGRESS, PAUSED, BLOCKED, PENDING_HANDOVER). <b>Status finais</b> (SUPSIG, COMPLETED, CANCELLED) não entram no rateio.<br>
+        - Com algum <b>clock-in aberto</b> (cronômetro rodando) o split fica bloqueado: feche o apontamento primeiro.<br>
+        - Sem <b>saldo de horas</b> (tempo utilizado ≥ total alocado) o split não é possível: não há o que redistribuir.
+    </div>
+</div>
+";
 
 // Armazena horas originais em global para usar no onValidateSuccess
 [glo_split_original_hours] = $var_hours;
