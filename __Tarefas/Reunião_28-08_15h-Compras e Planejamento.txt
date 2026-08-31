@@ -1,0 +1,23 @@
+# Reunião_28-08_15h-Compras e Planejamento - Leonel, Danilo, Bruno, Debora, Lucyla, Thiago  
+
+MRO SYSTEM - COMPRAS & PLANEJAMENTO
+Sexta-feira, 28 de agosto⋅15:00 – 16:00
+
+leonel.santos
+bruno.azevedo
+danilo.chagas
+debora.menezes
+lucyla.silva
+rodrigo@elevenconsultoria.com.br
+thiago.coelho
+
+Idempotente é operações que podem ser aplicadas várias vezes sem mudar o resultado final após a primeira execução.
+
+00) Na tela Importe de empeno de materiais (control_import_empenhos) o contador de porcentagem da quantidade de importe concluído não está chegando a 100%. Revisar.
+
+
+Sobre a reunião de hoje, 08/08 às 15h.
+
+Não foi registrado nenhum ajuste a ser realizado neste momento.
+
+A solicitação do Danilo referente a *acender o ícone da caixa vermelha "Blocked Material" quando liberação parcial* já está contemplada nos ajustes de Provedoria definidos na reunião *"Provedoria & Estoque"*, realizada em *27/08*.

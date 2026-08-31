@@ -13,13 +13,41 @@
       "nome": "description",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "ajuda": {
+        "tipo": "Pop-up"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "TEXTO",
+        "html_largura": "50",
+        "tamanho_min": "0",
+        "tamanho_max": "64",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "group_id",
       "tipo": "int",
-      "required": false,
-      "pk": true
+      "required": true,
+      "pk": true,
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "NUMEROEDT",
+        "html_largura": "11",
+        "tamanho_max": "11",
+        "aceita_neg": "N",
+        "obrigatorio": true,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": true
+      }
     }
   ]
 }

@@ -1,11 +1,11 @@
 {
   "nome": "sec_retrieve_pswd",
-  "tipo": "Form",
+  "tipo": "Control",
   "nome_tabela": "sec_retrieve_pswd",
   "descricao": "SECURITY MODULE :: Retrieve Password",
   "login": "admin",
   "nomeconexao": "conn_mro",
-  "variaveis": [
+  "variaveis_globais": [
     "sett_login_mode",
     "sett_recover_pswd",
     "sett_smtp",

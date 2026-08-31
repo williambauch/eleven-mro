@@ -1,6 +1,6 @@
 {
   "nome": "sec_search_sec_groups",
-  "tipo": "Form",
+  "tipo": "Filter",
   "nome_tabela": "public.sec_groups",
   "descricao": "SECURITY MODULE :: Search Groups",
   "login": "admin",
@@ -8,7 +8,7 @@
   "tabelas": [
     "public.sec_groups"
   ],
-  "variaveis": [
+  "variaveis_globais": [
     "group"
   ],
   "campos": [
@@ -16,7 +16,22 @@
       "nome": "group_id",
       "tipo": "int",
       "required": false,
-      "pk": true
+      "pk": true,
+      "ajuda": {
+        "tipo": "Pop-up"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "NUMEROEDT",
+        "html_largura": "11",
+        "tamanho_max": "11",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
     }
   ]
 }

@@ -1,0 +1,103 @@
+# Reunião_27-08_14h-Provedoria & Estoque - Leonel e Paulo e Clodoaldo e Gabriela (Rodrigo)
+
+Ajustes Reunião : Provedoria & Estoque 27/08 - Leonel e Paulo e Clodoaldo e Gabriela (Rodrigo)
+
+Leonel, vou continuar essa implementação com esse fluxo. OK?
+
+Ajustes Reunião : Provedoria e Estoque 27/08 - Leonel e Paulo e Clodoaldo e Gabriela (Rodrigo)
+
+01) ### Fluxo de Liberação de Tarefas
+
+Ficou definido o seguinte fluxo para a liberação de tarefas, envolvendo Planejamento, Provedoria e Manutenção:
+
+A. PROGRAMADOR 
+
+* O planejador clica em Liberar.
+* A tarefa é identificada com a origem PLANEJADOR.
+
+B. Verificação de material bloqueante
+
+O sistema verifica se a tarefa possui material bloqueante (`is_blocking_task = true`).
+
+Se SIM:
+
+* O status da tarefa passa para PENDING_PROVIDER.
+* A tarefa entra na fila da Provedoria.
+* Não são criados assignments (atribuição mecânicos) neste momento.
+* Enquanto estiver com status PENDING_PROVIDER, a Provedoria poderá:
+
+  * Liberar parcialmente (RELEASE PARCIAL): cria os assignments (atribuição mecânicos) de todas SKILLs.
+  * Liberar totalmente (RELEASED): altera o status para RELEASED e cria os assignments (atribuição mecânicos) de todas SKILLs.
+
+Se NÃO:
+
+* O status da tarefa passa diretamente para RELEASED.
+* O sistema cria os assignments automaticamente e todas SKILLs.
+
+
+OBS: solicitação do Danilo referente a **acender o ícone da caixa vermelha "Blocked Material"** QUANDO HOUVER RELEASE PARCIAL
+
+--------------------
+
+02) Na tela Provedoria - Bip de Saída (Separação de Materiais) (blank_mro_provedoria_bip), deve ser bipado o código de barras da JIC. Ao realizar a leitura, o sistema já deve identificar e preencher automaticamente a JIC e o Projeto.
+
+
+-----------------------
+
+
+
+
+
+ANOTACOES EXTRA
+
+
+        // ====================================================================
+        // REGRA DE BLOQUEIO OPERACIONAL E SALDO EMPENHADO (MRO-115)
+        //
+        // 1. SALDO EMPENHADO (committed_qty)
+        //    O campo committed_qty em mro_task_materials so recebe o valor
+        //    da coluna "Saldo Empenho" (planilha, coluna 16) QUANDO:
+        //      a) O material NAO bloqueia (is_blocking_task = false), OU
+        //      b) O material tem Status preenchido na planilha (disponivel, ex: "OK")
+        //    Se nenhuma das condicoes for atendida, committed_qty = 0.
+        //
+        // 2. BLOQUEIO DA TAREFA (is_blocked_material)
+        //    A tarefa so e bloqueada QUANDO as DUAS condicoes sao true:
+        //      a) is_blocking_task = true (material BLOQUEIA a tarefa)
+        //      b) Status vazio ou "-" (material indisponivel)
+        // ====================================================================
+
+Projeto 22 (GOL01/26): 836 tarefas reais, 0 materiais importados — segue sendo o candidato ideal para o teste limpo do CM-01
+
+📌 Pendências conhecidas (do checklist checklist_pontos_released_gate_material.md)
+Existem 3 pontos de liberação SEM gate de material (podem liberar JIC direto para RELEASED mesmo com material bloqueante):
+
+btn_validar_prog_rotina (validação de rotina pela programação)
+Aprovar no O&A (aprovação de NRC pelo cliente)
+fn_calcular_oa_nrc (auto-aprovação NRC)
+Se a regra deve valer para todos os fluxos, ainda falta implementar nesses 3 pontos.
+
+TASK ID 28786
+
+RESUMO DE LIBERAR
+
+Planejador clica Liberar (origem PLANEJADOR)
+  ├─ Tem material bloqueante? (is_blocking_task=true)
+  │    ├─ SIM → status = PENDING_PROVIDER (fila da provedoria, SEM assignments)
+  │    └─ NÃO → status = RELEASED + cria assignments
+
+
+| # | Validação 		| Bloqueia?  | Critério |
+|---|---|---|---|
+| 1 | Predecessora 		| ✅ Sim    | `is\_blocked\_predecessor` ou `is\_predecessor\_manual` |
+| 2 | Status 			| ✅ Sim    | Só `PLANNING`/`NOT\_STARTED`/`PLANNED`/`APPROVED` |
+| 3 | Completa horas/skill	| ❌ Não    | Só preenche se vazio (`estimated\_hours`, `skill\_code`) |
+| 4 | Skill/mão de obra 	| ✅ Sim    | Precisa de LABOR com skill OU `skill\_code` válido |
+| 5 | Material bloqueante 	| ⚠️ Desvia | `is\_blocking\_task=true/NULL` → `PENDING\_PROVIDER` |
+
+
+
+Provedoria (grid Almoxarifado) — só vê PENDING_PROVIDER e is_blocked_material IS NOT TRUE
+  ├─ Bip de Saída: separa materiais (committed_qty >= planned_qty)
+  ├─ FINALIZAR: exige 100% separado
+  └─ Liberar (origem PROVEDORIA) → RELEASED + is_blocked_material = false

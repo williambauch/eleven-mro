@@ -3,12 +3,12 @@
   "tipo": "Control",
   "nome_tabela": "control_import_empenhos",
   "login": "admin",
-  "data_alteracao": "2026-08-20 10:48",
+  "data_alteracao": "2026-08-28 14:46",
   "nomeconexao": "conn_mro",
   "bibliotecas": [
     "mro_engine.php"
   ],
-  "variaveis": [
+  "variaveis_globais": [
     "MODO_DEBUG",
     "var_project_id"
   ],
@@ -17,7 +17,17 @@
       "nome": "arquivo_excel",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "ajuda": {
+        "tipo": "Pop-up"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "DOCUMENTO",
+        "obrigatorio": false,
+        "read_only": false,
+        "chave_primaria": false
+      }
     }
   ]
 }

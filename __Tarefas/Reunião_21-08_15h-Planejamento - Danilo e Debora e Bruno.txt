@@ -1,0 +1,54 @@
+# Reunião 21-08 15 horas - Planejamento - Leonel, Danilo, Debora e Bruno
+
+## Cadastro do Projeto
+01) No cadastro do Projeto o campo  "Status do Projeto" ser uma lista PLANNING, EXECUTION, COMPLETED;
+
+02) WO = Conferir se a Work Order está configurada como um bloqueio de número único, com limite de 4 caracteres, contendo um ponto no meio. Após o ponto, devem ser permitidos somente 2 números, seguindo o formato Número.Ano (01.26).
+
+03) Cap HH limite = O limite deve aceitar somente números inteiros; valores decimais não são permitidos.
+
+## Importação do Excel do Primavera
+A importação do projeto do Primavera foi realizada. Porém, foi solicitada a inclusão de alguns campos e a revisão de algumas informações do processo de importação.
+
+Durante a reunião, o Leonel realizou anotações dos campos que precisam ser adicionados ou ajustados no processo de importação.
+04) Lista parcial de ajustes
+*Adicionar*:
+- Task Type: definir o nome da coluna correspondente no Excel.
+- WBS_ID: importar o WBS conforme apresentado no Primavera. Como agora o WBS será cadastrado globalmente, deverá ser possível estabelecer essa relação durante a importação. O Danilo ficou responsável por enviar a lista completa de Código x Descrição.
+Ferramenta calibrável: a opção não estava disponível na importação anterior, porém é necessária para o processo. Será adicionada ao arquivo Excel.
+*Ajustar*:
+Skill Code: as skills filhas já estão sendo cadastradas, porém o Skill Code Primary da Task não está sendo atualizado corretamente.
+
+
+## Cadastro da tarefa
+05) Ao informar as Skills, o sistema está atualizando o campo Estimated Hours (15 horas), porém não está atualizando igualmente o Budgeted Labor Hours (12 horas). Avaliar se é necessário manter os dois campos na lógica do sistema ou se o Estimated Hours pode ser removido, mantendo apenas o Budgeted Labor Hours.
+
+06) Base Phase Code: permitir que o campo seja editável a qualquer momento.
+
+## Lista de Tarefa 
+07) No grid de tarefas, exibir a soma de Consumed Hours (Actual Labor Units).
+08) No grid de tarefas, limitar a quantidade de caracteres do campo Task Name, com o objetivo de reduzir a altura das linhas e tornar a visualização mais compacta.
+
+## Gantt
+09) Rever a ordenação do campo Phase Code, exibindo no formato “Número - Descrição” (ex.: “1.4 - Hydraulic ON”) e respeitando a ordem definida em mro_project_phases.sort_order
+10) Durante os testes com um projeto recém-importado (GOL01/27), sem nenhuma data definida em Baseline, Target ou Actual, ao definir manualmente uma data em Target Start/End no formulário da tarefa, o Gantt ao buscar fallback apresenta um comportamento incorreto: a tarefa deixa de ser exibida como uma barra e passa a ser representada como um marcador de Milestone.
+
+------------------
+Para avaliação
+Foi levantada a necessidade de permitir um layout de colunas específico para cada usuário na LISTA DE TAREFAS, de acordo com suas preferências. Cada área utiliza uma configuração de colunas diferente e, atualmente, sempre que o usuário acessa a tela de tarefas, é necessário reconfigurar manualmente as colunas exibidas. Anotação técnica: sc_field_init_off(campo1, campo2,...)
+Leonel: ajustar opções de travar layouts (Ganho de agilidade para planejar e programar no dia-dia)
+
+
+
+------------------
+
+Duvida: 
+Quando é feita uma reimportarão da mesma planilha Excel as tarefas são recriadas?  Ou deve ser feito o filtro do que deve ser importado no Primavera? 
+
+
+
+379012 / 370058
+
+GANTT
+
+Ordernar noo Gant pelo úmero Phase Code pelo 

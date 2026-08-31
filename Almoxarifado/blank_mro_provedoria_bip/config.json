@@ -6,7 +6,7 @@
   "login": "william",
   "data_alteracao": "2026-08-20 10:34",
   "nomeconexao": "conn_mro",
-  "variaveis": [
+  "variaveis_globais": [
     "usr_login"
   ],
   "campos": []

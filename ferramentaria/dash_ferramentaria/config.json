@@ -1,6 +1,6 @@
 {
   "nome": "dash_ferramentaria",
-  "tipo": "Form",
+  "tipo": "Blank",
   "nome_tabela": "dash_ferramentaria",
   "login": "admin",
   "nomeconexao": "conn_mro",

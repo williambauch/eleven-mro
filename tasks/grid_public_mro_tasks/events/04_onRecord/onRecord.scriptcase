@@ -1,10 +1,15 @@
 <?php
 
+// Lê o status da linha (usado nos data-status do JS p/ desabilitar o RUN)
+$var_status_linha = {status_code};
+
 // Ícone de Material
+// MRO-115: data-material='1' indica bloqueio de material p/ o JS desabilitar
+// o checkbox RUN (liberação em lote) — mesmo padrão do data-blocked do predecessor.
 if ({is_blocked_material} == 't' || {is_blocked_material} == 1) {
-    {btn_mat} = "<i class='fa-solid fa-box-open' style='color:#dc3545; font-size:16px;' title='Bloqueio de Material'></i>";
+    {btn_mat} = "<span data-material='1' data-status='$var_status_linha'><i class='fa-solid fa-box-open' style='color:#dc3545; font-size:16px;' title='Bloqueio de Material'></i></span>";
 } else {
-    {btn_mat} = "<i class='fa-solid fa-box-open' style='color:#ced4da; font-size:16px;' title='Material OK'></i>";
+    {btn_mat} = "<span data-material='0' data-status='$var_status_linha'><i class='fa-solid fa-box-open' style='color:#ced4da; font-size:16px;' title='Material OK'></i></span>";
 }
 
 // Ícone de Ferramenta
@@ -37,8 +42,6 @@ if ({is_nrc} == 't' || {is_nrc} == 1 || {is_nrc} === true) {
 $var_predecessor_manual = (!empty({is_predecessor_manual}) && ({is_predecessor_manual} == 't' || {is_predecessor_manual} == 1 || {is_predecessor_manual} === true));
 
 $var_predecessor_auto = (!empty({is_blocked_predecessor}) && ({is_blocked_predecessor} == 't' || {is_blocked_predecessor} == 1 || {is_blocked_predecessor} === true));
-
-$var_status_linha = {status_code};
 
 if ($var_predecessor_manual) {
     {btn_predecessor} = "<span data-blocked='1' data-status='$var_status_linha'><i class='fa-solid fa-ban' style='color:#f9a825; font-size:16px;' title='Bloqueio manual de predecessora'></i></span>";

@@ -1,6 +1,6 @@
 {
   "nome": "sec_sync_apps",
-  "tipo": "Form",
+  "tipo": "Control",
   "nome_tabela": "sec_sync_apps",
   "descricao": "SECURITY MODULE :: Resync Applications",
   "login": "admin",
@@ -11,7 +11,26 @@
       "nome": "check_deleted",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "opcoes": {
+        "tipo": "checkbox",
+        "origem": "manual",
+        "multipla": false,
+        "opcoes": [
+          {
+            "label": "{lang_sec_check_deleted}",
+            "valor": "Y",
+            "padrao": true
+          }
+        ]
+      },
+      "configuracao": {
+        "html_tipo": "CHECKBOX",
+        "tipo_dado": "CHECKBOX",
+        "obrigatorio": false,
+        "read_only": false,
+        "chave_primaria": false
+      }
     }
   ]
 }

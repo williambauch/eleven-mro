@@ -1,6 +1,6 @@
 {
   "nome": "sec_grid_sec_users_groups",
-  "tipo": "Form",
+  "tipo": "Grid",
   "nome_tabela": "public.sec_users",
   "descricao": "SECURITY MODULE :: Show users by groups",
   "login": "admin",
@@ -13,31 +13,86 @@
       "nome": "active",
       "tipo": "text",
       "required": false,
-      "pk": false
+      "pk": false,
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "TEXTO",
+        "html_largura": "50",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "email",
       "tipo": "text",
       "required": false,
-      "pk": false
+      "pk": false,
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "EMAIL",
+        "html_largura": "50",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "group",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "ajuda": {
+        "tipo": "Pop-up"
+      },
+      "configuracao": {
+        "tipo_dado": "SELECT",
+        "html_largura": "10",
+        "tamanho_max": "20",
+        "obrigatorio": false,
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "login",
       "tipo": "text",
       "required": false,
-      "pk": true
+      "pk": true,
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "TEXTO",
+        "html_largura": "50",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "name",
       "tipo": "text",
       "required": false,
-      "pk": false
+      "pk": false,
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "TEXTO",
+        "html_largura": "50",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
     }
   ]
 }

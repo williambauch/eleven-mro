@@ -4,7 +4,7 @@
   "nome_tabela": "blank_report_test",
   "login": "admin",
   "nomeconexao": "conn_mro",
-  "variaveis": [
+  "variaveis_globais": [
     "X"
   ],
   "campos": []

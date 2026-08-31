@@ -3,19 +3,12 @@
 // BOTÃO DE BARRA DE AÇÃO: exec
 // ============================================================
 // Tipo    : LINK
-// Label   : exec
+// Label   : Abrir
 // Ícone   : fas fa-bullseye
-// Display : fa
+// Display : btn
 // Formato : icon_text
 // Estados:
-//   - state1 | fas fa-bullseye | cor=#1e57c9
+//   - state1 | label="Abrir" | fas fa-bullseye | cor=#1e57c9 | visual=blue
 //
 // ── LIGAÇÃO ──────────────────────────────────────────
-// App destino: form_public_mro_task_assignments (F)
-// Abertura    : Nova janela
-// Parâmetros:
-//   - [Campo] assignment_id → assignment_id
-//   - [Global] usr_employee_id
-//   - [Global] glo_timesheet_id
-//   - [Campo] assignment_id → glo_assignment_id
 // ============================================================

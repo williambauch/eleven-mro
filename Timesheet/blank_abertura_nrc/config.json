@@ -6,7 +6,7 @@
   "login": "william",
   "data_alteracao": "2026-08-14 15:15",
   "nomeconexao": "conn_mro",
-  "variaveis": [
+  "variaveis_globais": [
     "glo_origem",
     "glo_ultima_nrc",
     "task_id_origem",

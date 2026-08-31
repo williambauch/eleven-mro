@@ -1,0 +1,5 @@
+<?php
+
+// MRO-130 (Item 2B): filtro do painel esta no SELECT principal (sql/schema.sql),
+// via coordinator_id = [usr_employee_id] e status permitidos.
+// Nao repetir sc_select_where aqui para nao duplicar o WHERE.

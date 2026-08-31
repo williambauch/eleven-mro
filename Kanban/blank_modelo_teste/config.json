@@ -4,7 +4,7 @@
   "nome_tabela": "blank_modelo_teste",
   "login": "admin",
   "nomeconexao": "conn_mro",
-  "variaveis": [
+  "variaveis_globais": [
     "task_id"
   ],
   "campos": []

@@ -1,12 +1,12 @@
 {
   "nome": "sec_menu",
-  "tipo": "Form",
+  "tipo": "Menu",
   "nome_tabela": "___NM_APL_MEN___",
   "descricao": "SECURITY MODULE :: Menu",
   "login": "admin",
-  "data_alteracao": "2026-08-20 10:13",
+  "data_alteracao": "2026-08-26 12:37",
   "nomeconexao": "conn_mro",
-  "variaveis": [
+  "variaveis_globais": [
     "menu_description",
     "usr_email",
     "usr_is_inspector",

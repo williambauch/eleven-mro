@@ -4,9 +4,9 @@
   "nome_tabela": "control_filtro_jic",
   "descricao": "Tela de configuração da impressão em lote do Pack JIC.",
   "login": "william",
-  "data_alteracao": "2026-08-25 11:15",
+  "data_alteracao": "2026-08-25 14:06",
   "nomeconexao": "conn_mro",
-  "variaveis": [
+  "variaveis_globais": [
     "glo_jic_agrupado",
     "glo_jic_baixar",
     "glo_jic_ids",
@@ -16,22 +16,99 @@
   ],
   "campos": [
     {
-      "nome": "filtro_resume",
+      "nome": "filtro_agrupado",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "opcoes": {
+        "tipo": "radio",
+        "origem": "manual",
+        "multipla": false,
+        "opcoes": [
+          {
+            "label": "Não",
+            "valor": "N",
+            "padrao": true
+          },
+          {
+            "label": "Sim",
+            "valor": "S",
+            "padrao": false
+          }
+        ]
+      },
+      "configuracao": {
+        "html_tipo": "RADIO",
+        "tipo_dado": "RADIO",
+        "obrigatorio": false,
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "filtro_page",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "opcoes": {
+        "tipo": "checkbox",
+        "origem": "manual",
+        "multipla": true,
+        "opcoes": [
+          {
+            "label": "JIC - JOB INSTRUCTION CARD",
+            "valor": "JIC",
+            "padrao": false
+          },
+          {
+            "label": "JEC - JOB EQUIPMENT AND TOLL CARD",
+            "valor": "JEC",
+            "padrao": false
+          },
+          {
+            "label": "JMC - JOB MATERIAL CARD",
+            "valor": "JMC",
+            "padrao": false
+          },
+          {
+            "label": "SHIFT TURNOVER",
+            "valor": "SHIFT",
+            "padrao": false
+          },
+          {
+            "label": "CALIBRATED TOOL STAMTP CONTROL SHEET",
+            "valor": "CALIBRATED",
+            "padrao": false
+          }
+        ]
+      },
+      "configuracao": {
+        "html_tipo": "CHECKBOX",
+        "tipo_dado": "CHECKBOX",
+        "obrigatorio": false,
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
-      "nome": "filtro_agrupado",
+      "nome": "filtro_resume",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "ajuda": {
+        "tipo": "Pop-up"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "TEXTO",
+        "html_largura": "10",
+        "tamanho_min": "0",
+        "tamanho_max": "20",
+        "obrigatorio": false,
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
     }
   ]
 }

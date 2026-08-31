@@ -1,10 +1,10 @@
 {
   "nome": "pdf_jic_print",
-  "tipo": "Form",
+  "tipo": "Blank",
   "nome_tabela": "pdf_jic_print",
   "login": "admin",
   "nomeconexao": "conn_mro",
-  "variaveis": [
+  "variaveis_globais": [
     "task_id"
   ],
   "campos": []

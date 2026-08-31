@@ -1,10 +1,10 @@
 {
   "nome": "ctrl_import_p6",
-  "tipo": "Form",
+  "tipo": "Control",
   "nome_tabela": "ctrl_import_p6",
   "login": "admin",
   "nomeconexao": "conn_mro",
-  "variaveis": [
+  "variaveis_globais": [
     "glo_project_id",
     "usr_login"
   ],
@@ -13,31 +13,87 @@
       "nome": "csv_assignments",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "ajuda": {
+        "tipo": "Pop-up"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "DOCUMENTO",
+        "obrigatorio": false,
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "csv_predecessors",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "ajuda": {
+        "tipo": "Pop-up"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "DOCUMENTO",
+        "obrigatorio": false,
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "csv_resources",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "ajuda": {
+        "tipo": "Pop-up"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "DOCUMENTO",
+        "obrigatorio": false,
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "csv_tasks",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "ajuda": {
+        "tipo": "Pop-up"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "DOCUMENTO",
+        "obrigatorio": false,
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "project_id",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "ajuda": {
+        "tipo": "Pop-up"
+      },
+      "opcoes": {
+        "tipo": "select",
+        "origem": "lookup",
+        "multipla": false,
+        "sql": "SELECT project_id, project_name FROM \"public\".mro_projects ORDER BY project_name"
+      },
+      "configuracao": {
+        "html_tipo": "SELECT",
+        "tipo_dado": "SELECT",
+        "obrigatorio": false,
+        "read_only": false,
+        "chave_primaria": false
+      }
     }
   ]
 }

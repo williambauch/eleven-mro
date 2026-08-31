@@ -1,11 +1,11 @@
 {
   "nome": "sec_settings",
-  "tipo": "Form",
+  "tipo": "Control",
   "nome_tabela": "sec_settings",
   "descricao": "SECURITY MODULE :: Settings",
   "login": "admin",
   "nomeconexao": "conn_mro",
-  "variaveis": [
+  "variaveis_globais": [
     "sett_smtp",
     "sett_smtp_api",
     "sett_smtp_from_email",
@@ -21,265 +21,1058 @@
       "nome": "auth_sn_fb",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "opcoes": {
+        "tipo": "checkbox",
+        "origem": "manual",
+        "multipla": false,
+        "opcoes": [
+          {
+            "label": "Y",
+            "valor": "Y",
+            "padrao": false
+          }
+        ]
+      },
+      "configuracao": {
+        "html_tipo": "CHECKBOX",
+        "tipo_dado": "CHECKBOX",
+        "obrigatorio": false,
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "auth_sn_fb_app_id",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "ajuda": {
+        "tipo": "Pop-up"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "TEXTO",
+        "html_largura": "10",
+        "tamanho_min": "0",
+        "tamanho_max": "255",
+        "obrigatorio": false,
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "auth_sn_fb_secret",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "ajuda": {
+        "tipo": "Pop-up"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "TEXTO",
+        "html_largura": "10",
+        "tamanho_min": "0",
+        "tamanho_max": "255",
+        "obrigatorio": false,
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "auth_sn_google",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "opcoes": {
+        "tipo": "checkbox",
+        "origem": "manual",
+        "multipla": false,
+        "opcoes": [
+          {
+            "label": "Y",
+            "valor": "Y",
+            "padrao": false
+          }
+        ]
+      },
+      "configuracao": {
+        "html_tipo": "CHECKBOX",
+        "tipo_dado": "CHECKBOX",
+        "obrigatorio": false,
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "auth_sn_google_client_id",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "ajuda": {
+        "tipo": "Pop-up"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "TEXTO",
+        "html_largura": "10",
+        "tamanho_min": "0",
+        "tamanho_max": "255",
+        "obrigatorio": false,
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "auth_sn_google_secret",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "ajuda": {
+        "tipo": "Pop-up"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "TEXTO",
+        "html_largura": "10",
+        "tamanho_min": "0",
+        "tamanho_max": "255",
+        "obrigatorio": false,
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "auth_sn_position",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "opcoes": {
+        "tipo": "select",
+        "origem": "manual",
+        "multipla": false,
+        "opcoes": [
+          {
+            "label": "{lang_sec_opt_buttons_beside}",
+            "valor": "beside",
+            "padrao": false
+          },
+          {
+            "label": "{lang_sec_opt_buttons_below}",
+            "valor": "below",
+            "padrao": false
+          }
+        ]
+      },
+      "configuracao": {
+        "html_tipo": "SELECT",
+        "tipo_dado": "SELECT",
+        "obrigatorio": false,
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "auth_sn_x",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "opcoes": {
+        "tipo": "checkbox",
+        "origem": "manual",
+        "multipla": false,
+        "opcoes": [
+          {
+            "label": "Y",
+            "valor": "Y",
+            "padrao": false
+          }
+        ]
+      },
+      "configuracao": {
+        "html_tipo": "CHECKBOX",
+        "tipo_dado": "CHECKBOX",
+        "obrigatorio": false,
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "auth_sn_x_key",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "ajuda": {
+        "tipo": "Pop-up"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "TEXTO",
+        "html_largura": "10",
+        "tamanho_min": "0",
+        "tamanho_max": "255",
+        "obrigatorio": false,
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "auth_sn_x_secret",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "ajuda": {
+        "tipo": "Pop-up"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "TEXTO",
+        "html_largura": "10",
+        "tamanho_min": "0",
+        "tamanho_max": "255",
+        "obrigatorio": false,
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "brute_force",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "opcoes": {
+        "tipo": "checkbox",
+        "origem": "manual",
+        "multipla": false,
+        "opcoes": [
+          {
+            "label": "Y",
+            "valor": "Y",
+            "padrao": false
+          }
+        ]
+      },
+      "configuracao": {
+        "html_tipo": "CHECKBOX",
+        "tipo_dado": "CHECKBOX",
+        "obrigatorio": false,
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "brute_force_attempts",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "ajuda": {
+        "tipo": "Pop-up"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "NUMEROEDT",
+        "html_largura": "3",
+        "tamanho_max": "20",
+        "val_minimo": "0",
+        "val_maximo": "0",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "brute_force_time_block",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "ajuda": {
+        "tipo": "Texto",
+        "texto": "{lang_sec_minutes}"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "NUMEROEDT",
+        "html_largura": "3",
+        "tamanho_max": "20",
+        "val_minimo": "0",
+        "val_maximo": "0",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "captcha",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "opcoes": {
+        "tipo": "checkbox",
+        "origem": "manual",
+        "multipla": false,
+        "opcoes": [
+          {
+            "label": "Y",
+            "valor": "Y",
+            "padrao": false
+          }
+        ]
+      },
+      "configuracao": {
+        "html_tipo": "CHECKBOX",
+        "tipo_dado": "CHECKBOX",
+        "obrigatorio": false,
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "cookie_expiration_time",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "ajuda": {
+        "tipo": "Texto",
+        "texto": "{lang_sec_days}"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "NUMEROEDT",
+        "html_largura": "3",
+        "tamanho_max": "20",
+        "val_minimo": "0",
+        "val_maximo": "0",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "enable_2fa",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "opcoes": {
+        "tipo": "checkbox",
+        "origem": "manual",
+        "multipla": false,
+        "opcoes": [
+          {
+            "label": "Y",
+            "valor": "Y",
+            "padrao": false
+          }
+        ]
+      },
+      "configuracao": {
+        "html_tipo": "CHECKBOX",
+        "tipo_dado": "CHECKBOX",
+        "obrigatorio": false,
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "enable_2fa_api",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "ajuda": {
+        "tipo": "Pop-up"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "TEXTO",
+        "html_largura": "10",
+        "tamanho_min": "0",
+        "tamanho_max": "20",
+        "obrigatorio": false,
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "enable_2fa_api_type",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "opcoes": {
+        "tipo": "radio",
+        "origem": "manual",
+        "multipla": false,
+        "opcoes": [
+          {
+            "label": "E-mail",
+            "valor": "email",
+            "padrao": true
+          },
+          {
+            "label": "Google Auth",
+            "valor": "auth",
+            "padrao": false
+          },
+          {
+            "label": "SMS",
+            "valor": "sms",
+            "padrao": false
+          }
+        ]
+      },
+      "configuracao": {
+        "html_tipo": "RADIO",
+        "tipo_dado": "RADIO",
+        "obrigatorio": false,
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "enable_2fa_expiration_time",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "ajuda": {
+        "tipo": "Texto",
+        "texto": "{lang_sec_seconds}"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "NUMEROEDT",
+        "html_largura": "3",
+        "tamanho_max": "20",
+        "val_minimo": "0",
+        "val_maximo": "0",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "enable_2fa_mode",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "opcoes": {
+        "tipo": "select",
+        "origem": "manual",
+        "multipla": false,
+        "opcoes": [
+          {
+            "label": "{lang_sec_opt_2fa_individual}",
+            "valor": "individual",
+            "padrao": false
+          },
+          {
+            "label": "{lang_sec_opt_2fa_all}",
+            "valor": "all",
+            "padrao": false
+          }
+        ]
+      },
+      "configuracao": {
+        "html_tipo": "SELECT",
+        "tipo_dado": "SELECT",
+        "obrigatorio": false,
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "group_administrator",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "ajuda": {
+        "tipo": "Pop-up"
+      },
+      "opcoes": {
+        "tipo": "select",
+        "origem": "lookup",
+        "multipla": false,
+        "sql": "SELECT group_id, description FROM public.sec_groups ORDER BY description"
+      },
+      "configuracao": {
+        "html_tipo": "SELECT",
+        "tipo_dado": "SELECT",
+        "obrigatorio": false,
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "group_default",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "ajuda": {
+        "tipo": "Pop-up"
+      },
+      "opcoes": {
+        "tipo": "select",
+        "origem": "lookup",
+        "multipla": false,
+        "sql": "SELECT group_id, description FROM public.sec_groups ORDER BY description"
+      },
+      "configuracao": {
+        "html_tipo": "SELECT",
+        "tipo_dado": "SELECT",
+        "obrigatorio": false,
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "language",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "opcoes": {
+        "tipo": "checkbox",
+        "origem": "manual",
+        "multipla": false,
+        "opcoes": [
+          {
+            "label": "Y",
+            "valor": "Y",
+            "padrao": false
+          }
+        ]
+      },
+      "configuracao": {
+        "html_tipo": "CHECKBOX",
+        "tipo_dado": "CHECKBOX",
+        "obrigatorio": false,
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "login_mode",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "opcoes": {
+        "tipo": "select",
+        "origem": "manual",
+        "multipla": false,
+        "opcoes": [
+          {
+            "label": "{lang_sec_opt_login_mode_user}",
+            "valor": "username",
+            "padrao": false
+          },
+          {
+            "label": "E-mail",
+            "valor": "email",
+            "padrao": false
+          },
+          {
+            "label": "{lang_sec_opt_login_mode_both}",
+            "valor": "both",
+            "padrao": false
+          }
+        ]
+      },
+      "configuracao": {
+        "html_tipo": "SELECT",
+        "tipo_dado": "SELECT",
+        "obrigatorio": false,
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "mfa_last_updated",
       "tipo": "integer",
       "required": false,
-      "pk": false
+      "pk": false,
+      "ajuda": {
+        "tipo": "Texto",
+        "texto": "{lang_sec_days}"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "NUMEROEDT",
+        "html_largura": "10",
+        "tamanho_max": "20",
+        "val_minimo": "0.000000",
+        "val_maximo": "0.000000",
+        "aceita_neg": "S",
+        "obrigatorio": false,
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "new_users",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "opcoes": {
+        "tipo": "checkbox",
+        "origem": "manual",
+        "multipla": false,
+        "opcoes": [
+          {
+            "label": "Y",
+            "valor": "Y",
+            "padrao": true
+          }
+        ]
+      },
+      "configuracao": {
+        "html_tipo": "CHECKBOX",
+        "tipo_dado": "CHECKBOX",
+        "obrigatorio": false,
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "password_min",
       "tipo": "integer",
       "required": false,
-      "pk": false
+      "pk": false,
+      "ajuda": {
+        "tipo": "Pop-up"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "NUMEROEDT",
+        "html_largura": "10",
+        "tamanho_min": "5",
+        "tamanho_max": "20",
+        "val_minimo": "0.000000",
+        "val_maximo": "0.000000",
+        "aceita_neg": "S",
+        "obrigatorio": false,
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "password_strength",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "opcoes": {
+        "tipo": "checkbox",
+        "origem": "manual",
+        "multipla": true,
+        "opcoes": [
+          {
+            "label": "{lang_sec_opt_ps_uppercase_letter}",
+            "valor": "uppercase_letter",
+            "padrao": false
+          },
+          {
+            "label": "{lang_sec_opt_ps_lowercase_letter}",
+            "valor": "lowercase_letter",
+            "padrao": false
+          },
+          {
+            "label": "{lang_sec_opt_ps_numbers}",
+            "valor": "numbers",
+            "padrao": false
+          },
+          {
+            "label": "{lang_sec_opt_ps_special_chars}",
+            "valor": "special_chars",
+            "padrao": false
+          }
+        ]
+      },
+      "configuracao": {
+        "html_tipo": "CHECKBOX",
+        "tipo_dado": "CHECKBOX",
+        "obrigatorio": false,
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "pswd_last_updated",
       "tipo": "integer",
       "required": false,
-      "pk": false
+      "pk": false,
+      "ajuda": {
+        "tipo": "Texto",
+        "texto": "{lang_sec_days}"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "NUMEROEDT",
+        "html_largura": "10",
+        "tamanho_max": "20",
+        "val_minimo": "0.000000",
+        "val_maximo": "0.000000",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "recover_pswd",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "opcoes": {
+        "tipo": "select",
+        "origem": "manual",
+        "multipla": false,
+        "opcoes": [
+          {
+            "label": "{lang_sec_opt_reset_send}",
+            "valor": "reset_send",
+            "padrao": false
+          },
+          {
+            "label": "{lang_sec_opt_send_link}",
+            "valor": "send_link",
+            "padrao": true
+          }
+        ]
+      },
+      "configuracao": {
+        "html_tipo": "SELECT",
+        "tipo_dado": "SELECT",
+        "obrigatorio": false,
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "remember_me",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "opcoes": {
+        "tipo": "checkbox",
+        "origem": "manual",
+        "multipla": false,
+        "opcoes": [
+          {
+            "label": "Y",
+            "valor": "Y",
+            "padrao": false
+          }
+        ]
+      },
+      "configuracao": {
+        "html_tipo": "CHECKBOX",
+        "tipo_dado": "CHECKBOX",
+        "obrigatorio": false,
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "req_email_act",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "opcoes": {
+        "tipo": "checkbox",
+        "origem": "manual",
+        "multipla": false,
+        "opcoes": [
+          {
+            "label": "Y",
+            "valor": "Y",
+            "padrao": false
+          }
+        ]
+      },
+      "configuracao": {
+        "html_tipo": "CHECKBOX",
+        "tipo_dado": "CHECKBOX",
+        "obrigatorio": false,
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "retrieve_password",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "opcoes": {
+        "tipo": "checkbox",
+        "origem": "manual",
+        "multipla": false,
+        "opcoes": [
+          {
+            "label": "Y",
+            "valor": "Y",
+            "padrao": false
+          }
+        ]
+      },
+      "configuracao": {
+        "html_tipo": "CHECKBOX",
+        "tipo_dado": "CHECKBOX",
+        "obrigatorio": false,
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "send_email_adm",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "opcoes": {
+        "tipo": "checkbox",
+        "origem": "manual",
+        "multipla": false,
+        "opcoes": [
+          {
+            "label": "Y",
+            "valor": "Y",
+            "padrao": false
+          }
+        ]
+      },
+      "configuracao": {
+        "html_tipo": "CHECKBOX",
+        "tipo_dado": "CHECKBOX",
+        "obrigatorio": false,
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "session_expire",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "opcoes": {
+        "tipo": "select",
+        "origem": "manual",
+        "multipla": false,
+        "opcoes": [
+          {
+            "label": "{lang_sec_sess_no}",
+            "valor": "N",
+            "padrao": true
+          },
+          {
+            "label": "{lang_sec_sess_redir}",
+            "valor": "R",
+            "padrao": false
+          },
+          {
+            "label": "{lang_sec_sess_msg}",
+            "valor": "M",
+            "padrao": false
+          }
+        ]
+      },
+      "configuracao": {
+        "html_tipo": "SELECT",
+        "tipo_dado": "SELECT",
+        "obrigatorio": false,
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "smtp_api",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "ajuda": {
+        "tipo": "Pop-up"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "TEXTO",
+        "html_largura": "10",
+        "tamanho_min": "0",
+        "tamanho_max": "20",
+        "obrigatorio": false,
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "smtp_from_email",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "ajuda": {
+        "tipo": "Pop-up"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "EMAIL",
+        "html_largura": "10",
+        "tamanho_max": "0",
+        "obrigatorio": false,
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "smtp_from_name",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "ajuda": {
+        "tipo": "Pop-up"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "TEXTO",
+        "html_largura": "10",
+        "tamanho_min": "0",
+        "tamanho_max": "0",
+        "obrigatorio": false,
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "smtp_pass",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "ajuda": {
+        "tipo": "Pop-up"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "TEXTO",
+        "html_largura": "10",
+        "tamanho_min": "0",
+        "tamanho_max": "0",
+        "obrigatorio": false,
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "smtp_port",
       "tipo": "integer",
       "required": false,
-      "pk": false
+      "pk": false,
+      "ajuda": {
+        "tipo": "Pop-up"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "NUMEROEDT",
+        "html_largura": "10",
+        "tamanho_max": "20",
+        "val_minimo": "0000000",
+        "val_maximo": "0000000",
+        "aceita_neg": "S",
+        "obrigatorio": false,
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "smtp_security",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "opcoes": {
+        "tipo": "select",
+        "origem": "manual",
+        "multipla": false,
+        "opcoes": [
+          {
+            "label": "SSL",
+            "valor": "ssl",
+            "padrao": false
+          },
+          {
+            "label": "TLS",
+            "valor": "tls",
+            "padrao": false
+          }
+        ]
+      },
+      "configuracao": {
+        "html_tipo": "SELECT",
+        "tipo_dado": "SELECT",
+        "obrigatorio": false,
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "smtp_server",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "ajuda": {
+        "tipo": "Pop-up"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "TEXTO",
+        "html_largura": "10",
+        "tamanho_min": "0",
+        "tamanho_max": "0",
+        "obrigatorio": false,
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "smtp_user",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "TEXTO",
+        "html_largura": "10",
+        "tamanho_min": "0",
+        "tamanho_max": "0",
+        "obrigatorio": false,
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "theme",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "configuracao": {
+        "tipo_dado": "SCHEMA",
+        "obrigatorio": false,
+        "read_only": false,
+        "chave_primaria": false
+      }
     }
   ]
 }

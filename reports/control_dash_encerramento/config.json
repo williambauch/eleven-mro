@@ -6,7 +6,7 @@
   "login": "william",
   "data_alteracao": "2026-08-11 08:58",
   "nomeconexao": "conn_mro",
-  "variaveis": [
+  "variaveis_globais": [
     "glo_project_id"
   ],
   "campos": [
@@ -14,25 +14,82 @@
       "nome": "label_filtro",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "ajuda": {
+        "tipo": "Pop-up"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "TEXTO",
+        "html_largura": "10",
+        "tamanho_min": "0",
+        "tamanho_max": "20",
+        "obrigatorio": false,
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "periodo_final",
       "tipo": "date",
-      "required": false,
-      "pk": false
+      "required": true,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Pop-up"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "DATA",
+        "html_largura": "10",
+        "obrigatorio": true,
+        "formato_data": "dd/mm/aaaa",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "periodo_inicial",
       "tipo": "date",
-      "required": false,
-      "pk": false
+      "required": true,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Pop-up"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "DATA",
+        "html_largura": "10",
+        "obrigatorio": true,
+        "formato_data": "dd/mm/aaaa",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "projeto_id",
       "tipo": "varchar",
-      "required": false,
-      "pk": false
+      "required": true,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Pop-up"
+      },
+      "opcoes": {
+        "tipo": "select",
+        "origem": "lookup",
+        "multipla": false,
+        "sql": "SELECT project_id, concat(project_id, ' - ', p6_proj_id, ' ', project_name) FROM \"public\".mro_projects ORDER BY project_id, p6_proj_id, project_name"
+      },
+      "configuracao": {
+        "html_tipo": "SELECT",
+        "tipo_dado": "SELECT",
+        "obrigatorio": true,
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
     }
   ]
 }

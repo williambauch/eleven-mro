@@ -1,0 +1,7 @@
+<?php
+
+// Converte parent_wbs_id = 0 para NULL
+// (evita violacao da FK mro_wbs_parent_wbs_id_fkey)
+if ((int){parent_wbs_id} <= 0) {
+    {parent_wbs_id} = 'NULL';
+}

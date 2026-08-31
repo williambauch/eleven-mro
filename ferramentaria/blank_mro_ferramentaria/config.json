@@ -3,9 +3,9 @@
   "tipo": "Blank",
   "nome_tabela": "blank_mro_ferramentaria",
   "login": "admin",
-  "data_alteracao": "2026-08-17 20:55",
+  "data_alteracao": "2026-08-28 10:50",
   "nomeconexao": "conn_mro",
-  "variaveis": [
+  "variaveis_globais": [
     "usr_login"
   ],
   "campos": []

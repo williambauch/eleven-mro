@@ -10,3 +10,4 @@ SELECT
     updated_at
 FROM
     "public".mro_projects
+ORDER BY project_id DESC

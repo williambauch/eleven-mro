@@ -1,0 +1,59 @@
+Ajustes Reunião : ENGENHARIA 26/08 - Leonel e Anderson e Robson (Rodrigo)
+
+# Reunião_26-08_15h-ENGENHARIA - Leonel e Anderson e Robson (Rodrigo)
+
+Segue as anotações da reunião "Reunião 26-08 15h ENGENHARIA com Leonel, Anderson, Robson e Rodrigo.
+
+Por favor, analise os pontos levantados e, se necessário, faça seus apontamentos ou ajustes.
+
+Foram criados os usuários abaixo:
+Task Id de teste: 29947
+
+Usuário: robson.siqueira
+E-mail: robson.siqueira@digex.com.br
+Senha: @Senha102030
+
+Anderon Gonçalves
+Usuário: anderon.goncalves
+Senha: @Senha102030
+anderon.goncalves@digex.com.br
+
+# CADASTRADO DA TAREFA
+
+01) O campo Corrective Action, no cadastro da tarefa do tipo Não Rotina, deve ser de preenchimento obrigatório. Normalmente, nesse campo são informadas ações como "Reparar" ou "Trocar", conforme a necessidade identificada na abertura da NR.
+
+02) No cadastro da tarefa, reordenar os campos, fazendo com que "Discrepancy" fique acima de "Corrective Action".
+
+03) Remover o campo "AMM Reference" do cadastro da tarefa.
+
+04) Criar o campo "Change Justification" na tarefa, como uma seção de "Informações Extra". O campo deverá ser de preenchimento livre e NÃO deverá ser impresso no documento.
+
+05) Adicionar, na tarefa, um campo de texto livre denominado "Instruções Adicionais de Engenharia", destinado à Engenharia. Esse campo será utilizado como um canal de comunicação entre os setores de Manutenção e Engenharia, permitindo o registro de orientações, instruções ou informações adicionais relacionadas à tarefa.
+
+-- Eu fiz a anotação 04 e 05 mas relendo estou na dúvida se são redundantes. São?
+
+
+06) O campo "Zone" na tarefa deve utilizar uma lista global de zonas, que será disponibilizada pela Engenharia. Deverá existir um cadastro específico para essa tabela, permitindo a inclusão, edição e manutenção das zonas. Falta definir quais setores terão autorização para editar esse cadastro.
+
+
+# Ajustes no PDF da JIC
+08) Definir um limite de caracteres para o campo "Corrective Action", considerando o espaço máximo disponível no PDF da JIC.
+09) Corrigir a impressão do texto da JIC: atualmente, o conteúdo de "Corrective Action" está sendo exibido em "Discrepancy".
+10) No campo "Performance By", deixar o espaço em branco. Na página 01 (capa), remover todas as datas.
+
+OBS: Futuramene Avaliar a remoção do campo "Engineering Instruction" do PDF, utilizando o espaço liberado para permitir mais conteúdo em "Corrective Action".
+
+11) No cadastro de materiais dentro da tarefa verificar, se não tem estoque disponível, nem vai para a provedoria,  já coloca como bloqueio de material. Quando compras importar a planilha com o estoque liberado, na importação o sistema desbloqueia a JIC e manda para a provedoria.
+
+
+Uma outra dúvida esse Campo JIC Work Oder é o código de barras da JIC né? Não é o JIC Number (Nosso task code);
+
+
+
+
+Setor: Provedoria & Estoque de Materiais 
+
+Importação Posicional de Empenhos 
+Key Users: Nicolas Minami, Alison Cordeiro, Letícia Maria Gomes. 
+
+Casos de Teste – Provedoria & Estoque 

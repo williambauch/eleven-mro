@@ -5,7 +5,7 @@
   "descricao": "TAB Supervisor Melhorada",
   "login": "william",
   "data_alteracao": "2026-08-13 09:33",
-  "variaveis": [
+  "variaveis_globais": [
     "usr_is_inspector",
     "usr_login"
   ],

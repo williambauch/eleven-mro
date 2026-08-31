@@ -13,9 +13,14 @@
 //
 // ── LIGAÇÃO ──────────────────────────────────────────
 // App destino: grid_public_mro_tasks (C)
-// Abertura    : Mesma janela
+// Abertura    : Nova janela
 // Abre em aba : Sim
 // Parâmetros:
 //   - [Campo] project_id → var_project_id
 //   - [Global] glo_aviso_run
+//   - [Global] glo_jic_ids
+//   - [Global] usr_groups
+//   - [Global] usr_login
+//   - [Retorno] de  → glo_filtro_status
+//   - [Global] glo_jic_where
 // ============================================================

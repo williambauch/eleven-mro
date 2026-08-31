@@ -1,0 +1,34 @@
+{
+  "nome": "grid_painel_coordenador",
+  "tipo": "Grid",
+  "nome_tabela": "public.mro_tasks",
+  "descricao": "Painel do Coordenador — lista tarefas dos projetos onde o coordenador logado e o responsavel. coordinator_id = [usr_employee_id].",
+  "login": "admin",
+  "data_alteracao": "2026-08-26",
+  "nomeconexao": "conn_mro",
+  "tabelas": [
+    "public.mro_tasks",
+    "public.mro_projects",
+    "public.mro_aircraft"
+  ],
+  "variaveis": [
+    "usr_employee_id"
+  ],
+  "campos": [
+    {"nome": "task_id", "tipo": "int4", "required": false, "pk": false},
+    {"nome": "task_code", "tipo": "varchar", "required": false, "pk": false},
+    {"nome": "task_name", "tipo": "text", "required": false, "pk": false},
+    {"nome": "status_code", "tipo": "varchar", "required": false, "pk": false},
+    {"nome": "is_nrc", "tipo": "bool", "required": false, "pk": false},
+    {"nome": "is_blocked_material", "tipo": "bool", "required": false, "pk": false},
+    {"nome": "is_blocked_tool", "tipo": "bool", "required": false, "pk": false},
+    {"nome": "is_blocked_labor", "tipo": "bool", "required": false, "pk": false},
+    {"nome": "project_id", "tipo": "int4", "required": false, "pk": false},
+    {"nome": "p6_proj_id", "tipo": "varchar", "required": false, "pk": false},
+    {"nome": "project_name", "tipo": "varchar", "required": false, "pk": false},
+    {"nome": "registration", "tipo": "varchar", "required": false, "pk": false},
+    {"nome": "actual_start", "tipo": "datetime", "required": false, "pk": false},
+    {"nome": "actual_end", "tipo": "datetime", "required": false, "pk": false},
+    {"nome": "status_badge", "tipo": "varchar", "required": false, "pk": false}
+  ]
+}

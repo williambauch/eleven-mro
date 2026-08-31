@@ -1,0 +1,60 @@
+# Reunião_27-08_14h-Provedoria & Estoque - Leonel e Nicolas (Rodrigo)
+
+FR-01 - Bipagem Cega (Barcode) 
+FR-01 - LPAD no barcode: não existe nenhum LPAD/str_pad no código. O barcode é usado como part_number exato (WHERE part_number = '$ferramenta'). Se o código de barras da etiqueta tiver zeros à esquerda (ex: 008407 vs 8407), a busca falha. Resumo prático: não precisa implementar LPAD. O FR-01 é testável como está — basta bipar uma ferramenta com zeros no PN (ex: 008407) e confirmar o registro instantâneo de custódia vinculado ao técnico.
+
+
+FR-02 — Travas de Calibração — ✅ IMPLEMENTADO
+O código em onExecute (checkout) faz exatamente o que o caso de teste descreve:
+
+<?php
+if (!empty($tool_calib) && strtotime($tool_calib) < strtotime(date('Y-m-d'))) {
+    $sql_calib_upd = "UPDATE mro_tools SET status = 'FERRAMENTA EM CALIBRAÇÃO' WHERE tool_id = $tool_id";
+    sc_exec_sql($sql_calib_upd);
+    mroLogFerramentaria('tool_checkout_block', "...bloqueada por calibração vencida...", $usuario_logado);
+    $response['msg'] = "BLOQUEIO ANAC: A ferramenta '$tool_desc' está com calibração vencida e foi retida.";
+    echo json_encode($response); die();
+}
+
+✅ Bloqueia checkout com calibração vencida
+✅ Atualiza status para FERRAMENTA EM CALIBRAÇÃO
+✅ Registra log de auditoria
+✅ Envia Alerta: "BLOQUEIO ANAC: A ferramenta 'X' está com calibração vencida e foi retida."
+
+Em controle de ferramentas (grid_public_mro_tools):
+Calibration Due Date: menor que '28/08/2026'
+Part Number: 1587, 112350, 2100
+
+FR-03: Bloqueio de Fechamento JIC
+Impedir que uma JIC seja encerrada (Repasse/Conclusão) com ferramentas em custódia não devolvidas. Empréstimo é por crachá, mas o fechamento é por JIC — ferramentas de outras JICs não travam a JIC atual.
+
+⚙️ Como funciona (2 gatilhos)
+
+1. Motivo 2 — Fim de Turno / Repasse
+Verifica ferramentas ACTIVE do mecânico NESTA JIC
+├── Tem pendência? → ❌ BLOQUEIA (mensagem + botão Custódia)
+└── Sem pendência?
+    ├── Último mecânico? → JIC → PENDING_PROG (Programação)
+    └── Há outros mecânico ativos? → Encerra só a participação dele
+
+2. Motivo 6 — Timesheet Finalizado / Tarefa Concluída
+Verifica ferramentas ACTIVE do mecânico NESTA JIC
+├── Tem pendência? → ❌ BLOQUEIA
+└── Sem pendência?
+    ├── Último mecânico? → verifica TODAS as ferramentas da JIC
+    │   ├── Alguma pendente (inclusive de outros)? → ❌ BLOQUEIA
+    │   └── Tudo devolvido? → ✅ JIC → SUPSIG (Inspeção)
+    └── Há outros mecânico ativos? → Encerra só o timesheet dele
+
+DUVIDA
+Quando o mecânico encerra a participação dele na JIC por fim de turno/repasse ou remanejado pra outra tarefa, ele deve devolver as ferramentas que estão em posse dele antes de encerrar? Ou ele pode encerrar e deixar a devolução para o turno seguinte?
+
+Exemplo prático:
+Mecânico A retirou 3 ferramentas na JIC e vai encerrar o turno dele.
+Mecânico B continua na mesma JIC no turno seguinte ou já trabalhando.
+
+* Cenário 1 (regra atual): o A é obrigado a devolver as 3 ferramentas dele no terminal antes de encerrar. Se não devolver, o sistema bloqueia a saída dele.
+
+* Cenário 2: o A encerra normalmente com as ferramentas em posse dele, e o B (ou o último mecânico que ficou na tarefa) fica responsável por devolvê-las.
+
+A gente implementou o Cenário 1 (bloqueia a saída com ferramentas pendentes), porque entendemos que a custódia é do crachá e cada um deve devolver o que retirou. Mas queremos confirmar se é isso mesmo que vocês esperam na rotina de trabalho, ou se o repasse deve permitir deixar ferramenta para o turno seguinte.

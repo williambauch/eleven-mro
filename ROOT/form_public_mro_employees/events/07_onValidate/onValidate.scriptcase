@@ -1,0 +1,20 @@
+<?php
+
+// onValidate
+// MRO-EXTRA: Impede crachá duplicado (employee_registration único)
+// Segue o padrão do form_public_mro_task_resources (lookup + error_message + error_exit).
+
+// Só valida se o crachá foi informado
+if (!empty({employee_registration})) {
+    $var_matricula = addslashes({employee_registration});
+
+    // Busca por crachá igual, ignorando o próprio registro na edição
+    sc_lookup(rs_dup, "SELECT employee_id FROM mro_employees
+                       WHERE employee_registration = '$var_matricula'
+                       AND (employee_id IS DISTINCT FROM " . (int){employee_id} . ")");
+
+    if (!empty({rs_dup})) {
+        sc_error_message("Já existe um funcionário com o crachá \"" . {employee_registration} . "\" cadastrado.");
+        sc_error_exit();
+    }
+}

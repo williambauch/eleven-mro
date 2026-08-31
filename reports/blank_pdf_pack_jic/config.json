@@ -4,9 +4,9 @@
   "nome_tabela": "blank_pdf_pack_jic",
   "descricao": "Pack para impressao (JIC, JEC, JMC, Shift Turnover, Calib Tools)",
   "login": "william",
-  "data_alteracao": "2026-08-25 11:17",
+  "data_alteracao": "2026-08-25 14:02",
   "nomeconexao": "conn_mro",
-  "variaveis": [
+  "variaveis_globais": [
     "glo_jic_agrupado",
     "glo_jic_baixar",
     "glo_jic_paginas",

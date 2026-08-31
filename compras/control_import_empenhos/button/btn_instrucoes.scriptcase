@@ -1,0 +1,163 @@
+<?php
+
+// ============================================================
+// BOTÃO: btn_instrucoes
+// ============================================================
+// Tipo    : PHP (execução única)
+// Label   : Instruções de Importação
+// Ícone   : fas fa-circle-info
+// Display : fa
+// Formato : icon_text
+// Ação    : Exibe o card orientativo com o mapeamento das colunas
+//           do Excel, a regra de bloqueio operacional (MRO-115)
+//           e link de download do modelo de planilha.
+// ============================================================
+
+// URL dinâmica do servidor (sem hardcode de host)
+$var_host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '';
+$var_url_modelo = 'https://' . $var_host . '/scriptcase/devel/conf/grp/MRO_System/libraries/modelo_documento/COMPRAS-PRODUTO_EMPENHADOS_POR_PROJETO-MODELO.xlsx';
+
+echo "
+<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css'>
+<div style='width: 100%; max-width: 940px; margin: 15px auto; font-family: Arial, sans-serif;'>
+    <div style='background: #fff; border: 1px solid #dee2e6; border-left: 6px solid #004080; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); padding: 20px 24px;'>
+        <h3 style='margin: 0 0 12px 0; color: #004080; font-size: 16px; border-bottom: 2px solid #004080; padding-bottom: 10px;'>
+            <i class='fa-solid fa-circle-info'></i> Como preencher o Excel de Empenhos
+        </h3>
+
+        <div style='margin-bottom: 14px; text-align: right;'>
+            <a href='$var_url_modelo' download target='_blank' style='display: inline-block; background: #198754; color: #fff; padding: 8px 14px; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: bold;'>
+                <i class='fa-solid fa-file-excel'></i> Baixar modelo de planilha
+            </a>
+        </div>
+
+        <p style='margin: 0 0 12px 0; font-size: 13px; color: #495057; line-height: 1.5;'>
+            Abaixo o mapeamento das colunas do arquivo Excel para os campos do sistema.
+            A importação lê apenas as colunas indicadas - as demais colunas do arquivo
+            são ignoradas no processamento.
+        </p>
+
+        <table style='width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 14px;'>
+            <thead>
+                <tr style='background: #004080; color: #fff; text-align: left;'>
+                    <th style='padding: 8px; border: 1px solid #dee2e6;'>Coluna</th>
+                    <th style='padding: 8px; border: 1px solid #dee2e6;'>Campo Excel</th>
+                    <th style='padding: 8px; border: 1px solid #dee2e6;'>Campo do Sistema</th>
+                    <th style='padding: 8px; border: 1px solid #dee2e6;'>Onde vai no sistema</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style='padding: 7px; border: 1px solid #dee2e6; font-weight: bold;'>A</td>
+                    <td style='padding: 7px; border: 1px solid #dee2e6;'>TAREFA / JIC NUMBER</td>
+                    <td style='padding: 7px; border: 1px solid #dee2e6;'>task_code</td>
+                    <td style='padding: 7px; border: 1px solid #dee2e6;'>Cadastro Tarefa</td>
+                </tr>
+                <tr style='background: #f8f9fa;'>
+                    <td style='padding: 7px; border: 1px solid #dee2e6; font-weight: bold;'>J</td>
+                    <td style='padding: 7px; border: 1px solid #dee2e6;'>PRODUTO</td>
+                    <td style='padding: 7px; border: 1px solid #dee2e6;'>product_code</td>
+                    <td style='padding: 7px; border: 1px solid #dee2e6;'>Cadastro de Materiais</td>
+                </tr>
+                <tr>
+                    <td style='padding: 7px; border: 1px solid #dee2e6; font-weight: bold;'>K</td>
+                    <td style='padding: 7px; border: 1px solid #dee2e6;'>MATERIAL</td>
+                    <td style='padding: 7px; border: 1px solid #dee2e6;'>material_source</td>
+                    <td style='padding: 7px; border: 1px solid #dee2e6;'>Materiais da Tarefa (origem)</td>
+                </tr>
+                <tr style='background: #f8f9fa;'>
+                    <td style='padding: 7px; border: 1px solid #dee2e6; font-weight: bold;'>L</td>
+                    <td style='padding: 7px; border: 1px solid #dee2e6;'>PART NUMBER</td>
+                    <td style='padding: 7px; border: 1px solid #dee2e6;'>part_number</td>
+                    <td style='padding: 7px; border: 1px solid #dee2e6;'>Cadastro de Materiais</td>
+                </tr>
+                <tr>
+                    <td style='padding: 7px; border: 1px solid #dee2e6; font-weight: bold;'>M</td>
+                    <td style='padding: 7px; border: 1px solid #dee2e6;'>DESCRICAO</td>
+                    <td style='padding: 7px; border: 1px solid #dee2e6;'>description</td>
+                    <td style='padding: 7px; border: 1px solid #dee2e6;'>Cadastro de Materiais</td>
+                </tr>
+                <tr style='background: #f8f9fa;'>
+                    <td style='padding: 7px; border: 1px solid #dee2e6; font-weight: bold;'>O</td>
+                    <td style='padding: 7px; border: 1px solid #dee2e6;'>QTDE EMP.</td>
+                    <td style='padding: 7px; border: 1px solid #dee2e6;'>planned_qty</td>
+                    <td style='padding: 7px; border: 1px solid #dee2e6;'>Materiais da Tarefa</td>
+                </tr>
+                <tr>
+                    <td style='padding: 7px; border: 1px solid #dee2e6; font-weight: bold;'>Q</td>
+                    <td style='padding: 7px; border: 1px solid #dee2e6;'>SALDO EMPENHO</td>
+                    <td style='padding: 7px; border: 1px solid #dee2e6;'>committed_qty</td>
+                    <td style='padding: 7px; border: 1px solid #dee2e6;'>Materiais da Tarefa</td>
+                </tr>
+                <tr style='background: #f8f9fa;'>
+                    <td style='padding: 7px; border: 1px solid #dee2e6; font-weight: bold;'>S</td>
+                    <td style='padding: 7px; border: 1px solid #dee2e6;'>ARMZ</td>
+                    <td style='padding: 7px; border: 1px solid #dee2e6;'>stock_location</td>
+                    <td style='padding: 7px; border: 1px solid #dee2e6;'>Cadastro de Materiais</td>
+                </tr>
+                <tr>
+                    <td style='padding: 7px; border: 1px solid #dee2e6; font-weight: bold;'>T</td>
+                    <td style='padding: 7px; border: 1px solid #dee2e6;'>STATUS</td>
+                    <td style='padding: 7px; border: 1px solid #dee2e6;'>nao gravado</td>
+                    <td style='padding: 7px; border: 1px solid #dee2e6;'>Usado na regra de bloqueio (ver abaixo)</td>
+                </tr>
+                <tr style='background: #f8f9fa;'>
+                    <td style='padding: 7px; border: 1px solid #dee2e6; font-weight: bold;'>AH</td>
+                    <td style='padding: 7px; border: 1px solid #dee2e6;'>CUSTO EMPENHADO</td>
+                    <td style='padding: 7px; border: 1px solid #dee2e6;'>unit_cost</td>
+                    <td style='padding: 7px; border: 1px solid #dee2e6;'>Cadastro de Materiais + Materiais da Tarefa</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div style='background: #fff8e6; border: 1px solid #ffc107; border-radius: 4px; padding: 10px 12px; margin-bottom: 14px; font-size: 12px; color: #664d03; line-height: 1.5;'>
+            <strong><i class='fa-solid fa-triangle-exclamation'></i> Coluna T (STATUS)</strong> - não é gravada no banco.
+            Ela participa da <strong>regra de bloqueio</strong>: se estiver <strong>vazia ou com \"-\"</strong>,
+            o material bloqueia a tarefa <i class='fa-solid fa-box-open' style='color:#dc3545; font-size:16px;' title='Bloqueio de Material'></i>(is_blocked_material = true) e o saldo empenhado
+            <strong>não</strong> é contabilizado. Se tiver valor (ex: OK), o saldo empenhado
+            é contabilizado e o material <strong>não</strong> bloqueia.
+        </div>
+
+        <div style='background: #e7f1ff; border: 1px solid #0d6efd; border-radius: 4px; padding: 12px; font-size: 12px; color: #084298; line-height: 1.6;'>
+            <strong><i class='fa-solid fa-boxes-packing'></i> Regra de Bloqueio Operacional e Saldo Empenhado</strong>
+            <ul style='margin: 8px 0 0 0; padding-left: 18px;'>
+                <li>
+                    <strong>Saldo Empenhado (Q-committed_qty):</strong> só recebe o valor da coluna
+                    SALDO EMPENHO quando o material <strong>Não bloqueia</strong> (is_blocking_task = false)
+                    OU quando o STATUS da planilha está preenchido (ex: OK).
+                    Caso contrário, committed_qty = 0.
+                </li>
+                <li style='margin-top: 6px;'>
+                    <strong>Bloqueio da Tarefa (is_blocked_material):</strong> a tarefa só é bloqueada
+                    quando o material <strong>bloqueia</strong> (is_blocking_task = true)
+                    <strong>E</strong> o STATUS está vazio ou \"-\" (material indisponível).
+                </li>
+                <li style='margin-top: 6px;'>
+                    <strong>Material CLIENTE:</strong> quando a coluna MATERIAL (K) for CLIENTE,
+                    o custo unitário é zerado na importação.
+                </li>
+            </ul>
+        </div>
+
+        <div style='background: #e9f7ef; border: 1px solid #198754; border-radius: 4px; padding: 12px; font-size: 12px; color: #14532d; line-height: 1.6;'>
+            <strong><i class='fa-solid fa-arrows-rotate'></i> Reimportação da mesma planilha</strong>
+            <ul style='margin: 8px 0 0 0; padding-left: 18px;'>
+                <li>
+                    <strong>Pode reimportar:</strong> ao enviar a mesma planilha novamente, o sistema <strong>atualiza</strong> o que já existe em vez de criar tudo de novo — não gera duplicidade.
+                </li>
+                <li style='margin-top: 6px;'>
+                    <strong>Reflete o estado atual do arquivo:</strong> se o STATUS mudar de \"-\" para OK,
+                    o material deixa de bloquear a tarefa e o saldo passa a ser contabilizado na reimportação.
+                    Se uma linha for removida da planilha, o vínculo correspondente é removido do sistema
+                    <strong>desde que o material ainda não tenha sido aplicado (consumido)</strong> na tarefa.
+                </li>
+                <li style='margin-top: 6px;'>
+                    <strong>Dica:</strong> após receber a planilha atualizada da área de compras,
+                    reimporte o arquivo para sincronizar saldos, status e bloqueios das tarefas.
+                </li>
+            </ul>
+        </div>
+
+    </div>
+</div>
+";

@@ -45,10 +45,10 @@ if (!empty({rs_task})) {
         sc_lookup(rs_status, $var_sql_status);
 
         if (!empty({rs_status}) && {rs_status[0][0]} == 'RELEASED') {
+            // MRO-130: removido updated_by (coluna inexistente em mro_tasks).
+            // O trigger set_timestamp_mro_tasks ja atualiza updated_at sozinho.
             sc_exec_sql("UPDATE mro_tasks
-                         SET status_code = 'IN_PROGRESS',
-                             updated_at = CURRENT_TIMESTAMP,
-                             updated_by = '[usr_login]'
+                         SET status_code = 'IN_PROGRESS'
                          WHERE task_id = " . $var_task_id . "
                            AND status_code = 'RELEASED'");
 

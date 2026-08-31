@@ -42,6 +42,12 @@
       "form_public_mro_wbs",
       "grid_public_mro_wbs",
       "reports/jobcard"
+    ],
+    "MRO-130": [
+      "form_public_mro_projects",
+      "form_public_mro_task_assignments",
+      "form_public_mro_task_assignments_planned",
+      "grid_painel_coordenador"
     ]
   },
   "shortcuts": {

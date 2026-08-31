@@ -8,7 +8,7 @@
   "tabelas": [
     "public.sec_groups_apps"
   ],
-  "variaveis": [
+  "variaveis_globais": [
     "arr_apps",
     "arr_apps_desc",
     "group",
@@ -18,56 +18,246 @@
     {
       "nome": "app_name",
       "tipo": "varchar",
-      "required": false,
-      "pk": false
+      "required": true,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Pop-up"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "FORM_LABEL",
+        "html_largura": "50",
+        "tamanho_min": "0",
+        "tamanho_max": "128",
+        "aceita_neg": "N",
+        "obrigatorio": true,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": true
+      }
     },
     {
       "nome": "description",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "ajuda": {
+        "tipo": "Pop-up"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "TEXTO",
+        "html_largura": "10",
+        "tamanho_min": "0",
+        "tamanho_max": "20",
+        "obrigatorio": false,
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "group_id",
       "tipo": "int",
-      "required": false,
-      "pk": false
+      "required": true,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Pop-up"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "NUMEROEDT",
+        "html_largura": "11",
+        "tamanho_max": "11",
+        "aceita_neg": "N",
+        "obrigatorio": true,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": true
+      }
     },
     {
       "nome": "priv_access",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "opcoes": {
+        "tipo": "checkbox",
+        "origem": "manual",
+        "multipla": false,
+        "opcoes": [
+          {
+            "label": "{lang_opt_yes}",
+            "valor": "Y",
+            "padrao": false
+          }
+        ]
+      },
+      "configuracao": {
+        "html_tipo": "CHECKBOX",
+        "tipo_dado": "CHECKBOX",
+        "html_largura": "1",
+        "tamanho_max": "1",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "priv_delete",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "opcoes": {
+        "tipo": "checkbox",
+        "origem": "manual",
+        "multipla": false,
+        "opcoes": [
+          {
+            "label": "{lang_opt_yes}",
+            "valor": "Y",
+            "padrao": false
+          }
+        ]
+      },
+      "configuracao": {
+        "html_tipo": "CHECKBOX",
+        "tipo_dado": "CHECKBOX",
+        "html_largura": "1",
+        "tamanho_max": "1",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "priv_export",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "opcoes": {
+        "tipo": "checkbox",
+        "origem": "manual",
+        "multipla": true,
+        "opcoes": [
+          {
+            "label": "{lang_opt_yes}",
+            "valor": "Y",
+            "padrao": false
+          }
+        ]
+      },
+      "configuracao": {
+        "html_tipo": "CHECKBOX",
+        "tipo_dado": "CHECKBOX",
+        "html_largura": "1",
+        "tamanho_max": "1",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "priv_insert",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "opcoes": {
+        "tipo": "checkbox",
+        "origem": "manual",
+        "multipla": true,
+        "opcoes": [
+          {
+            "label": "{lang_opt_yes}",
+            "valor": "Y",
+            "padrao": false
+          }
+        ]
+      },
+      "configuracao": {
+        "html_tipo": "CHECKBOX",
+        "tipo_dado": "CHECKBOX",
+        "html_largura": "1",
+        "tamanho_min": "0",
+        "tamanho_max": "1",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "priv_print",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "opcoes": {
+        "tipo": "checkbox",
+        "origem": "manual",
+        "multipla": false,
+        "opcoes": [
+          {
+            "label": "{lang_opt_yes}",
+            "valor": "Y",
+            "padrao": false
+          }
+        ]
+      },
+      "configuracao": {
+        "html_tipo": "CHECKBOX",
+        "tipo_dado": "CHECKBOX",
+        "html_largura": "1",
+        "tamanho_max": "1",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "priv_update",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "opcoes": {
+        "tipo": "checkbox",
+        "origem": "manual",
+        "multipla": false,
+        "opcoes": [
+          {
+            "label": "{lang_opt_yes}",
+            "valor": "Y",
+            "padrao": false
+          }
+        ]
+      },
+      "configuracao": {
+        "html_tipo": "CHECKBOX",
+        "tipo_dado": "CHECKBOX",
+        "html_largura": "1",
+        "tamanho_max": "1",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
     }
   ]
 }

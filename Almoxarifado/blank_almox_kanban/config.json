@@ -4,7 +4,7 @@
   "nome_tabela": "blank_almox_kanban",
   "login": "admin",
   "nomeconexao": "conn_mro",
-  "variaveis": [
+  "variaveis_globais": [
     "usr_login"
   ],
   "campos": []

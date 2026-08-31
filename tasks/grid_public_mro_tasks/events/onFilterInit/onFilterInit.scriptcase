@@ -1,0 +1,6 @@
+<?php
+
+$temProjeto =  (int)[var_project_id];
+if($temProjeto > 0) {
+	{project_id} =  [var_project_id];
+}

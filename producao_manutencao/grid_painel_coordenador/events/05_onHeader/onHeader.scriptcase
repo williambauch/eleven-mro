@@ -1,0 +1,37 @@
+<?php
+
+// MRO-130 (Item 2B): Card explicativo do Painel do Coordenador.
+// Exibe no topo da grid o que esta sendo listado, como o filtro funciona
+// e por que essas tarefas aparecem aqui.
+
+echo "
+<div style='max-width: 1100px; margin: 0 auto 16px auto; padding: 16px 20px; background: #ffffff; color: #374151; border-radius: 8px; border: 1px solid #e5e7eb; border-left: 6px solid #f59e0b; box-shadow: 0 1px 3px rgba(0,0,0,0.06); font-family: Roboto, sans-serif;'>
+    <div style='font-size: 18px; font-weight: 800; margin-bottom: 6px; color: #1f2937;'>
+        <i class='fas fa-user-tie'></i> Painel do Coordenador
+    </div>
+    <div style='font-size: 13px; line-height: 1.6; color: #4b5563;'>
+        <p style='margin: 0 0 8px 0;'>
+            <b style='color:#b45309;'>O que aparece aqui:</b>
+            somente as tarefas dos <b>projetos em que você é o coordenador responsável</b>.
+        </p>
+        <p style='margin: 0 0 8px 0;'>
+            <b style='color:#b45309;'>Como o filtro funciona:</b>
+            a lista já vem filtrada automaticamente pelo seu usuário, sem precisar selecionar nada.
+            Apenas os status relevantes para a coordenação aparecem:
+            <code style='background:#f3f4f6; padding:1px 5px; border-radius:3px; color:#b45309;'>PENDING_COORD</code>,
+            <code style='background:#f3f4f6; padding:1px 5px; border-radius:3px; color:#b45309;'>IN_PROGRESS</code>,
+            <code style='background:#f3f4f6; padding:1px 5px; border-radius:3px; color:#b45309;'>RELEASED</code> e
+            <code style='background:#f3f4f6; padding:1px 5px; border-radius:3px; color:#b45309;'>PENDING_PROG</code>.
+        </p>
+        <p style='margin: 0 0 8px 0;'>
+            <b style='color:#b45309;'>O que fazer?:</b>
+            você precisa revisar, validar ou acompanhar essas tarefas durante o ciclo de execução.
+            Use o botão <b>Editar</b> para abrir a tarefa e fazer os ajustes necessários.
+        </p>
+        <p style='margin: 0; font-size: 12px; color: #9ca3af;'>
+            <i class='fas fa-info-circle'></i>
+            Se um projeto ainda não tem coordenador definido, as tarefas dele não aparecem em nenhum painel de coordenador.
+        </p>
+    </div>
+</div>
+";

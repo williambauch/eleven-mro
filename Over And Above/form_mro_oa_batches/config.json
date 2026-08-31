@@ -7,7 +7,7 @@
   "tabelas": [
     "public.mro_oa_batches"
   ],
-  "variaveis": [
+  "variaveis_globais": [
     "usr_login"
   ],
   "campos": [
@@ -15,67 +15,247 @@
       "nome": "approved_at",
       "tipo": "datetime",
       "required": false,
-      "pk": false
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "DATAHORA",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "dd/mm/aaaa;hh:ii:ss",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "batch_id",
       "tipo": "int4",
-      "required": false,
-      "pk": true
+      "required": true,
+      "pk": true,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "NUMEROEDT",
+        "aceita_neg": "N",
+        "obrigatorio": true,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": true,
+        "chave_primaria": true
+      }
     },
     {
       "nome": "created_at",
       "tipo": "datetime",
       "required": false,
-      "pk": false
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "DATAHORA",
+        "html_largura": "18",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "dd/mm/aaaa;hh:ii:ss",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "created_by",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "TEXTO",
+        "html_largura": "50",
+        "tamanho_min": "0",
+        "tamanho_max": "100",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "iten",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "configuracao": {
+        "tipo_dado": "EMBUTIDA",
+        "obrigatorio": false,
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "project_id",
       "tipo": "int4",
       "required": false,
-      "pk": false
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "opcoes": {
+        "tipo": "select",
+        "origem": "lookup",
+        "multipla": false,
+        "sql": "SELECT project_id, p6_proj_id FROM \"public\".mro_projects ORDER BY p6_proj_id"
+      },
+      "configuracao": {
+        "html_tipo": "SELECT",
+        "tipo_dado": "SELECT",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": true,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "remarks",
       "tipo": "text",
       "required": false,
-      "pk": false
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "MULTITEXTO",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "status",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "opcoes": {
+        "tipo": "select",
+        "origem": "manual",
+        "multipla": false,
+        "opcoes": [
+          {
+            "label": "Rascunho",
+            "valor": "DRAFT",
+            "padrao": true
+          },
+          {
+            "label": "Aprovado Total",
+            "valor": "APPROVED",
+            "padrao": false
+          },
+          {
+            "label": "Rejeitado Total",
+            "valor": "REJECTED",
+            "padrao": false
+          },
+          {
+            "label": "Aprovado Parcial",
+            "valor": "PARTIALLY_APPROVED",
+            "padrao": false
+          },
+          {
+            "label": "Aguardando Análise",
+            "valor": "PENDING_REVIEW",
+            "padrao": false
+          },
+          {
+            "label": "Aprovado com Itens Reprovados",
+            "valor": "REJECTED_ITEMS",
+            "padrao": false
+          }
+        ]
+      },
+      "configuracao": {
+        "html_tipo": "SELECT",
+        "tipo_dado": "SELECT",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": true,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "submitted_at",
       "tipo": "datetime",
       "required": false,
-      "pk": false
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "DATAHORA",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "dd/mm/aaaa;hh:ii:ss",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "total_hh",
       "tipo": "numeric",
       "required": false,
-      "pk": false
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "VALOR",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": true,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "total_material_cost",
       "tipo": "numeric",
       "required": false,
-      "pk": false
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "VALOR",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": true,
+        "chave_primaria": false
+      }
     }
   ]
 }

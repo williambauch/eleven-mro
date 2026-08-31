@@ -4,7 +4,7 @@
   "nome_tabela": "blank_kanban_board",
   "login": "admin",
   "nomeconexao": "conn_mro",
-  "variaveis": [
+  "variaveis_globais": [
     "var_project_id"
   ],
   "campos": []

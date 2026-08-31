@@ -182,6 +182,58 @@ PROJETO
 | Custo empenhado | R$ 839.300,75 |
 
 
+## 📌 Resumo em tabela — Validações do fluxo de liberação
+
+> Fonte: `_Bibliotecas_Internas/mro_engine.php` → `fn_liberar_task_para_execucao()`
+> Ordem exata das validações antes da mudança de status (`PENDING_PROVIDER` ou `RELEASED`).
+
+| # | Validação | Bloqueia? | Critério |
+|---|---|---|---|
+| 1 | Predecessora | ✅ Sim | `is_blocked_predecessor` ou `is_predecessor_manual` |
+| 2 | Status | ✅ Sim | Só `PLANNING`/`NOT_STARTED`/`PLANNED`/`APPROVED` |
+| 3 | Completa horas/skill | ❌ Não | Só preenche se vazio (`estimated_hours`, `skill_code`) |
+| 4 | Skill/mão de obra | ✅ Sim | Precisa de LABOR com skill OU `skill_code` válido |
+| 5 | Material bloqueante | ⚠️ Desvia | `is_blocking_task=true/NULL` → `PENDING_PROVIDER` |
+
+### Detalhes por validação
+
+**1. Bloqueio por predecessora**
+- Impede liberação se `is_blocked_predecessor` (automático) OU `is_predecessor_manual` (manual) = true
+- Mensagem: "não pode ser liberada porque possui dependência de uma tarefa predecessora que ainda não foi concluída"
+
+**2. Crítica de status**
+- Só libera nos status: `PLANNING`, `NOT_STARTED`, `PLANNED`, `APPROVED`
+- Qualquer outro (RELEASED, IN_PROGRESS, BLOCKED, COMPLETED...) → bloqueia
+
+**3. Completa dados básicos (MRO-126)**
+- Se `estimated_hours` vazio → soma `budgeted_hours` dos recursos LABOR e grava
+- Se `skill_code` vazio → usa o primeiro recurso LABOR com skill em `mro_skills`
+- Não bloqueia — apenas preenche antes de prosseguir
+
+**4. Valida skill / mão de obra (Gated Process)**
+- Bloqueia se a task não tem skill liberável:
+  - Nenhum recurso LABOR com skill em `mro_skills`, **E**
+  - `skill_code` da própria task não existe em `mro_skills`
+- Motivo: evita task RELEASED sem slot de trabalho ("fantasma")
+- Mensagem: "não possui skill/recursos de mão de obra definidos. Atribua a skill antes de liberar"
+
+**5. Detecta material bloqueante (MRO-126)**
+- Conta materiais com `is_blocking_task = true` **ou NULL** (não aplicados)
+- Se `> 0` + origem PLANEJADOR → `PENDING_PROVIDER` (fila da provedoria, sem assignments)
+- Se `= 0` → `RELEASED` + cria assignments
+
+### ⚠️ Ponto de atenção para o teste CM-02
+
+A validação **#4 (skill/mão de obra)** precede a de material. Tasks importadas do P6
+**costumam ter `skill_code` vazio** — se a task não tiver skill, o botão Liberar
+**bloqueia com erro de skill ANTES** de chegar na regra de material.
+
+Possíveis resultados ao liberar a `370460` (bloqueada por material):
+- **Bloqueio por skill** (sem skill definida) → não chega no teste de material
+- **PENDING_PROVIDER** (com skill + material bloqueante) → fluxo correto esperado
+
+
+
 
 # 
 

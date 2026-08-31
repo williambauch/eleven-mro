@@ -8,33 +8,105 @@
   "tabelas": [
     "public.mro_task_tools"
   ],
-  "variaveis": [
+  "variaveis_globais": [
     "task_id"
   ],
   "campos": [
     {
       "nome": "quantity_required",
       "tipo": "numeric",
-      "required": false,
-      "pk": false
+      "required": true,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "VALOR",
+        "aceita_neg": "N",
+        "obrigatorio": true,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "task_id",
       "tipo": "int4",
       "required": false,
-      "pk": false
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "opcoes": {
+        "tipo": "select",
+        "origem": "lookup",
+        "multipla": false,
+        "sql": "SELECT task_id, task_code FROM \"public\".mro_tasks ORDER BY task_code"
+      },
+      "configuracao": {
+        "html_tipo": "SELECT",
+        "tipo_dado": "SELECT",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "task_tool_id",
       "tipo": "int4",
-      "required": false,
-      "pk": true
+      "required": true,
+      "pk": true,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "NUMEROEDT",
+        "html_largura": "9",
+        "tamanho_max": "9",
+        "val_minimo": "0",
+        "val_maximo": "0",
+        "aceita_neg": "N",
+        "obrigatorio": true,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": true,
+        "chave_primaria": true
+      }
     },
     {
       "nome": "tool_id",
       "tipo": "int4",
-      "required": false,
-      "pk": false
+      "required": true,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "opcoes": {
+        "tipo": "autocomplete",
+        "origem": "lookup",
+        "multipla": false,
+        "sql": "SELECT tool_id, concat(part_number, ' - ', description) FROM \"public\".mro_tools ORDER BY part_number, description"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "NUMERO_AUTOCOMP",
+        "html_largura": "9",
+        "tamanho_max": "9",
+        "val_minimo": "0",
+        "val_maximo": "0",
+        "aceita_neg": "N",
+        "obrigatorio": true,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
     }
   ]
 }

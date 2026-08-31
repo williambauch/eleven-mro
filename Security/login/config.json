@@ -1,6 +1,6 @@
 {
   "nome": "login",
-  "tipo": "Form",
+  "tipo": "Control",
   "nome_tabela": "login",
   "login": "admin",
   "nomeconexao": "conn_mro",
@@ -9,13 +9,27 @@
       "nome": "login",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "configuracao": {
+        "tipo_dado": "TEXTO",
+        "obrigatorio": false,
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "senha",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "configuracao": {
+        "tipo_dado": "TEXTO",
+        "obrigatorio": false,
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
     }
   ]
 }

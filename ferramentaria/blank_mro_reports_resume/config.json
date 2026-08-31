@@ -5,7 +5,7 @@
   "login": "william",
   "data_alteracao": "2026-08-17 19:41",
   "nomeconexao": "conn_mro",
-  "variaveis": [
+  "variaveis_globais": [
     "glo_report_id"
   ],
   "campos": []

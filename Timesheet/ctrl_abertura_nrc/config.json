@@ -1,12 +1,12 @@
 {
   "nome": "ctrl_abertura_nrc",
-  "tipo": "Form",
+  "tipo": "Control",
   "nome_tabela": "ctrl_abertura_nrc",
   "descricao": "-- APP DESCONTINUADO --",
   "login": "admin",
   "data_alteracao": "2026-07-27 11:28",
   "nomeconexao": "conn_mro",
-  "variaveis": [
+  "variaveis_globais": [
     "glo_origem",
     "task_id_origem",
     "usr_employee_id",
@@ -17,31 +17,90 @@
       "nome": "descricao_detalhada",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "ajuda": {
+        "tipo": "Pop-up"
+      },
+      "configuracao": {
+        "html_tipo": "TEXTAREA",
+        "tipo_dado": "MULTITEXTO",
+        "html_largura": "30",
+        "html_linhas": "0",
+        "tamanho_min": "0",
+        "tamanho_max": "2000",
+        "obrigatorio": false,
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "foto_defeito",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "configuracao": {
+        "tipo_dado": "ARQUIVO",
+        "obrigatorio": false,
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "impeditivo",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "opcoes": {
+        "tipo": "radio",
+        "origem": "manual",
+        "multipla": false,
+        "opcoes": [
+          {
+            "label": "Sim",
+            "valor": "S",
+            "padrao": false
+          },
+          {
+            "label": "Não",
+            "valor": "N",
+            "padrao": false
+          }
+        ]
+      },
+      "configuracao": {
+        "html_tipo": "RADIO",
+        "tipo_dado": "RADIO",
+        "obrigatorio": false,
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "referencia_passo",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "configuracao": {
+        "tipo_dado": "TEXTO",
+        "obrigatorio": false,
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "titulo_nrc",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "configuracao": {
+        "tipo_dado": "TEXTO",
+        "obrigatorio": false,
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
     }
   ]
 }

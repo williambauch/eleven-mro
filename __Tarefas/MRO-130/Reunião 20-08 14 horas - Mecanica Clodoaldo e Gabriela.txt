@@ -1,0 +1,207 @@
+Ajustes Reunião : Mecânica 20/08 - Leonel, Clodoaldo, Gabriela, Danilo
+
+Oi, Leonel! Seguem as anotações que consegui fazer da reunião. Por gentileza, complemente ou me ajude a deixar mais claros os pontos levantados.
+
+1) Exibir o projeto e a matrícula da aeronave na tela do cronômetro do mecânico.
+
+2) No cadastro do projeto, definir quem será o coordenador responsável. Esse coordenador deverá ter um filtro que permita visualizar, no painel do coordenador, as listas de tarefas que precisam ser editadas por ele.
+
+3) No painel do supervisor/mecânico, disponibilizar um filtro inicial para selecionar o projeto que será trabalhado antes de listar as atribuições.
+
+4) O Split, em vez de dividir o tempo ao meio, deve considerar o total atualmente alocado e redistribuí-lo entre as atribuições existentes e a nova atribuição criada.
+Exemplo: hoje, ao fazer um Split de 0,88, o sistema gera 0,44 / 0,44. Se for realizado um novo Split sobre uma das atribuições de 0,44, o resultado atual seria 0,44 / 0,22 / 0,22, deixando a distribuição desproporcional. O esperado é que o total de 0,88 seja redistribuído igualmente entre as três atribuições, resultando em aproximadamente 0,29 / 0,29 / 0,29.
+
+-----
+*IMPORTANTE*: Foi questionada a necessidade de ter um tempo individual para cada mecânico ou se seria suficiente considerar apenas um tempo total para toda a tarefa, somando o tempo de todos que trabalharam nela. É necessário avaliar o impacto desse tipo de controle nos demais setores, como o de qualidade.
+-----
+
+No CLOCK-OUT:
+* "Pausa Curta" está OK.
+* "Fim de turno / Repasse": as atribuições repassadas devem voltar para o supervisor redistribuir (NÃO DEVEM IR PARA PROGRAMAÇÃO COMO É HOJE).
+* "Impedimento: Falta de Material, Impedimento: Aguardando Ferramenta / GSE, Impedimento: Inspetor / Engenharia": devem ir para a programação.
+* "Timesheet Finalizado/Tarefa Concluída." está OK.
+
+NOVO "CLOCK-OUT de Interrupção": O mecânico pode interromper o trabalho em uma atribuição sem finalizar a tarefa, SÓ SAIR DA TAREFA. A interrupção deve apenas encerrar a atribuição daquele mecânico, mantendo o status da tarefa inalterado. Ao realizar a interrupção, o tempo reservado para o mecânico deve ser devolvido para que possa ser redistribuído posteriormente.
+
+HOJE IMPLEMENTADO: Temos o motivo (2) "Fim de turno / Repasse", que possui dois comportamentos, dependendo da quantidade de mecânicos ativos na tarefa:
+a) Há outros mecânicos ativos: encerra apenas a atribuição deste mecânico.
+b) É o último mecânico ativo: altera o status da tarefa para PENDING_PROG (Comportamento questionado na reunião).
+
+_Observação: durante a reunião, o Clodoaldo propôs que uma tarefa só possa ser encerrada quando um mecânico específico (normalmente o primeiro responsável pela tarefa) estiver definido como responsável pelo encerramento. Outro termo citado foi "mecânico licenciado", selecionado a partir de uma lista. Somente esse mecânico poderia encerrar a tarefa. Estou registrando essa proposta neste escopo apenas para estudo e avaliação de viabilidade._
+
+
+Eu preciso de ajuda para entender melhor a questão que a Gabriela trouxe sobre o tempo de trabalho da Rotina não dever ser pausado enquanto o mecânico estiver executando uma Não Rotina filha.
+
+
+// ROTA 3: FIM DE TURNO / REPASSE
+$var_outros_ativos = COUNT(assignments com status IN ('IN_PROGRESS','PAUSED','BLOCKED') e assignment <> atual)
+
+if ($var_outros_ativos > 0) {
+    // ✅ AINDA há outros mecânicos ativos — encerra a participacao DESTE
+    $status_code = 'PENDING_HANDOVER';    // Assignment encerrada
+    $status_ts   = 'COMPLETED';           // Timesheet fechado
+    // "Nao altera a task mae (outro mecânico continua)"
+} else {
+    // Último mecânico — faz o handover para Programacao
+    $status_code = 'PENDING_HANDOVER';
+    // MRO-120: task mae vai para PENDING_PROG, is_blocked_labor = FALSE
+
+
+Duvida William Bauch 02: 
+Estava revisando o fluxo do Planejamento, Esse perfil tem acesso ao botão "Liberar para Execução" que muda o status para RELEASED. 
+Recentemente a gente criou esse item grid_provedoria_release. Eu tinha entendido que o liberar as tarefas seria essa mesma ação. Mas agora estou na dúvida se é isso mesmo.
+
+Informação POO 02:
+vdd, não ficou claro isso...
+o que ocorre... quando não tem material, o planejamento libera pra execução e vai para REALEASED.  
+quando tem material, tem que ir para um novo status onde vai pra o painel da provedoria.
+aí a provedoria verifica, se tem material libera.
+acredito que possa usar essa flag is_blocked_material nesse momento do planejamento liberar a task, se tiver material marca como is_blocked_material , daí a provedoria quando liberar desmarca essa flag.
+
+SOLUÇÃO PLANEJADA:
+
+JIC SEM material = Planejamento libera → vai direto para RELEASED (comportamento atual)
+JIC COM material = Planejamento libera → NÃO vai para RELEASED; vai para um novo status intermediário que aparece no painel da provedoria. A provedoria verifica se o material está disponível e só então libera (desmarcando a flag is_blocked_material)
+
+Planejamento clica "Liberar para Execução"
+    ├── JIC SEM material → status = RELEASED (direto, como hoje)
+    └── JIC COM material (is_blocking_task true) → status = PENDING_PROVIDER (novo status)                                 
+
+Provedoria
+    ├── grid_provedoria_release lista PENDING_PROVIDER
+    ├── bip de saída: separa os materiais (blank_mro_provedoria_bip)
+    └── provedoria libera → status = RELEASED + is_blocked_material = false
+
+USAR O Botão "Liberar" na grid_provedoria_release (RUN, que já existe) Separado do bip de saída (2 passos manuais DOUBLE CHECK).
+
+OBS: Não criar assignments na ida para PENDING_PROVIDER (só cria em RELEASED final)
+
+
+
+
+PL-03  Liberação de Tarefas 
+Validar liberação de JIC com recursos sinalizados em verde (HH e materiais disponíveis). 
+A JIC deve assumir o status executável e tornar-se visível no painel de despacho da supervisão. 
+
+[ ] Pass [ ] Fail 
+
+
+liberação agora é condicional:
+
+PL-03 — Liberação de Tarefas
+
+Ao abrir a Não Rotina, seu apontamento (se houver) será pausado, essa atribuição e a tarefa ficarão bloqueados, e a NRC será criada em rascunho para depois ser enviada manualmente para Engenharia ou Programação. Você só retoma após a liberação. Deseja continuar? 
+
+
+Tipo de Rotina	Não Rotina (RN)
+Project *	MODELO 737NG - GOL
+Task Id	28.843
+Task Code *	N370022002
+Validar liberação de JIC com recursos sinalizados (HH e materiais disponíveis).
+Sem material bloqueante: libera direto para RELEASED
+Com material bloqueante: vai para PENDING_PROVIDER (fila da provedoria);
+
+
+ a provedoria libera → RELEASED + flag desmarcada + assignments criados. 
+Resultado final em ambos: JIC executável e visível no painel de despacho da supervisão.
+
+
+Apontamento (timesheet) → PAUSADO
+Assignment do mecânico → BLOCKED
+Task → fica com a flag is_blocked_labor = true (sinalizada como bloqueada por mão de obra)
+Ou seja, ambos: o apontamento é pausado e o assignment/tarefa ficam bloqueados. A mensagem correta em uma linha:
+
+Mecânico na form_public_mro_task_assignments
+  → assignment 15724 (task 18149 / 370022)
+  → clica em "Abrir Não Rotina" (btn_Abrir Não Rotina)
+  → redireciona para blank_abertura_nrc
+      ├── Busca assignment ativo do mecânico (ASSIGNED/IN_PROGRESS/PAUSED)
+      ├── Gera código NRC: N370022002 (N + JIC + seq)
+      ├── INSERT mro_tasks: task 28843 (DRAFT, is_nrc=true, parent=18149)
+      ├── Pausa o timesheet ativo
+      ├── UPDATE assignment 15724 → BLOCKED
+      ├── UPDATE task 18149 → is_blocked_labor=true
+      └── INSERT evento BLOCKED "Achado impeditivo. NRC N370022002 gerada."
+  → sc_redir para form_public_mro_tasks (task 28843)
+
+
+
+
+Motivo Pausa	
+
+Pausa Curta (Almoço / Descanso)
+
+Fim de Turno / Repasse
+
+Impedimento: Falta de Material
+
+Impedimento: Aguardando Ferramenta / GSE
+
+Impedimento: Inspetor / Engenharia
+
+Timesheet Finalizado/Tarefa Concluída.
+Passagem de Serviço	
+
+Id Timesheet	116
+assignment_id	15711
+
+descrição = valor
+CALIBRATED TOOL STAMTP CONTROL SHEET = CALIBRATED
+SHIFT TURNOVER = SHIFT
+
+
+
+
+
+
+
+A implementação permite gerar os PDFs das tarefas JIC de forma individual ou em lote, dando ao usuário a opção de definir quais tarefas serão processadas, quais páginas serão incluídas e se os arquivos devem ser agrupados em um único PDF ou entregues em um ZIP.
+
+Fluxo de negócio
+Definição das tarefas
+
+O usuário pode escolher entre:
+
+processar as tarefas que foram marcadas na grid; ou
+processar todas as tarefas que atendem aos filtros aplicados na grid.
+Configuração da impressão
+
+Antes de gerar os arquivos, o usuário define:
+
+quais páginas deseja imprimir: JIC, JEC, JMC, SHIFT e/ou CALIBRATED;
+se deseja gerar os documentos de forma agrupada ou individual;
+e visualiza um resumo da seleção, incluindo a origem dos dados e a quantidade de tarefas que serão processadas.
+É obrigatório selecionar pelo menos uma página.
+
+Geração dos documentos
+
+Após a confirmação, o sistema processa cada tarefa selecionada e gera o respectivo PDF.
+
+Forma de entrega
+
+A entrega depende da opção escolhida:
+
+Agrupado: todos os PDFs são reunidos em um único arquivo PDF, com as páginas das tarefas processadas em sequência.
+Não agrupado: os PDFs individuais são reunidos em um arquivo ZIP.
+Acompanhamento do processamento
+
+O sistema registra o processamento das tarefas, permitindo identificar o lote, a tarefa processada, o usuário responsável, o status e o arquivo gerado.
+
+Download
+
+Ao finalizar o processamento em lote, o usuário recebe uma tela com a opção de Baixar arquivo e de Fechar a janela.
+
+No processamento individual, o PDF é disponibilizado diretamente para download.
+
+Limpeza dos arquivos temporários
+
+Os arquivos utilizados durante o processamento são temporários e são removidos automaticamente após 60 minutos, evitando o acúmulo de arquivos no ambiente.
+
+
+TESTES DE PERFORMACE
+Qtd Task: 145 (725 páginas) após 00:35 segundos = Lote PDF SEPARADO COM ZIP 
+Qtd Task: 145 (725 páginas) após 00:33 segundos = Lote AGRUPADO UNICO 
+Qtd Task: 550 (2750 páginas) após 02:43 = Lote SEPARADO Sucesso (417MB)
+Qtd Task: 1140 (5700 páginas) após 5min = Reason: Error reading from remote server
+
+

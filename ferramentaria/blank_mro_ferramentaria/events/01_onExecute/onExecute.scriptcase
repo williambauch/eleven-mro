@@ -144,7 +144,8 @@ if (isset($_POST['action_mro'])) {
             $sql_calib_upd = "UPDATE mro_tools SET status = 'FERRAMENTA EM CALIBRAÇÃO' WHERE tool_id = $tool_id";
             sc_exec_sql($sql_calib_upd);
             mroLogFerramentaria('tool_checkout_block', "Ferramenta $tool_desc (PN: $ferramenta) bloqueada por calibração vencida no checkout.", $usuario_logado);
-            $response['msg'] = "BLOQUEIO ANAC: A ferramenta '$tool_desc' está com calibração vencida e foi retida.";
+            $var_calib_data = date('d/m/Y', strtotime($tool_calib));
+            $response['msg'] = "BLOQUEIO ANAC: A ferramenta '$tool_desc' não pode ser retirada — calibração vencida em $var_calib_data. Ela foi enviada para FERRAMENTA EM CALIBRAÇÃO e não poderá ser emprestada até passar por recalibração.";
             echo json_encode($response); die();
         }
 
@@ -384,7 +385,12 @@ if (isset($_POST['action_mro'])) {
 <div class="mro-container">
     <div class="mro-header">
         <h2>MRO SYSTEM — FLOOR TOOL CONTROL</h2>
-        <span class="e-badge e-badge-success" style="padding:6px 12px; font-size:12px;"><i class="fa-solid fa-circle-check"></i> Terminal Rápido</span>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <span class="e-badge e-badge-success" style="padding:6px 12px; font-size:12px;"><i class="fa-solid fa-circle-check"></i> Terminal Rápido</span>
+            <button type="button" onclick="abrirInstrucoes()" title="Instruções e regras de negócio do terminal" style="background:#0d6efd; color:#fff; border:none; border-radius:4px; padding:7px 14px; font-size:12px; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:6px;">
+                <i class="fa-solid fa-circle-question"></i> Instruções
+            </button>
+        </div>
     </div>
 
     <div class="workspace" id="main_workspace">
@@ -442,6 +448,25 @@ if (isset($_POST['action_mro'])) {
     var inspecaoDialog;
     var formDialog;
     var ferramentaBipada = '';
+
+    // Modal de Instruções do Terminal
+    function abrirInstrucoes() {
+        var modal = document.getElementById('modal_instrucoes');
+        if (modal) modal.style.display = 'block';
+    }
+
+    function fecharInstrucoes() {
+        var modal = document.getElementById('modal_instrucoes');
+        if (modal) modal.style.display = 'none';
+    }
+
+    // Fecha o modal ao clicar fora do card
+    document.addEventListener('click', function(e) {
+        var modal = document.getElementById('modal_instrucoes');
+        if (modal && e.target === modal) {
+            modal.style.display = 'none';
+        }
+    });
 
     function mostrarToast(titulo, conteudo, tipo) {
         var container = document.createElement('div');
@@ -732,6 +757,11 @@ if (isset($_POST['action_mro'])) {
         configurarFoco();
     }
 </script>
+
+<?php
+// Modal de Instruções (conteúdo centralizado no método mInstrucoes)
+mInstrucoes();
+?>
 </body>
 </html>
 <?php

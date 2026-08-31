@@ -1,10 +1,10 @@
 {
   "nome": "pdf_pack_universal",
-  "tipo": "Form",
+  "tipo": "Blank",
   "nome_tabela": "pdf_pack_universal",
   "login": "admin",
   "nomeconexao": "conn_mro",
-  "variaveis": [
+  "variaveis_globais": [
     "task_id"
   ],
   "campos": []

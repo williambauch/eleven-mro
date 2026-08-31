@@ -6,7 +6,7 @@
   "login": "admin",
   "data_alteracao": "2026-08-21 13:02",
   "nomeconexao": "conn_mro",
-  "variaveis": [
+  "variaveis_globais": [
     "glo_project_id",
     "glo_project_ids",
     "FP",

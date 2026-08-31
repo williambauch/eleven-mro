@@ -124,6 +124,8 @@ if (!empty([glo_aviso_run])) {
 // MRO-119: Desabilitar checkbox RUN se a task estiver bloqueada por predecessora
 // MRO-126: desabilita tambem quando o status da linha nao permite liberacao
 // (so liberam: PLANNING, NOT_STARTED, PLANNED, APPROVED)
+// MRO-115: desabilita tambem quando a task tem bloqueio de material
+// (is_blocked_material = true -> data-material='1')
 function esconderCheckboxRun() {
   const statusPermitidos = ['PLANNING', 'NOT_STARTED', 'PLANNED', 'APPROVED'];
   const predSpans = document.querySelectorAll("span[id^='id_sc_field_btn_predecessor_']");
@@ -135,12 +137,16 @@ function esconderCheckboxRun() {
     const innerSpan = span.querySelector('span[data-blocked]');
     if (!innerSpan) return;
 
+    // MRO-115: localiza o span de material da MESMA linha (mesmo numero)
+    const matSpan = document.querySelector("span[id^='id_sc_field_btn_mat_" + linhaNum + "_'] span[data-material], span[id='id_sc_field_btn_mat_" + linhaNum + "'] span[data-material]");
+    const material = matSpan ? matSpan.getAttribute('data-material') : '0';
+
     const blocked = innerSpan.getAttribute('data-blocked');
     const status = innerSpan.getAttribute('data-status');
     const statusOk = statusPermitidos.indexOf(status) !== -1;
     const checkbox = document.getElementById('NM_ck_run' + linhaNum);
 
-    if (checkbox && (blocked === '1' || !statusOk)) {
+    if (checkbox && (blocked === '1' || material === '1' || !statusOk)) {
       checkbox.disabled = true;
       checkbox.checked = false;
       checkbox.closest('td').style.opacity = '0.4';

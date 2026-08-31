@@ -3,9 +3,9 @@
   "tipo": "Control",
   "nome_tabela": "control_pause_task",
   "login": "admin",
-  "data_alteracao": "2026-08-15 10:19",
+  "data_alteracao": "2026-08-28 14:14",
   "nomeconexao": "conn_mro",
-  "variaveis": [
+  "variaveis_globais": [
     "glo_assignment_id",
     "glo_assignment_id_sel",
     "glo_current_timesheet",
@@ -18,31 +18,135 @@
       "nome": "assignment_id",
       "tipo": "integer",
       "required": false,
-      "pk": false
+      "pk": false,
+      "ajuda": {
+        "tipo": "Pop-up"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "NUMEROEDT",
+        "html_largura": "10",
+        "tamanho_max": "20",
+        "val_minimo": "0000000",
+        "val_maximo": "0000000",
+        "aceita_neg": "S",
+        "obrigatorio": false,
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "assignment_id_sel",
       "tipo": "integer",
       "required": false,
-      "pk": false
+      "pk": false,
+      "ajuda": {
+        "tipo": "Pop-up"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "NUMEROEDT",
+        "html_largura": "10",
+        "tamanho_max": "20",
+        "val_minimo": "0000000",
+        "val_maximo": "0000000",
+        "aceita_neg": "S",
+        "obrigatorio": false,
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "id_timesheet",
       "tipo": "integer",
       "required": false,
-      "pk": false
+      "pk": false,
+      "ajuda": {
+        "tipo": "Pop-up"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "NUMEROEDT",
+        "html_largura": "10",
+        "tamanho_max": "20",
+        "val_minimo": "0000000",
+        "val_maximo": "0000000",
+        "aceita_neg": "S",
+        "obrigatorio": false,
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "motivo_pausa",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "opcoes": {
+        "tipo": "radio",
+        "origem": "manual",
+        "multipla": false,
+        "opcoes": [
+          {
+            "label": "Pausa Curta (Almoço / Descanso)",
+            "valor": "1",
+            "padrao": false
+          },
+          {
+            "label": "Fim de Turno / Repasse",
+            "valor": "2",
+            "padrao": false
+          },
+          {
+            "label": "Impedimento: Falta de Material",
+            "valor": "3",
+            "padrao": false
+          },
+          {
+            "label": "Impedimento: Aguardando Ferramenta / GSE",
+            "valor": "4",
+            "padrao": false
+          },
+          {
+            "label": "Impedimento: Inspetor / Engenharia",
+            "valor": "5",
+            "padrao": false
+          },
+          {
+            "label": "Timesheet Finalizado/Tarefa Concluída.",
+            "valor": "6",
+            "padrao": false
+          }
+        ]
+      },
+      "configuracao": {
+        "html_tipo": "RADIO",
+        "tipo_dado": "RADIO",
+        "obrigatorio": false,
+        "read_only": false,
+        "chave_primaria": false
+      }
     },
     {
       "nome": "passagem_servico",
       "tipo": "varchar",
       "required": false,
-      "pk": false
+      "pk": false,
+      "ajuda": {
+        "tipo": "Pop-up"
+      },
+      "configuracao": {
+        "html_tipo": "TEXTAREA",
+        "tipo_dado": "MULTITEXTO",
+        "html_largura": "30",
+        "html_linhas": "0",
+        "tamanho_min": "0",
+        "tamanho_max": "1000",
+        "obrigatorio": false,
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
     }
   ]
 }
