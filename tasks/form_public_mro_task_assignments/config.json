@@ -40,6 +40,12 @@
       "pk": false
     },
     {
+      "nome": "label_projeto",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false
+    },
+    {
       "nome": "display_tempo",
       "tipo": "varchar",
       "required": false,

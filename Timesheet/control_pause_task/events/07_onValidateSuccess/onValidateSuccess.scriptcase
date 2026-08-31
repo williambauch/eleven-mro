@@ -14,14 +14,14 @@ if($v_motivo == 1) {
     $motivo_txt = '';
     $status_code = 'PAUSED';
     $status_ts = 'PAUSED';
-    $status_type = "Pausa - Notas: $v_notas";
+    $status_type = "Pausa Curta (Almoço / Descanso) - Notas: $v_notas";
 	
 } elseif (in_array($v_motivo, [3, 4, 5])) {
     // ROTA 2: IMPEDIMENTOS / GARGALOS (Alerta as áreas de apoio!)
-    $motivo_txt = ($v_motivo == 3) ? 'Falta de Material' : (($v_motivo == 4) ? 'Falta de Ferramenta/GSE' : 'Aguardando Qualidade/Eng.');
+    $motivo_txt = ($v_motivo == 3) ? 'Falta de Material' : (($v_motivo == 4) ? 'Aguardando Ferramenta / GSE' : 'Inspetor / Engenharia');
     $status_code = 'BLOCKED';
     $status_ts = 'PAUSED';
-    $status_type = "Impedimento ($motivo_txt) - Notas: $v_notas";
+    $status_type = "Impedimento: $motivo_txt - Notas: $v_notas";
 	
     // Mapeando a decisão para true/false 
     $b_mat  = ($v_motivo == 3) ? 'true' : 'false';
@@ -37,7 +37,26 @@ if($v_motivo == 1) {
 	
 } elseif ($v_motivo == 2) { 
     // ROTA 3: FIM DE TURNO / REPASSE
-    
+
+    // MRO-UAT-FR03: Mecanico precisa devolver as ferramentas em posse dele
+    // NESTA JIC (task_id) antes de encerrar a participacao na atribuicao
+    // (repasse/fim de turno). Ferramentas de outras JICs nao bloqueiam aqui.
+    $var_emp_id_fr03 = "SELECT employee_id, task_id FROM mro_task_assignments WHERE assignment_id = " . (int)$v_ass_id;
+    sc_lookup(rs_emp_fr03, $var_emp_id_fr03);
+    if (!empty({rs_emp_fr03})) {
+        $var_emp_fr03 = (int){rs_emp_fr03[0][0]};
+        $var_task_emp_fr03 = (int){rs_emp_fr03[0][1]};
+        sc_lookup(rs_tools_emp, "SELECT COUNT(*) FROM mro_tool_transactions
+                                 WHERE employee_id = $var_emp_fr03
+                                   AND task_id = $var_task_emp_fr03
+                                   AND status = 'ACTIVE'");
+        $var_pend_emp = (!empty({rs_tools_emp})) ? (int){rs_tools_emp[0][0]} : 0;
+        if ($var_pend_emp > 0) {
+            sc_error_message("Ação Bloqueada: você possui $var_pend_emp ferramenta(s) em custódia nesta JIC. Devolva as ferramentas no terminal antes de encerrar a participação. Consulte o botão 'Custódia' na tela do cronômetro para ver a lista.");
+            sc_error_exit();
+        }
+    }
+
     // Verifica se é o último mecânico ativo na tarefa
     $var_sql_count = "SELECT COUNT(*) FROM mro_task_assignments
                       WHERE task_id = (SELECT task_id FROM mro_task_assignments WHERE assignment_id = " . (int)$v_ass_id . ")
@@ -72,8 +91,54 @@ if($v_motivo == 1) {
     }
 	
 } elseif ($v_motivo == 6) { 
-    // ROTA 4: CONCLUSÃO (Vai para o Inspetor/Supervisor assinar)
-    // MRO-126: nome do encerramento alterado para "Timesheet Finalizado/Tarefa Concluida"
+    // ROTA 4: CONCLUSÃO — "Timesheet Finalizado/Tarefa Concluída"
+    // Conclui o timesheet DO MECANICO (individual). A task so vai para
+    // SUPSIG (Inspecao) quando o ULTIMO mecanico ativo encerrar.
+
+    // MRO-UAT-FR03: O mecanico precisa devolver as ferramentas em posse DELE
+    // NESTA JIC (task_id) antes de finalizar o timesheet. Ferramentas de
+    // outras JICs nao bloqueiam a conclusao desta.
+    $var_emp_id_fr03 = "SELECT employee_id, task_id FROM mro_task_assignments WHERE assignment_id = " . (int)$v_ass_id;
+    sc_lookup(rs_emp_fr03, $var_emp_id_fr03);
+    if (!empty({rs_emp_fr03})) {
+        $var_emp_fr03 = (int){rs_emp_fr03[0][0]};
+        $var_task_emp_fr03 = (int){rs_emp_fr03[0][1]};
+        sc_lookup(rs_tools_emp, "SELECT COUNT(*) FROM mro_tool_transactions
+                                 WHERE employee_id = $var_emp_fr03
+                                   AND task_id = $var_task_emp_fr03
+                                   AND status = 'ACTIVE'");
+        $var_pend_emp = (!empty({rs_tools_emp})) ? (int){rs_tools_emp[0][0]} : 0;
+        if ($var_pend_emp > 0) {
+            sc_error_message("Ação Bloqueada: você possui $var_pend_emp ferramenta(s) em custódia nesta JIC. Devolva as ferramentas no terminal antes de finalizar o timesheet. Consulte o botão 'Custódia' na tela do cronômetro para ver a lista.");
+            sc_error_exit();
+        }
+    }
+
+    // MRO-UAT-FR03: Se for o ULTIMO mecanico ativo, a JIC vai para Inspecao
+    // (SUPSIG) — bloqueia por task_id inteira para pegar ferramentas orfas
+    // de mecanicos que ja sairam da task.
+    $var_sql_count6 = "SELECT COUNT(*) FROM mro_task_assignments
+                       WHERE task_id = (SELECT task_id FROM mro_task_assignments WHERE assignment_id = " . (int)$v_ass_id . ")
+                         AND status_code IN ('IN_PROGRESS', 'PAUSED', 'BLOCKED')
+                         AND assignment_id <> " . (int)$v_ass_id;
+    sc_lookup(rs_count6, $var_sql_count6);
+    $var_outros6 = (!empty({rs_count6})) ? (int){rs_count6[0][0]} : 0;
+
+    if ($var_outros6 == 0) {
+        $var_task_id_fr03 = "SELECT task_id FROM mro_task_assignments WHERE assignment_id = " . (int)$v_ass_id;
+        sc_lookup(rs_task_fr03, $var_task_id_fr03);
+        if (!empty({rs_task_fr03})) {
+            $var_tid_fr03 = (int){rs_task_fr03[0][0]};
+            sc_lookup(rs_tools_pend, "SELECT COUNT(*) FROM mro_tool_transactions
+                                      WHERE task_id = $var_tid_fr03 AND status = 'ACTIVE'");
+            $var_pendentes = (!empty({rs_tools_pend})) ? (int){rs_tools_pend[0][0]} : 0;
+            if ($var_pendentes > 0) {
+                sc_error_message("Ação Bloqueada: existem $var_pendentes ferramenta(s) em custódia na JIC sem devolução. A JIC não pode ir para Inspeção com ferramentas pendentes. Consulte o botão 'Custódia' na tela do cronômetro para ver a lista.");
+                sc_error_exit();
+            }
+        }
+    }
+
     $motivo_txt = '';
     $status_code = 'SUPSIG';
     $status_ts = 'COMPLETED';

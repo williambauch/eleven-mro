@@ -1,0 +1,207 @@
+<?php
+// ============================================================
+// BOTÃO: btn_ver_custodia
+// ============================================================
+// Tipo    : PHP (execução única)
+// Label   : Ver Ferramentas em Custódia
+// Ícone   : fas fa-toolbox
+// Display : fa
+// Formato : icon_text
+// Ação    : Exibe a lista de ferramentas em custódia vinculadas
+//           ao mecânico logado. Se for o último mecânico ativo
+//           da task, mostra também as de outros mecânicos
+//           (para saber o que está travando a conclusão da JIC).
+// App     : form_public_mro_task_assignments (cronômetro do mecânico)
+// ============================================================
+
+$var_assignment = (int){assignment_id};
+$var_emp_id     = (int)[usr_employee_id];
+
+if ($var_assignment <= 0 || $var_emp_id <= 0) {
+    echo "<div style='font-family: Segoe UI, sans-serif; padding: 16px; color: #842029; background: #f8d7da; border-left: 5px solid #dc3545; border-radius: 6px; font-size: 13px;'>Parâmetros de sessão inválidos para consultar a custódia.</div>";
+    return;
+}
+
+// 1. Busca a task do assignment atual (task_id, task_code e projeto)
+$var_sql_task = "SELECT t.task_id, t.task_code, p.project_name
+                 FROM mro_task_assignments a
+                 JOIN mro_tasks t ON t.task_id = a.task_id
+                 JOIN mro_projects p ON p.project_id = t.project_id
+                 WHERE a.assignment_id = $var_assignment";
+sc_lookup(rs_task_cus, $var_sql_task);
+
+if (empty({rs_task_cus})) {
+    echo "<div style='font-family: Segoe UI, sans-serif; padding: 16px; color: #842029; background: #f8d7da; border-left: 5px solid #dc3545; border-radius: 6px; font-size: 13px;'>Assignment não localizado.</div>";
+    return;
+}
+
+$var_task_id = (int){rs_task_cus[0][0]};
+$var_task_code_cus = {rs_task_cus[0][1]};
+$var_projeto_cus = {rs_task_cus[0][2]};
+
+// 2. Verifica se é o último mecânico ativo na task
+$var_sql_outros = "SELECT COUNT(*) FROM mro_task_assignments
+                   WHERE task_id = $var_task_id
+                     AND status_code IN ('IN_PROGRESS', 'PAUSED', 'BLOCKED')
+                     AND assignment_id <> $var_assignment";
+sc_lookup(rs_outros_cus, $var_sql_outros);
+$var_outros_cus = (!empty({rs_outros_cus})) ? (int){rs_outros_cus[0][0]} : 0;
+$var_ultimo = ($var_outros_cus == 0);
+
+// 3. Busca ferramentas em custódia (ACTIVE) do mecânico logado NA TASK ATUAL
+$var_sql_minhas = "SELECT tl.part_number, tl.description, tt.checkout_time
+                   FROM mro_tool_transactions tt
+                   JOIN mro_tools tl ON tl.tool_id = tt.tool_id
+                   WHERE tt.employee_id = $var_emp_id
+                     AND tt.task_id = $var_task_id
+                     AND tt.status = 'ACTIVE'
+                   ORDER BY tt.checkout_time";
+sc_lookup(rs_minhas, $var_sql_minhas);
+
+// 3.1 Busca ferramentas do mecânico em OUTRAS tasks (fora da JIC atual)
+//     Mostra também o projeto, pois o task_code se repete entre projetos.
+$var_sql_minhas_outras = "SELECT tl.part_number, tl.description, tt.checkout_time, t.task_code, p.project_name
+                          FROM mro_tool_transactions tt
+                          JOIN mro_tools tl ON tl.tool_id = tt.tool_id
+                          JOIN mro_tasks t ON t.task_id = tt.task_id
+                          JOIN mro_projects p ON p.project_id = t.project_id
+                          WHERE tt.employee_id = $var_emp_id
+                            AND tt.task_id <> $var_task_id
+                            AND tt.status = 'ACTIVE'
+                          ORDER BY tt.checkout_time";
+sc_lookup(rs_minhas_outras, $var_sql_minhas_outras);
+
+// 4. Só busca as de OUTROS mecânicos se este for o ÚLTIMO ativo —
+//    somente nesse caso elas travam a conclusão da JIC (Inspeção).
+$var_tem_outras = false;
+if ($var_ultimo) {
+    $var_sql_outras = "SELECT tl.part_number, tl.description, tt.checkout_time, e.full_name AS mecanico
+                       FROM mro_tool_transactions tt
+                       JOIN mro_tools tl ON tl.tool_id = tt.tool_id
+                       JOIN mro_employees e ON e.employee_id = tt.employee_id
+                       WHERE tt.task_id = $var_task_id
+                         AND tt.employee_id <> $var_emp_id
+                         AND tt.status = 'ACTIVE'
+                       ORDER BY tt.checkout_time";
+    sc_lookup(rs_outras, $var_sql_outras);
+    $var_tem_outras = !empty({rs_outras});
+}
+
+// 5. Monta o HTML responsivo
+$var_tem_minhas = !empty({rs_minhas});
+$var_tem_minhas_outras = !empty({rs_minhas_outras});
+$var_total = 0;
+
+echo "
+<div style='font-family: Segoe UI, sans-serif; max-width: 640px; margin: 10px auto;'>
+    <div style='background: #fff; border: 1px solid #dee2e6; border-left: 6px solid #0d6efd; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.08); overflow: hidden;'>
+        <div style='background: #0d6efd; color: #fff; padding: 12px 16px; font-size: 14px; font-weight: bold; display: flex; align-items: center; gap: 8px;'>
+            <i class='fa-solid fa-toolbox'></i> Ferramentas em Custódia
+        </div>
+        <div style='background: #e7f1ff; padding: 8px 16px; font-size: 12px; color: #0d6efd; border-bottom: 1px solid #cfe2ff; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;'>
+            <span><i class='fa-solid fa-hashtag'></i> JIC: <strong>$var_task_code_cus</strong></span>
+            <span><i class='fa-solid fa-plane'></i> Projeto: <strong>$var_projeto_cus</strong></span>
+        </div>
+        <div style='padding: 14px 16px;'>
+";
+
+if ($var_tem_minhas || $var_tem_minhas_outras || $var_tem_outras) {
+    if ($var_tem_minhas) {
+        echo "
+            <div style='font-size: 12px; font-weight: bold; color: #198754; text-transform: uppercase; margin-bottom: 6px;'>
+                <i class='fa-solid fa-user'></i> Suas ferramentas nesta JIC
+            </div>
+            <div style='margin-bottom: 14px;'>";
+
+        foreach ({rs_minhas} as $var_linha_minha) {
+            $var_pn    = $var_linha_minha[0];
+            $var_desc  = $var_linha_minha[1];
+            $var_data  = date('d/m/Y H:i', strtotime($var_linha_minha[2]));
+            $var_total++;
+            echo "
+            <div style='background: #f8f9fa; border: 1px solid #dee2e6; border-left: 4px solid #198754; border-radius: 6px; padding: 10px 12px; margin-bottom: 8px; display: flex; align-items: center; gap: 10px;'>
+                <i class='fa-solid fa-wrench' style='color: #198754; font-size: 16px;'></i>
+                <div style='flex: 1; min-width: 0;'>
+                    <div style='font-size: 13px; font-weight: bold; color: #212529;'>$var_pn</div>
+                    <div style='font-size: 12px; color: #6c757d; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;'>$var_desc</div>
+                </div>
+                <div style='font-size: 11px; color: #6c757d; text-align: right; white-space: nowrap;'>Retirada:<br>$var_data</div>
+            </div>";
+        }
+        echo "</div>";
+    }
+
+    if ($var_tem_outras) {
+        echo "
+            <div style='font-size: 12px; font-weight: bold; color: #dc3545; text-transform: uppercase; margin-bottom: 6px;'>
+                <i class='fa-solid fa-users'></i> Ferramentas de outros mecânicos (travam a conclusão)
+            </div>
+            <div style='margin-bottom: 14px;'>";
+
+        foreach ({rs_outras} as $var_linha_outra) {
+            $var_pn_o    = $var_linha_outra[0];
+            $var_desc_o  = $var_linha_outra[1];
+            $var_data_o  = date('d/m/Y H:i', strtotime($var_linha_outra[2]));
+            $var_mec_o   = $var_linha_outra[3];
+            $var_total++;
+            echo "
+            <div style='background: #fff5f5; border: 1px solid #f5c2c7; border-left: 4px solid #dc3545; border-radius: 6px; padding: 10px 12px; margin-bottom: 8px; display: flex; align-items: center; gap: 10px;'>
+                <i class='fa-solid fa-wrench' style='color: #dc3545; font-size: 16px;'></i>
+                <div style='flex: 1; min-width: 0;'>
+                    <div style='font-size: 13px; font-weight: bold; color: #212529;'>$var_pn_o</div>
+                    <div style='font-size: 12px; color: #6c757d; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;'>$var_desc_o</div>
+                </div>
+                <div style='font-size: 11px; color: #842029; text-align: right; white-space: nowrap;'><i class='fa-solid fa-user'></i> $var_mec_o<br>$var_data_o</div>
+            </div>";
+        }
+        echo "</div>";
+    }
+
+    if ($var_tem_minhas_outras) {
+        echo "
+            <div style='font-size: 12px; font-weight: bold; color: #6f42c1; text-transform: uppercase; margin-bottom: 6px;'>
+                <i class='fa-solid fa-box-open'></i> Suas ferramentas em OUTRAS JICs (informativo apenas)
+            </div>
+            <div style='margin-bottom: 14px;'>";
+
+        foreach ({rs_minhas_outras} as $var_linha_mo) {
+            $var_pn_mo   = $var_linha_mo[0];
+            $var_desc_mo = $var_linha_mo[1];
+            $var_data_mo = date('d/m/Y H:i', strtotime($var_linha_mo[2]));
+            $var_task_mo = $var_linha_mo[3];
+            $var_proj_mo = $var_linha_mo[4];
+            echo "
+            <div style='background: #f8f0ff; border: 1px solid #d0b3f0; border-left: 4px solid #6f42c1; border-radius: 6px; padding: 10px 12px; margin-bottom: 8px; display: flex; align-items: center; gap: 10px;'>
+                <i class='fa-solid fa-wrench' style='color: #6f42c1; font-size: 16px;'></i>
+                <div style='flex: 1; min-width: 0;'>
+                    <div style='font-size: 13px; font-weight: bold; color: #212529;'>$var_pn_mo</div>
+                    <div style='font-size: 12px; color: #6c757d; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;'>$var_desc_mo</div>
+                </div>
+                <div style='font-size: 11px; color: #6f42c1; text-align: right; white-space: nowrap;'>JIC: $var_task_mo<br><i class='fa-solid fa-plane'></i> $var_proj_mo<br>$var_data_mo</div>
+            </div>";
+        }
+        echo "</div>";
+        echo "
+            <div style='font-size: 11px; color: #6f42c1; background: #f3e8ff; border-radius: 4px; padding: 6px 10px; margin-bottom: 14px;'>
+                <i class='fa-solid fa-circle-info'></i> Essas ferramentas <strong>não bloqueiam</strong> o fechamento desta JIC — devolva-as quando encerrar a participação na JIC correspondente.
+            </div>";
+    }
+
+    echo "
+            <div style='font-size: 12px; color: #495057; background: #e7f1ff; border-radius: 4px; padding: 8px 10px;'>
+                <i class='fa-solid fa-circle-info'></i> Total: <strong>$var_total</strong> ferramenta(s) em custódia nesta JIC.
+                " . ($var_ultimo ? "Você é o <strong>último mecânico</strong> — a JIC só vai para Inspeção após a devolução de todas." : "Devolva suas ferramentas no terminal para poder encerrar a participação.") . "
+            </div>";
+} else {
+    echo "
+            <div style='text-align: center; padding: 20px 10px; color: #198754;'>
+                <i class='fa-solid fa-circle-check' style='font-size: 28px;'></i>
+                <div style='font-size: 14px; font-weight: bold; margin-top: 8px;'>Nenhuma ferramenta em custódia</div>
+                <div style='font-size: 12px; color: #6c757d; margin-top: 4px;'>Você não possui ferramentas pendentes de devolução.</div>
+            </div>";
+}
+
+echo "
+        </div>
+    </div>
+</div>";

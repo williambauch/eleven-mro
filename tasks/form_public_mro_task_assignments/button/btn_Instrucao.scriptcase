@@ -1,0 +1,79 @@
+<?php
+// ============================================================
+// BOTÃO: btn_Instrucao
+// ============================================================
+// Tipo    : PHP (execução única)
+// Label   : Instruções
+// Ícone   : fas fa-circle-question
+// Display : fa
+// Formato : icon_text
+// Ação    : Exibe as instruções de uso da tela do cronômetro
+//           (form_public_mro_task_assignments) e do controle de
+//           pausa/conclusão (control_pause_task), com as regras
+//           de negócio vigentes.
+// App     : form_public_mro_task_assignments (cronômetro do mecânico)
+//
+// TODO FUTURO: os motivos 3, 4 e 5 (impedimentos) hoje apenas marcam os
+// flags is_blocked_material / is_blocked_tool / is_blocked_labor e ficam
+// visíveis nas grids para as áreas de apoio. O AVISO AUTOMÁTICO às áreas
+// de apoio (notificação/e-mail) será implementado futuramente.
+// ============================================================
+
+echo "
+<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css'>
+<div style='font-family: Segoe UI, sans-serif; max-width: 680px; margin: 10px auto;'>
+    <div style='background: #fff; border: 1px solid #dee2e6; border-left: 6px solid #0d6efd; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.08); overflow: hidden;'>
+        <div style='background: #0d6efd; color: #fff; padding: 12px 16px; font-size: 14px; font-weight: bold; display: flex; align-items: center; gap: 8px;'>
+            <i class='fa-solid fa-circle-question'></i> Instruções — Cronômetro de Atribuição
+        </div>
+        <div style='padding: 14px 16px;'>
+
+            <div style='font-size: 12px; font-weight: bold; color: #0d6efd; text-transform: uppercase; margin-bottom: 6px;'>
+                <i class='fa-solid fa-stopwatch'></i> Tela do Cronômetro
+            </div>
+            <div style='font-size: 13px; color: #212529; line-height: 1.6; margin-bottom: 14px;'>
+                <ul style='margin: 0; padding-left: 20px;'>
+                    <li><strong>Play</strong> — inicia o apontamento de horas na atribuição (clock-in).</li>
+                    <li><strong>Pause</strong> — abre a tela de pausa/conclusão para escolher o motivo e encerrar ou interromper o apontamento.</li>
+                    <li><strong>Custódia</strong> — mostra as ferramentas em custódia vinculadas ao seu crachá (nesta JIC e em outras JICs).</li>
+                    <li><strong>Tarefa / Ver Anexo</strong> — atalhos para a tarefa e seus anexos.</li>
+                    <li>O relógio acumula o tempo apontado e compara com as <strong>horas previstas</strong> da atribuição (verde = OK, amarelo = próximo do limite, vermelho = excedido).</li>
+                    <li>Se a JIC estiver <strong>bloqueada por material</strong>, o Play fica oculto e a tela mostra o bloqueio.</li>
+                    <li>Não é possível ter <strong>dois apontamentos abertos</strong> ao mesmo tempo — o sistema bloqueia e mostra a tarefa em andamento.</li>
+                </ul>
+            </div>
+
+            <div style='font-size: 12px; font-weight: bold; color: #198754; text-transform: uppercase; margin-bottom: 6px;'>
+                <i class='fa-solid fa-pause'></i> Pausa / Conclusão (motivos)
+            </div>
+            <div style='font-size: 13px; color: #212529; line-height: 1.6; margin-bottom: 14px;'>
+                <ul style='margin: 0; padding-left: 20px;'>
+                    <li><strong>1. Pausa Curta (Almoço / Descanso)</strong> — apenas interrompe o relógio, mantendo a participação ativa. A JIC não muda de status.</li>
+                    <li><strong>2. Fim de Turno / Repasse</strong> — encerra sua participação na atribuição. Se for o <strong>último mecânico</strong>, a JIC vai para <strong>PENDING_PROG</strong> (Programação). Se houver outros mecânicos ativos, a JIC não muda — só a sua participação é encerrada.</li>
+                    <li><strong>3. Impedimento: Falta de Material</strong> — <i class='fa-solid fa-box-open' style='color:#dc3545; font-size:15px;'></i> marca a JIC como bloqueada por material (visível para a provedoria). A JIC <strong>não muda de status</strong>.</li>
+                    <li><strong>4. Impedimento: Aguardando Ferramenta / GSE</strong> — <i class='fa-solid fa-screwdriver-wrench' style='color:#6f42c1; font-size:15px;'></i> marca a JIC como bloqueada por ferramenta. A JIC <strong>não muda de status</strong>.</li>
+                    <li><strong>5. Impedimento: Inspetor / Engenharia</strong> — <i class='fa-solid fa-user-clock' style='color:#fd7e14; font-size:15px;'></i> marca a JIC como bloqueada por mão de obra. A JIC <strong>não muda de status</strong>.</li>
+                    <li><strong>6. Timesheet Finalizado / Tarefa Concluída</strong> — encerra o apontamento. Se for o último mecânico, a JIC vai para <strong>SUPSIG</strong> (Inspeção).</li>
+                </ul>
+            </div>
+
+            <div style='font-size: 12px; font-weight: bold; color: #dc3545; text-transform: uppercase; margin-bottom: 6px;'>
+                <i class='fa-solid fa-triangle-exclamation'></i> Regras importantes
+            </div>
+            <div style='font-size: 13px; color: #212529; line-height: 1.6; margin-bottom: 14px;'>
+                <ul style='margin: 0; padding-left: 20px;'>
+                    <li><strong>Ferramentas em custódia:</strong> nos motivos 2 (Repasse) e 6 (Conclusão), é obrigatório devolver as ferramentas desta JIC no terminal antes de encerrar. Ferramentas de outras JICs não bloqueiam a conclusão desta.</li>
+                    <li><strong>Passagem de serviço:</strong> obrigatória para os motivos 2, 3, 4 e 5. No motivo 2, só é exigida se você for o último mecânico ativo.</li>
+                    <li><strong>Último mecânico:</strong> se for o último ativo na JIC, o sistema verifica TODAS as ferramentas pendentes da JIC (inclusive de outros mecânicos) antes de enviar para Inspeção.</li>
+                    <li>Use o botão <strong>Custódia</strong> para ver quais ferramentas estão pendentes e com quem.</li>
+                    <li>Sempre <strong>pausar ou concluir</strong> antes de sair do posto — nunca feche o navegador com o relógio rodando.</li>
+                </ul>
+            </div>
+
+            <div style='font-size: 11px; color: #856404; background: #fff3cd; border-radius: 4px; padding: 8px 10px;'>
+                <i class='fa-solid fa-clock'></i> <strong>Desenvolvimento Futuro:</strong> o aviso automático às áreas de apoio (notificação) para os impedimentos de material, ferramenta e mão de obra será implementado futuramente. Hoje o bloqueio fica visível pelo ICONES nas consulta de tarefas.
+            </div>
+
+        </div>
+    </div>
+</div>";

@@ -73,6 +73,28 @@ $var_planned = !empty({rs_hh}) ? (float){rs_hh[0][0]} : 0;
 // Usa o mesmo calculo exato do timer (EPOCH) em vez de duration_minutes
 $var_total   = $segundos_totais / 3600;
 
+// =================================================================================
+// MRO-130: BUSCA PROJETO E MATRICULA DA AERONAVE
+// =================================================================================
+// O mecanico precisa saber em qual projeto e aeronave esta apontando.
+// Projeto vem de mro_projects (p6_proj_id) e matricula de mro_aircraft.
+$sql_proj = "SELECT p.p6_proj_id, p.project_name, a.registration
+             FROM mro_task_assignments ta
+             JOIN mro_projects p ON p.project_id = ta.project_id
+             LEFT JOIN mro_aircraft a ON a.aircraft_id = p.aircraft_id
+             WHERE ta.assignment_id = " . (int){assignment_id};
+sc_lookup(rs_proj, $sql_proj);
+
+$var_proj_codigo = !empty({rs_proj[0][0]}) ? {rs_proj[0][0]} : 'N/A';
+$var_proj_nome   = !empty({rs_proj[0][1]}) ? {rs_proj[0][1]} : '';
+$var_matricula   = !empty({rs_proj[0][2]}) ? {rs_proj[0][2]} : 'N/A';
+
+// MRO-130: Preenche o label fixo de projeto/matricula (campo criado na IDE).
+// CSS movido para o CSS customizado da app (nao usa box/background aqui).
+{label_projeto} = "<span class='mro-label-projeto'>Projeto: " . $var_proj_codigo . "</span>"
+                . " &nbsp;|&nbsp; "
+                . "<span class='mro-label-matricula'><i class='fas fa-plane'></i> Matricula: " . $var_matricula . "</span>";
+
 // Define cor e texto do HH inicial
 if ($var_planned > 0 && $var_total > $var_planned) {
     $var_hh_color = '#d93025';
