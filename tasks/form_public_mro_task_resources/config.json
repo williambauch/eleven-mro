@@ -33,69 +33,6 @@
       }
     },
     {
-      "nome": "budgeted_hours",
-      "tipo": "numeric",
-      "required": true,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "DECIMAL",
-        "html_largura": "10",
-        "tamanho_max": "10",
-        "val_minimo": "0",
-        "val_maximo": "0",
-        "decimais": "2",
-        "aceita_neg": "N",
-        "obrigatorio": true,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "consumed_hours",
-      "tipo": "varchar",
-      "required": false,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Pop-up"
-      },
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "TEXTO",
-        "html_largura": "10",
-        "tamanho_min": "0",
-        "tamanho_max": "20",
-        "obrigatorio": false,
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "created_at",
-      "tipo": "datetime",
-      "required": false,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "DATAHORA",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "dd/mm/aaaa;hh:ii:ss",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
       "nome": "project_id",
       "tipo": "int4",
       "required": false,
@@ -106,6 +43,29 @@
       "configuracao": {
         "html_tipo": "TEXT",
         "tipo_dado": "NUMEROEDT",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "task_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "NUMEROEDT",
+        "html_largura": "9",
+        "tamanho_max": "9",
+        "val_minimo": "0",
+        "val_maximo": "0",
         "aceita_neg": "N",
         "obrigatorio": false,
         "formato_data": "NADA",
@@ -140,8 +100,32 @@
       }
     },
     {
-      "nome": "task_id",
-      "tipo": "int4",
+      "nome": "budgeted_hours",
+      "tipo": "numeric",
+      "required": true,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "DECIMAL",
+        "html_largura": "10",
+        "tamanho_max": "10",
+        "val_minimo": "0",
+        "val_maximo": "0",
+        "decimais": "2",
+        "aceita_neg": "N",
+        "obrigatorio": true,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "created_at",
+      "tipo": "datetime",
       "required": false,
       "pk": false,
       "ajuda": {
@@ -149,14 +133,30 @@
       },
       "configuracao": {
         "html_tipo": "TEXT",
-        "tipo_dado": "NUMEROEDT",
-        "html_largura": "9",
-        "tamanho_max": "9",
-        "val_minimo": "0",
-        "val_maximo": "0",
+        "tipo_dado": "DATAHORA",
         "aceita_neg": "N",
         "obrigatorio": false,
-        "formato_data": "NADA",
+        "formato_data": "dd/mm/aaaa;hh:ii:ss",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "consumed_hours",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Pop-up"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "TEXTO",
+        "html_largura": "10",
+        "tamanho_min": "0",
+        "tamanho_max": "20",
+        "obrigatorio": false,
         "texto_transforma": "NADA",
         "read_only": false,
         "chave_primaria": false

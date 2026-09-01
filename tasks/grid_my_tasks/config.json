@@ -4,17 +4,75 @@
   "nome_tabela": "mro_task_assignments",
   "descricao": "Lista de Atribuições no Painel do Mecânico",
   "login": "admin",
-  "data_alteracao": "2026-08-26 14:17",
+  "data_alteracao": "2026-08-31 18:54",
   "nomeconexao": "conn_mro",
   "tabelas": [
     "mro_task_assignments"
   ],
   "variaveis_globais": [
+    "filtro_mecanico_projeto_id",
     "usr_employee_id"
   ],
   "campos": [
     {
-      "nome": "actual_qty_hours",
+      "nome": "assignment_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": true,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "NUMEROEDT",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "task_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "NUMEROEDT",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "resource_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "NUMEROEDT",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "planned_qty_hours",
       "tipo": "numeric",
       "required": false,
       "pk": false,
@@ -33,16 +91,16 @@
       }
     },
     {
-      "nome": "assignment_id",
-      "tipo": "int4",
+      "nome": "role_id",
+      "tipo": "varchar",
       "required": false,
-      "pk": true,
+      "pk": false,
       "ajuda": {
         "tipo": "Tippy"
       },
       "configuracao": {
         "html_tipo": "TEXT",
-        "tipo_dado": "NUMEROEDT",
+        "tipo_dado": "TEXTO",
         "aceita_neg": "N",
         "obrigatorio": false,
         "formato_data": "NADA",
@@ -90,7 +148,45 @@
       }
     },
     {
-      "nome": "employee_id",
+      "nome": "updated_at",
+      "tipo": "datetime",
+      "required": false,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "DATAHORA",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "dd/mm/aaaa;hh:ii:ss",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "updated_by",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "TEXTO",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "planned_skill_id",
       "tipo": "int4",
       "required": false,
       "pk": false,
@@ -128,38 +224,7 @@
       }
     },
     {
-      "nome": "hh_alert",
-      "tipo": "varchar",
-      "required": false,
-      "pk": false,
-      "configuracao": {
-        "tipo_dado": "TEXTO",
-        "obrigatorio": false,
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "planned_qty_hours",
-      "tipo": "numeric",
-      "required": false,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "VALOR",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "planned_skill_id",
+      "nome": "supervisor_id",
       "tipo": "int4",
       "required": false,
       "pk": false,
@@ -169,63 +234,6 @@
       "configuracao": {
         "html_tipo": "TEXT",
         "tipo_dado": "NUMEROEDT",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "project_id",
-      "tipo": "int4",
-      "required": false,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "NUMEROEDT",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "resource_id",
-      "tipo": "int4",
-      "required": false,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "NUMEROEDT",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "role_id",
-      "tipo": "varchar",
-      "required": false,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "TEXTO",
         "aceita_neg": "N",
         "obrigatorio": false,
         "formato_data": "NADA",
@@ -254,6 +262,44 @@
       }
     },
     {
+      "nome": "employee_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "NUMEROEDT",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "actual_qty_hours",
+      "tipo": "numeric",
+      "required": false,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "VALOR",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
       "nome": "status_code",
       "tipo": "varchar",
       "required": false,
@@ -273,7 +319,7 @@
       }
     },
     {
-      "nome": "supervisor_id",
+      "nome": "project_id",
       "tipo": "int4",
       "required": false,
       "pk": false,
@@ -283,6 +329,8 @@
       "configuracao": {
         "html_tipo": "TEXT",
         "tipo_dado": "NUMEROEDT",
+        "html_largura": "9",
+        "tamanho_max": "9",
         "aceita_neg": "N",
         "obrigatorio": false,
         "formato_data": "NADA",
@@ -292,58 +340,13 @@
       }
     },
     {
-      "nome": "task_id",
-      "tipo": "int4",
-      "required": false,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "NUMEROEDT",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "updated_at",
-      "tipo": "datetime",
-      "required": false,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "DATAHORA",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "dd/mm/aaaa;hh:ii:ss",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "updated_by",
+      "nome": "hh_alert",
       "tipo": "varchar",
       "required": false,
       "pk": false,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
       "configuracao": {
-        "html_tipo": "TEXT",
         "tipo_dado": "TEXTO",
-        "aceita_neg": "N",
         "obrigatorio": false,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
         "read_only": false,
         "chave_primaria": false
       }

@@ -16,81 +16,6 @@
   ],
   "campos": [
     {
-      "nome": "created_at",
-      "tipo": "datetime",
-      "required": false,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "DATAHORA",
-        "html_largura": "18",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "dd/mm/aaaa;hh:ii:ss",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "created_by",
-      "tipo": "varchar",
-      "required": false,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "TEXTO",
-        "html_largura": "50",
-        "tamanho_min": "0",
-        "tamanho_max": "100",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "dep_type",
-      "tipo": "varchar",
-      "required": true,
-      "pk": false,
-      "opcoes": {
-        "tipo": "select",
-        "origem": "manual",
-        "multipla": false,
-        "opcoes": [
-          {
-            "label": "Finish-to-Start",
-            "valor": "FS",
-            "padrao": false
-          },
-          {
-            "label": "Start-to-Start",
-            "valor": "SS",
-            "padrao": false
-          }
-        ]
-      },
-      "configuracao": {
-        "html_tipo": "SELECT",
-        "tipo_dado": "SELECT",
-        "aceita_neg": "N",
-        "obrigatorio": true,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
       "nome": "dependency_id",
       "tipo": "int4",
       "required": true,
@@ -111,30 +36,6 @@
         "texto_transforma": "NADA",
         "read_only": true,
         "chave_primaria": true
-      }
-    },
-    {
-      "nome": "lag_hours",
-      "tipo": "numeric",
-      "required": true,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "DECIMAL",
-        "html_largura": "10",
-        "tamanho_max": "10",
-        "val_minimo": "0",
-        "val_maximo": "0",
-        "decimais": "2",
-        "aceita_neg": "N",
-        "obrigatorio": true,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
       }
     },
     {
@@ -188,6 +89,105 @@
         "val_maximo": "0",
         "aceita_neg": "N",
         "obrigatorio": true,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "dep_type",
+      "tipo": "varchar",
+      "required": true,
+      "pk": false,
+      "opcoes": {
+        "tipo": "select",
+        "origem": "manual",
+        "multipla": false,
+        "opcoes": [
+          {
+            "label": "Finish-to-Start",
+            "valor": "FS",
+            "padrao": false
+          },
+          {
+            "label": "Start-to-Start",
+            "valor": "SS",
+            "padrao": false
+          }
+        ]
+      },
+      "configuracao": {
+        "html_tipo": "SELECT",
+        "tipo_dado": "SELECT",
+        "aceita_neg": "N",
+        "obrigatorio": true,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "lag_hours",
+      "tipo": "numeric",
+      "required": true,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "DECIMAL",
+        "html_largura": "10",
+        "tamanho_max": "10",
+        "val_minimo": "0",
+        "val_maximo": "0",
+        "decimais": "2",
+        "aceita_neg": "N",
+        "obrigatorio": true,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "created_at",
+      "tipo": "datetime",
+      "required": false,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "DATAHORA",
+        "html_largura": "18",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "dd/mm/aaaa;hh:ii:ss",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "created_by",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "TEXTO",
+        "html_largura": "50",
+        "tamanho_min": "0",
+        "tamanho_max": "100",
+        "aceita_neg": "N",
+        "obrigatorio": false,
         "formato_data": "NADA",
         "texto_transforma": "NADA",
         "read_only": false,

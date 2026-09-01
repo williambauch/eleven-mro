@@ -14,63 +14,6 @@
   ],
   "campos": [
     {
-      "nome": "action_date",
-      "tipo": "datetime",
-      "required": false,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "DATAHORA",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "dd/mm/aaaa;hh:ii:ss",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "action_taken",
-      "tipo": "varchar",
-      "required": false,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "TEXTO",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "batch_id",
-      "tipo": "int4",
-      "required": false,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "NUMEROEDT",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
       "nome": "log_id",
       "tipo": "int4",
       "required": false,
@@ -81,25 +24,6 @@
       "configuracao": {
         "html_tipo": "TEXT",
         "tipo_dado": "NUMEROEDT",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "remarks",
-      "tipo": "text",
-      "required": false,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "MULTITEXTO",
         "aceita_neg": "N",
         "obrigatorio": false,
         "formato_data": "NADA",
@@ -128,6 +52,25 @@
       }
     },
     {
+      "nome": "action_taken",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "TEXTO",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
       "nome": "user_login",
       "tipo": "varchar",
       "required": false,
@@ -138,6 +81,63 @@
       "configuracao": {
         "html_tipo": "TEXT",
         "tipo_dado": "TEXTO",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "action_date",
+      "tipo": "datetime",
+      "required": false,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "DATAHORA",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "dd/mm/aaaa;hh:ii:ss",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "remarks",
+      "tipo": "text",
+      "required": false,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "MULTITEXTO",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "batch_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "NUMEROEDT",
         "aceita_neg": "N",
         "obrigatorio": false,
         "formato_data": "NADA",

@@ -13,22 +13,26 @@
   ],
   "campos": [
     {
-      "nome": "quantity_required",
-      "tipo": "numeric",
+      "nome": "task_tool_id",
+      "tipo": "int4",
       "required": true,
-      "pk": false,
+      "pk": true,
       "ajuda": {
         "tipo": "Tippy"
       },
       "configuracao": {
         "html_tipo": "TEXT",
-        "tipo_dado": "VALOR",
+        "tipo_dado": "NUMEROEDT",
+        "html_largura": "9",
+        "tamanho_max": "9",
+        "val_minimo": "0",
+        "val_maximo": "0",
         "aceita_neg": "N",
         "obrigatorio": true,
         "formato_data": "NADA",
         "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
+        "read_only": true,
+        "chave_primaria": true
       }
     },
     {
@@ -57,29 +61,6 @@
       }
     },
     {
-      "nome": "task_tool_id",
-      "tipo": "int4",
-      "required": true,
-      "pk": true,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "NUMEROEDT",
-        "html_largura": "9",
-        "tamanho_max": "9",
-        "val_minimo": "0",
-        "val_maximo": "0",
-        "aceita_neg": "N",
-        "obrigatorio": true,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": true,
-        "chave_primaria": true
-      }
-    },
-    {
       "nome": "tool_id",
       "tipo": "int4",
       "required": true,
@@ -100,6 +81,25 @@
         "tamanho_max": "9",
         "val_minimo": "0",
         "val_maximo": "0",
+        "aceita_neg": "N",
+        "obrigatorio": true,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "quantity_required",
+      "tipo": "numeric",
+      "required": true,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "VALOR",
         "aceita_neg": "N",
         "obrigatorio": true,
         "formato_data": "NADA",

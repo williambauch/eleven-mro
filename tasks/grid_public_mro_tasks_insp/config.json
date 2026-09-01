@@ -20,7 +20,210 @@
   ],
   "campos": [
     {
+      "nome": "task_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "NUMEROEDT",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "task_code",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "TEXTO",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "task_desc",
+      "tipo": "text",
+      "required": false,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "MULTITEXTO",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "jic_number",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "TEXTO",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "requires_rii",
+      "tipo": "bool",
+      "required": false,
+      "pk": false,
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "TEXTO",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "is_rii",
+      "tipo": "bool",
+      "required": false,
+      "pk": false,
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "TEXTO",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "status_code",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "TEXTO",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "skill_code",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "TEXTO",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "project_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "NUMEROEDT",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "project_code",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "TEXTO",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
       "nome": "actual_end",
+      "tipo": "datetime",
+      "required": false,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "DATAHORA",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "dd/mm/aaaa;hh:ii:ss",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "updated_at",
       "tipo": "datetime",
       "required": false,
       "pk": false,
@@ -71,209 +274,6 @@
         "aceita_neg": "N",
         "obrigatorio": false,
         "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "is_rii",
-      "tipo": "bool",
-      "required": false,
-      "pk": false,
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "TEXTO",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "jic_number",
-      "tipo": "varchar",
-      "required": false,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "TEXTO",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "project_code",
-      "tipo": "varchar",
-      "required": false,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "TEXTO",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "project_id",
-      "tipo": "int4",
-      "required": false,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "NUMEROEDT",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "requires_rii",
-      "tipo": "bool",
-      "required": false,
-      "pk": false,
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "TEXTO",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "skill_code",
-      "tipo": "varchar",
-      "required": false,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "TEXTO",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "status_code",
-      "tipo": "varchar",
-      "required": false,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "TEXTO",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "task_code",
-      "tipo": "varchar",
-      "required": false,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "TEXTO",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "task_desc",
-      "tipo": "text",
-      "required": false,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "MULTITEXTO",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "task_id",
-      "tipo": "int4",
-      "required": false,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "NUMEROEDT",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "updated_at",
-      "tipo": "datetime",
-      "required": false,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "DATAHORA",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "dd/mm/aaaa;hh:ii:ss",
         "texto_transforma": "NADA",
         "read_only": false,
         "chave_primaria": false

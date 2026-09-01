@@ -9,25 +9,6 @@
   ],
   "campos": [
     {
-      "nome": "qtde",
-      "tipo": "int8",
-      "required": false,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "NUMEROEDT",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
       "nome": "status_code",
       "tipo": "varchar",
       "required": false,
@@ -38,6 +19,25 @@
       "configuracao": {
         "html_tipo": "TEXT",
         "tipo_dado": "TEXTO",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "qtde",
+      "tipo": "int8",
+      "required": false,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "NUMEROEDT",
         "aceita_neg": "N",
         "obrigatorio": false,
         "formato_data": "NADA",

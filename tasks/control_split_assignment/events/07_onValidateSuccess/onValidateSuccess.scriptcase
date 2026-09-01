@@ -115,9 +115,14 @@ foreach ($var_ajustes as $var_aid => $var_valor_fixo) {
 }
 
 // 5. Cria NOVO assignment ja ATRIBUIDO (ASSIGNED) ao mecanico escolhido
+// MRO-UAT-FR03: preenche employee_id (mecanico em maos) alem de
+// executed_by_employee_id — garante que o assignment nao nasce orfao
+// (evita o gap do FR-03, onde assignment IN_PROGRESS com employee_id NULL
+// nao encontrava as ferramentas em custodia do mecanico).
 $var_sql_ins = "INSERT INTO mro_task_assignments
                 (task_id, skill_id, planned_skill_id, project_id, status_code,
                  planned_qty_hours, supervisor_id, executed_by_employee_id,
+                 employee_id,
                  resource_id, role_id, created_by, created_at)
                 VALUES
                 (" . $var_task_id . ",
@@ -127,6 +132,7 @@ $var_sql_ins = "INSERT INTO mro_task_assignments
                  'ASSIGNED',
                  " . number_format($var_novo_valor, 4, '.', '') . ",
                  " . $var_supervisor_id . ",
+                 " . (int){employee_info} . ",
                  " . (int){employee_info} . ",
                  " . $var_resource_id . ",
                  '" . $var_role_id . "',

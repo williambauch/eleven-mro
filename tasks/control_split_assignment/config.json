@@ -2,9 +2,9 @@
   "nome": "control_split_assignment",
   "tipo": "Control",
   "nome_tabela": "control_split_assignment",
-  "descricao": "Divide uma atribuicao redistribuindo proporcionalmente o total de horas da task entre as atribuicoes existentes e a nova (MRO-130)",
+  "descricao": "Divide uma atribuicao redistribuindo proporcionalmente o total de horas da task entre as atribuicoes existentes e a nova",
   "login": "william",
-  "data_alteracao": "2026-08-14 16:31",
+  "data_alteracao": "2026-08-31 14:46",
   "nomeconexao": "conn_mro",
   "variaveis_globais": [
     "glo_assignment_id_split",
@@ -14,7 +14,7 @@
   ],
   "campos": [
     {
-      "nome": "assignment_id",
+      "nome": "task_info",
       "tipo": "varchar",
       "required": false,
       "pk": false,
@@ -22,11 +22,20 @@
         "tipo": "Pop-up"
       },
       "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "TEXTO",
-        "html_largura": "10",
-        "tamanho_min": "0",
-        "tamanho_max": "20",
+        "tipo_dado": "FORM_LABEL",
+        "obrigatorio": false,
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "skill_info",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false,
+      "configuracao": {
+        "tipo_dado": "FORM_LABEL",
         "obrigatorio": false,
         "texto_transforma": "NADA",
         "read_only": false,
@@ -40,13 +49,13 @@
       "pk": false,
       "ajuda": {
         "tipo": "Tippy",
-        "texto": "Funcionário que receberá a nova atribuição (assignment) com metade das horas"
+        "texto": "Lista funcionário que tem a skill para essa atribuição."
       },
       "opcoes": {
         "tipo": "select",
         "origem": "lookup",
         "multipla": false,
-        "sql": "SELECT e.employee_id, e.full_name\nFROM mro_employees e\nJOIN mro_skills s ON s.skill_code = '{skill_info}'\nWHERE e.is_active = TRUE\n  AND s.skill_id::text = ANY(string_to_array(e.skill_id, ','))\nORDER BY e.full_name"
+        "sql": "SELECT e.employee_id, e.full_name FROM mro_employees e JOIN mro_skills s ON s.skill_code = '{skill_info}' WHERE e.is_active = TRUE AND s.skill_id::text = ANY(string_to_array(e.skill_id, ', ')) ORDER BY e.full_name"
       },
       "configuracao": {
         "html_tipo": "SELECT",
@@ -66,67 +75,6 @@
         "tipo": "Tippy",
         "texto": "Horas atuais da atribuição (assignment) antes da divisão"
       },
-      "configuracao": {
-        "tipo_dado": "FORM_LABEL",
-        "obrigatorio": false,
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "hours_split",
-      "tipo": "varchar",
-      "required": false,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy",
-        "texto": "Novas horas para cada atribuição (assignment) após a divisão (metade do original)"
-      },
-      "configuracao": {
-        "tipo_dado": "FORM_LABEL",
-        "obrigatorio": false,
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "info",
-      "tipo": "varchar",
-      "required": false,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy",
-        "texto": "Resumo completo do que acontece no split: origens, usos, totais e nova distribuicao"
-      },
-      "configuracao": {
-        "tipo_dado": "FORM_LABEL",
-        "obrigatorio": false,
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "supervisor_info",
-      "tipo": "varchar",
-      "required": false,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy",
-        "texto": "Supervisor responsável pela nova atribuição (assignment) criada pelo split"
-      },
-      "configuracao": {
-        "tipo_dado": "FORM_LABEL",
-        "obrigatorio": false,
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "skill_info",
-      "tipo": "varchar",
-      "required": false,
-      "pk": false,
       "configuracao": {
         "tipo_dado": "FORM_LABEL",
         "obrigatorio": false,
@@ -156,12 +104,71 @@
       }
     },
     {
-      "nome": "task_info",
+      "nome": "hours_split",
       "tipo": "varchar",
       "required": false,
       "pk": false,
+      "ajuda": {
+        "tipo": "Tippy",
+        "texto": "Novas horas para cada atribuição (assignment) após a divisão (metade do original)"
+      },
       "configuracao": {
         "tipo_dado": "FORM_LABEL",
+        "obrigatorio": false,
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "assignment_id",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Pop-up"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "TEXTO",
+        "html_largura": "10",
+        "tamanho_min": "0",
+        "tamanho_max": "20",
+        "obrigatorio": false,
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "supervisor_info",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy",
+        "texto": "Supervisor responsável pela nova atribuição (assignment) criada pelo split"
+      },
+      "configuracao": {
+        "tipo_dado": "FORM_LABEL",
+        "obrigatorio": false,
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "info",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Pop-up"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "FORM_LABEL",
+        "html_largura": "10",
+        "tamanho_min": "0",
+        "tamanho_max": "20",
         "obrigatorio": false,
         "texto_transforma": "NADA",
         "read_only": false,

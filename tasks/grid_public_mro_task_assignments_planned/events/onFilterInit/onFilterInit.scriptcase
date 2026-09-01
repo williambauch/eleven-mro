@@ -1,0 +1,6 @@
+<?php
+
+$temProjeto =  (int)[filtro_supervisor_projeto_id];
+if($temProjeto > 0) {
+	{project_id} =  [filtro_supervisor_projeto_id];
+}

@@ -2,9 +2,9 @@
 
 Ajustes Reunião : Provedoria & Estoque 27/08 - Leonel e Paulo e Clodoaldo e Gabriela (Rodrigo)
 
+------
 Leonel, vou continuar essa implementação com esse fluxo. OK?
 
-Ajustes Reunião : Provedoria e Estoque 27/08 - Leonel e Paulo e Clodoaldo e Gabriela (Rodrigo)
 
 01) ### Fluxo de Liberação de Tarefas
 
@@ -12,8 +12,10 @@ Ficou definido o seguinte fluxo para a liberação de tarefas, envolvendo Planej
 
 A. PROGRAMADOR 
 
+REGRA: é o PROGRAMADOR que libera as JICS, planejador só cria os projetos, sobe as JICS e 1° emprenho de ferrmantas e materiais
+
 * O planejador clica em Liberar.
-* A tarefa é identificada com a origem PLANEJADOR.
+* A tarefa é identificada com a origem PLANEJADOR (PROGRAMADOR).
 
 B. Verificação de material bloqueante
 
@@ -26,13 +28,13 @@ Se SIM:
 * Não são criados assignments (atribuição mecânicos) neste momento.
 * Enquanto estiver com status PENDING_PROVIDER, a Provedoria poderá:
 
-  * Liberar parcialmente (RELEASE PARCIAL): cria os assignments (atribuição mecânicos) de todas SKILLs.
+  * Liberar parcialmente (RELEASE PARCIAL (CRIAR STATUS)): cria os assignments (atribuição mecânicos) de todas SKILLs DA JIC.
   * Liberar totalmente (RELEASED): altera o status para RELEASED e cria os assignments (atribuição mecânicos) de todas SKILLs.
 
 Se NÃO:
 
 * O status da tarefa passa diretamente para RELEASED.
-* O sistema cria os assignments automaticamente e todas SKILLs.
+* O sistema cria os assignments automaticamente e todas SKILLs DA JIC.
 
 
 OBS: solicitação do Danilo referente a **acender o ícone da caixa vermelha "Blocked Material"** QUANDO HOUVER RELEASE PARCIAL

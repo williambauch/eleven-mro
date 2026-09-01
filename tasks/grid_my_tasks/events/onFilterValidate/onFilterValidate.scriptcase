@@ -1,0 +1,8 @@
+<?php
+
+if (empty({project_id}) || (int){project_id} == 0) {
+    // Limpa a variavel global de projeto
+	[filtro_mecanico_projeto_id] = "";
+} else {
+	[filtro_mecanico_projeto_id] = {project_id};
+}

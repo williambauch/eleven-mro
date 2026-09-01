@@ -1,0 +1,22 @@
+<?php
+// ============================================================
+// BOTÃO DE BARRA DE AÇÃO: btn_atribuir
+// ============================================================
+// Tipo    : LINK
+// Label   : Atribuir
+// Ícone   : fas fa-link
+// Display : btn
+// Formato : icon_text
+// Estados:
+//   - state1 | label="Atribuir" | fas fa-link | visual=yellow
+//
+// ── LIGAÇÃO ──────────────────────────────────────────
+// App destino: form_public_mro_task_assignments_planned (F)
+// Abertura    : Modal
+// Modal       : 900 x 800
+// Parâmetros:
+//   - [Campo] assignment_id → assignment_id
+//   - [Campo] assignment_id → glo_assignment_id_assign
+//   - [Global] usr_employee_id
+//   - [Global] usr_login
+// ============================================================

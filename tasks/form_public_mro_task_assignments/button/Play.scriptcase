@@ -65,7 +65,10 @@ if (!empty({rs_novo_id[0][0]})) {
 [glo_timesheet_id] = $id_ts; // Guarda na sessão
 
 // Atualiza o status do Assignment para Em Andamento
-sc_exec_sql("UPDATE mro_task_assignments SET status_code = 'IN_PROGRESS' WHERE assignment_id = " . (int){assignment_id});
+// MRO-UAT-FR03: preenche employee_id (mecanico em maos) junto com o status
+// — sem isso o assignment fica IN_PROGRESS com employee_id NULL e o bloqueio
+// de fechamento (FR-03) nao encontra as ferramentas em custodia do mecanico.
+sc_exec_sql("UPDATE mro_task_assignments SET status_code = 'IN_PROGRESS', employee_id = $emp_id WHERE assignment_id = " . (int){assignment_id});
 
 // Grava auditoria com o evento correto (START ou RESUME)
 sc_exec_sql("INSERT INTO mro_assignment_events (assignment_id, timesheet_id, event_type, performed_by_id) 

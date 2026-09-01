@@ -13,6 +13,102 @@
   ],
   "campos": [
     {
+      "nome": "task_material_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": true,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "NUMEROEDT",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "task_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "NUMEROEDT",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "material_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "NUMEROEDT",
+        "html_largura": "9",
+        "tamanho_max": "9",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "planned_qty",
+      "tipo": "numeric",
+      "required": false,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "VALOR",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "is_applied",
+      "tipo": "bool",
+      "required": false,
+      "pk": false,
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "TEXTO",
+        "html_largura": "1",
+        "tamanho_max": "1",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
       "nome": "applied_qty",
       "tipo": "numeric",
       "required": false,
@@ -70,25 +166,6 @@
       }
     },
     {
-      "nome": "committed_total_cost",
-      "tipo": "numeric",
-      "required": false,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "VALOR",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
       "nome": "committed_unit_cost",
       "tipo": "numeric",
       "required": false,
@@ -108,26 +185,8 @@
       }
     },
     {
-      "nome": "is_applied",
-      "tipo": "bool",
-      "required": false,
-      "pk": false,
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "TEXTO",
-        "html_largura": "1",
-        "tamanho_max": "1",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "material_id",
-      "tipo": "int4",
+      "nome": "committed_total_cost",
+      "tipo": "numeric",
       "required": false,
       "pk": false,
       "ajuda": {
@@ -135,9 +194,7 @@
       },
       "configuracao": {
         "html_tipo": "TEXT",
-        "tipo_dado": "NUMEROEDT",
-        "html_largura": "9",
-        "tamanho_max": "9",
+        "tipo_dado": "VALOR",
         "aceita_neg": "N",
         "obrigatorio": false,
         "formato_data": "NADA",
@@ -168,7 +225,7 @@
       }
     },
     {
-      "nome": "planned_qty",
+      "nome": "unit_cost",
       "tipo": "numeric",
       "required": false,
       "pk": false,
@@ -178,44 +235,6 @@
       "configuracao": {
         "html_tipo": "TEXT",
         "tipo_dado": "VALOR",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "task_id",
-      "tipo": "int4",
-      "required": false,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "NUMEROEDT",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "task_material_id",
-      "tipo": "int4",
-      "required": false,
-      "pk": true,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "NUMEROEDT",
         "aceita_neg": "N",
         "obrigatorio": false,
         "formato_data": "NADA",
@@ -226,25 +245,6 @@
     },
     {
       "nome": "total_cost",
-      "tipo": "numeric",
-      "required": false,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "VALOR",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "unit_cost",
       "tipo": "numeric",
       "required": false,
       "pk": false,

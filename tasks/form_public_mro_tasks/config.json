@@ -18,7 +18,174 @@
   ],
   "campos": [
     {
-      "nome": "access_panel",
+      "nome": "task_id",
+      "tipo": "int4",
+      "required": true,
+      "pk": true,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "NUMEROEDT",
+        "aceita_neg": "N",
+        "obrigatorio": true,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": true,
+        "chave_primaria": true
+      }
+    },
+    {
+      "nome": "wbs_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "opcoes": {
+        "tipo": "select",
+        "origem": "lookup",
+        "multipla": false,
+        "sql": "SELECT wbs_id, concat(wbs_code, ' - ', wbs_name, ' - ', wbs_level) FROM \"public\".mro_wbs order by sort_order"
+      },
+      "configuracao": {
+        "html_tipo": "SELECT",
+        "tipo_dado": "SELECT",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "task_code",
+      "tipo": "varchar",
+      "required": true,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "TEXTO",
+        "html_largura": "50",
+        "tamanho_min": "0",
+        "tamanho_max": "50",
+        "aceita_neg": "N",
+        "obrigatorio": true,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "task_name",
+      "tipo": "text",
+      "required": true,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "MULTITEXTO",
+        "aceita_neg": "N",
+        "obrigatorio": true,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "task_type",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "opcoes": {
+        "tipo": "select",
+        "origem": "lookup",
+        "multipla": false,
+        "sql": "SELECT type_code, type_name FROM \"public\".mro_task_types ORDER BY type_name"
+      },
+      "configuracao": {
+        "html_tipo": "SELECT",
+        "tipo_dado": "SELECT",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "is_nrc",
+      "tipo": "bool",
+      "required": false,
+      "pk": false,
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "TEXTO",
+        "html_largura": "1",
+        "tamanho_min": "0",
+        "tamanho_max": "1",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": true,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "parent_task_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "TEXTO",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "root_task_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "NUMEROEDT",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "ata_chapter",
       "tipo": "varchar",
       "required": false,
       "pk": false,
@@ -37,7 +204,7 @@
       }
     },
     {
-      "nome": "access_panels",
+      "nome": "jic_number",
       "tipo": "varchar",
       "required": false,
       "pk": false,
@@ -50,6 +217,163 @@
         "aceita_neg": "N",
         "obrigatorio": false,
         "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "zone",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "TEXTO",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "requires_rii",
+      "tipo": "bool",
+      "required": false,
+      "pk": false,
+      "opcoes": {
+        "tipo": "checkbox",
+        "origem": "manual",
+        "multipla": false,
+        "opcoes": [
+          {
+            "label": "1",
+            "valor": "1",
+            "padrao": false
+          }
+        ]
+      },
+      "configuracao": {
+        "html_tipo": "CHECKBOX",
+        "tipo_dado": "CHECKBOX",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "is_ojt_eligible",
+      "tipo": "bool",
+      "required": false,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "TEXTO",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "status_code",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "opcoes": {
+        "tipo": "select",
+        "origem": "lookup",
+        "multipla": false,
+        "sql": "SELECT status_code, label_ptbr FROM \"public\".mro_sys_status WHERE module='TASKS' ORDER BY display_order"
+      },
+      "configuracao": {
+        "html_tipo": "SELECT",
+        "tipo_dado": "SELECT",
+        "html_largura": "30",
+        "tamanho_min": "0",
+        "tamanho_max": "30",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "target_start",
+      "tipo": "datetime",
+      "required": false,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy",
+        "texto": "Data prevista de início da tarefa (planejamento).\n\nComo é preenchido:\n• Automaticamente (Gantt): ao arrastar a barra da tarefa na timeline do Gantt de Fases, esta data é atualizada conforme a nova posição da barra.\n• Manualmente: a equipe de Planejamento pode informar/corrigir a data diretamente neste campo.\n\nOnde é usado:\n• Gantt de Fases: define a posição da barra na timeline (prioridade 1 — junto com target_end, é o que o planejador enxerga e edita; se vazio, o Gantt usa actual_start e depois baseline_start como fallback).\n\nValidação\n• Quando a fase está definida, target_start/target_end são obrigatórios para o planejamento no Gantt."
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "DATA",
+        "html_largura": "18",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "dd/mm/aaaa",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "target_end",
+      "tipo": "datetime",
+      "required": false,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy",
+        "texto": "Data prevista de conclusão da tarefa (planejamento).\n\nComo é preenchido:\n• Automaticamente (Gantt): ao arrastar a barra da tarefa no Gantt de Fases, esta data é atualizada conforme o novo fim da barra.\n• Manualmente: a equipe de Planejamento pode informar/corrigir a data diretamente neste campo.\n\nOnde é usado:\n• Gantt de Fases: define o fim da barra na timeline (prioridade 1 — junto com target_start, é o que o planejador enxerga e edita; se vazio, o Gantt usa actual_end e depois baseline_end como fallback).\n\nValidação\n• Quando a fase está definida, target_start/target_end são obrigatórios para o planejamento no Gantt"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "DATA",
+        "html_largura": "18",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "dd/mm/aaaa",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "actual_start",
+      "tipo": "datetime",
+      "required": false,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy",
+        "texto": "Data e hora em que a tarefa realmente começou a ser executada no hangar (início real da mão de obra).\n\nComo é preenchido:\n- Automaticamente: é gravado quando o primeiro mecânico inicia a tarefa (primeiro"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "DATAHORA",
+        "html_largura": "18",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "dd/mm/aaaa;hh:ii:ss",
         "texto_transforma": "NADA",
         "read_only": false,
         "chave_primaria": false
@@ -77,13 +401,228 @@
       }
     },
     {
-      "nome": "actual_start",
+      "nome": "created_at",
       "tipo": "datetime",
       "required": false,
       "pk": false,
       "ajuda": {
-        "tipo": "Tippy",
-        "texto": "Data e hora em que a tarefa realmente começou a ser executada no hangar (início real da mão de obra).\n\nComo é preenchido:\n- Automaticamente: é gravado quando o primeiro mecânico inicia a tarefa (primeiro"
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "DATAHORA",
+        "html_largura": "18",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "dd/mm/aaaa;hh:ii:ss",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "updated_at",
+      "tipo": "datetime",
+      "required": false,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "DATAHORA",
+        "html_largura": "18",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "dd/mm/aaaa;hh:ii:ss",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "target_duration_hours",
+      "tipo": "float8",
+      "required": false,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "VALOR",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "skill_code",
+      "tipo": "varchar",
+      "required": true,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "opcoes": {
+        "tipo": "select",
+        "origem": "lookup",
+        "multipla": false,
+        "sql": "SELECT skill_code, description FROM \"public\".mro_skills ORDER BY description"
+      },
+      "configuracao": {
+        "html_tipo": "SELECT",
+        "tipo_dado": "SELECT",
+        "aceita_neg": "N",
+        "obrigatorio": true,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "is_blocked_material",
+      "tipo": "bool",
+      "required": false,
+      "pk": false,
+      "opcoes": {
+        "tipo": "checkbox",
+        "origem": "manual",
+        "multipla": false,
+        "opcoes": [
+          {
+            "label": "1",
+            "valor": "1",
+            "padrao": false
+          }
+        ]
+      },
+      "configuracao": {
+        "html_tipo": "CHECKBOX",
+        "tipo_dado": "CHECKBOX",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "is_blocked_tool",
+      "tipo": "bool",
+      "required": false,
+      "pk": false,
+      "opcoes": {
+        "tipo": "checkbox",
+        "origem": "manual",
+        "multipla": false,
+        "opcoes": [
+          {
+            "label": "1",
+            "valor": "1",
+            "padrao": false
+          }
+        ]
+      },
+      "configuracao": {
+        "html_tipo": "CHECKBOX",
+        "tipo_dado": "CHECKBOX",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "is_blocked_labor",
+      "tipo": "bool",
+      "required": false,
+      "pk": false,
+      "opcoes": {
+        "tipo": "checkbox",
+        "origem": "manual",
+        "multipla": false,
+        "opcoes": [
+          {
+            "label": "1",
+            "valor": "1",
+            "padrao": false
+          }
+        ]
+      },
+      "configuracao": {
+        "html_tipo": "CHECKBOX",
+        "tipo_dado": "CHECKBOX",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "is_critical_path",
+      "tipo": "bool",
+      "required": false,
+      "pk": false,
+      "opcoes": {
+        "tipo": "checkbox",
+        "origem": "manual",
+        "multipla": false,
+        "opcoes": [
+          {
+            "label": "1",
+            "valor": "1",
+            "padrao": false
+          }
+        ]
+      },
+      "configuracao": {
+        "html_tipo": "CHECKBOX",
+        "tipo_dado": "CHECKBOX",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "baseline_start",
+      "tipo": "datetime",
+      "required": false,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "DATAHORA",
+        "html_largura": "18",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "dd/mm/aaaa;hh:ii:ss",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "baseline_end",
+      "tipo": "datetime",
+      "required": false,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
       },
       "configuracao": {
         "html_tipo": "TEXT",
@@ -117,19 +656,7 @@
       }
     },
     {
-      "nome": "anexos",
-      "tipo": "varchar",
-      "required": false,
-      "pk": false,
-      "configuracao": {
-        "tipo_dado": "EMBUTIDA",
-        "obrigatorio": false,
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "ata_chapter",
+      "nome": "access_panel",
       "tipo": "varchar",
       "required": false,
       "pk": false,
@@ -148,72 +675,7 @@
       }
     },
     {
-      "nome": "baseline_end",
-      "tipo": "datetime",
-      "required": false,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "DATAHORA",
-        "html_largura": "18",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "dd/mm/aaaa;hh:ii:ss",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "baseline_phase_code",
-      "tipo": "varchar",
-      "required": false,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
-      "opcoes": {
-        "tipo": "select",
-        "origem": "lookup",
-        "multipla": false,
-        "sql": "SELECT phase_code, phase_name FROM \"public\".mro_project_phases ORDER BY sort_order"
-      },
-      "configuracao": {
-        "html_tipo": "SELECT",
-        "tipo_dado": "SELECT",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "baseline_start",
-      "tipo": "datetime",
-      "required": false,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "DATAHORA",
-        "html_largura": "18",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "dd/mm/aaaa;hh:ii:ss",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "budgeted_labor_hours",
+      "nome": "estimated_hours",
       "tipo": "numeric",
       "required": false,
       "pk": false,
@@ -222,7 +684,12 @@
       },
       "configuracao": {
         "html_tipo": "TEXT",
-        "tipo_dado": "VALOR",
+        "tipo_dado": "DECIMAL",
+        "html_largura": "5",
+        "tamanho_max": "5",
+        "val_minimo": "0",
+        "val_maximo": "0",
+        "decimais": "2",
         "aceita_neg": "N",
         "obrigatorio": false,
         "formato_data": "NADA",
@@ -232,7 +699,7 @@
       }
     },
     {
-      "nome": "corrective_action",
+      "nome": "instruction_text",
       "tipo": "text",
       "required": false,
       "pk": false,
@@ -251,8 +718,8 @@
       }
     },
     {
-      "nome": "created_at",
-      "tipo": "datetime",
+      "nome": "safety_warnings",
+      "tipo": "text",
       "required": false,
       "pk": false,
       "ajuda": {
@@ -260,30 +727,7 @@
       },
       "configuracao": {
         "html_tipo": "TEXT",
-        "tipo_dado": "DATAHORA",
-        "html_largura": "18",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "dd/mm/aaaa;hh:ii:ss",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "created_by",
-      "tipo": "varchar",
-      "required": false,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "TEXTO",
-        "html_largura": "50",
-        "tamanho_min": "0",
-        "tamanho_max": "100",
+        "tipo_dado": "MULTITEXTO",
         "aceita_neg": "N",
         "obrigatorio": false,
         "formato_data": "NADA",
@@ -293,7 +737,7 @@
       }
     },
     {
-      "nome": "deferment_reason",
+      "nome": "tools_required",
       "tipo": "text",
       "required": false,
       "pk": false,
@@ -340,25 +784,83 @@
       }
     },
     {
-      "nome": "detalhe_predecessoras",
-      "tipo": "varchar",
+      "nome": "deferment_reason",
+      "tipo": "text",
       "required": false,
       "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
       "configuracao": {
-        "tipo_dado": "EMBUTIDA",
+        "html_tipo": "TEXT",
+        "tipo_dado": "MULTITEXTO",
+        "aceita_neg": "N",
         "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
         "read_only": false,
         "chave_primaria": false
       }
     },
     {
-      "nome": "detalhe_sucessoras",
+      "nome": "nrc_status",
       "tipo": "varchar",
       "required": false,
       "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
       "configuracao": {
-        "tipo_dado": "EMBUTIDA",
+        "html_tipo": "TEXT",
+        "tipo_dado": "TEXTO",
+        "aceita_neg": "N",
         "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "project_id",
+      "tipo": "int4",
+      "required": true,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "opcoes": {
+        "tipo": "select",
+        "origem": "lookup",
+        "multipla": false,
+        "sql": "SELECT project_id, p6_proj_id FROM \"public\".mro_projects ORDER BY project_name"
+      },
+      "configuracao": {
+        "html_tipo": "SELECT",
+        "tipo_dado": "SELECT",
+        "aceita_neg": "N",
+        "obrigatorio": true,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "origin_document",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "TEXTO",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
         "read_only": false,
         "chave_primaria": false
       }
@@ -383,7 +885,26 @@
       }
     },
     {
-      "nome": "estimated_hours",
+      "nome": "mpd_reference",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "TEXTO",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "budgeted_labor_hours",
       "tipo": "numeric",
       "required": false,
       "pk": false,
@@ -392,12 +913,265 @@
       },
       "configuracao": {
         "html_tipo": "TEXT",
-        "tipo_dado": "DECIMAL",
-        "html_largura": "5",
-        "tamanho_max": "5",
-        "val_minimo": "0",
-        "val_maximo": "0",
-        "decimais": "2",
+        "tipo_dado": "VALOR",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "p6_actual_hours",
+      "tipo": "numeric",
+      "required": false,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "VALOR",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "resource_list",
+      "tipo": "text",
+      "required": false,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "MULTITEXTO",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "phase_code",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "opcoes": {
+        "tipo": "select",
+        "origem": "lookup",
+        "multipla": false,
+        "sql": "SELECT phase_code, phase_name FROM \"public\".mro_project_phases ORDER BY sort_order"
+      },
+      "configuracao": {
+        "html_tipo": "SELECT",
+        "tipo_dado": "SELECT",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "baseline_phase_code",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "opcoes": {
+        "tipo": "select",
+        "origem": "lookup",
+        "multipla": false,
+        "sql": "SELECT phase_code, phase_name FROM \"public\".mro_project_phases ORDER BY sort_order"
+      },
+      "configuracao": {
+        "html_tipo": "SELECT",
+        "tipo_dado": "SELECT",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "frequency",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "TEXTO",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "access_panels",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "TEXTO",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "zone_area",
+      "tipo": "text",
+      "required": false,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "MULTITEXTO",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "is_rii",
+      "tipo": "bool",
+      "required": false,
+      "pk": false,
+      "opcoes": {
+        "tipo": "checkbox",
+        "origem": "manual",
+        "multipla": false,
+        "opcoes": [
+          {
+            "label": "1",
+            "valor": "1",
+            "padrao": false
+          }
+        ]
+      },
+      "configuracao": {
+        "html_tipo": "CHECKBOX",
+        "tipo_dado": "CHECKBOX",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "is_oa",
+      "tipo": "bool",
+      "required": false,
+      "pk": false,
+      "opcoes": {
+        "tipo": "checkbox",
+        "origem": "manual",
+        "multipla": false,
+        "opcoes": [
+          {
+            "label": "Yes",
+            "valor": "t",
+            "padrao": false
+          }
+        ]
+      },
+      "configuracao": {
+        "html_tipo": "CHECKBOX",
+        "tipo_dado": "CHECKBOX",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "oa_hours",
+      "tipo": "numeric",
+      "required": false,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "VALOR",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "oa_material_cost",
+      "tipo": "numeric",
+      "required": false,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "VALOR",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "oa_batch_id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "NUMEROEDT",
         "aceita_neg": "N",
         "obrigatorio": false,
         "formato_data": "NADA",
@@ -431,7 +1205,7 @@
       }
     },
     {
-      "nome": "frequency",
+      "nome": "created_by",
       "tipo": "varchar",
       "required": false,
       "pk": false,
@@ -441,6 +1215,9 @@
       "configuracao": {
         "html_tipo": "TEXT",
         "tipo_dado": "TEXTO",
+        "html_largura": "50",
+        "tamanho_min": "0",
+        "tamanho_max": "100",
         "aceita_neg": "N",
         "obrigatorio": false,
         "formato_data": "NADA",
@@ -450,7 +1227,7 @@
       }
     },
     {
-      "nome": "instruction_text",
+      "nome": "corrective_action",
       "tipo": "text",
       "required": false,
       "pk": false,
@@ -469,35 +1246,7 @@
       }
     },
     {
-      "nome": "is_blocked_labor",
-      "tipo": "bool",
-      "required": false,
-      "pk": false,
-      "opcoes": {
-        "tipo": "checkbox",
-        "origem": "manual",
-        "multipla": false,
-        "opcoes": [
-          {
-            "label": "1",
-            "valor": "1",
-            "padrao": false
-          }
-        ]
-      },
-      "configuracao": {
-        "html_tipo": "CHECKBOX",
-        "tipo_dado": "CHECKBOX",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "is_blocked_material",
+      "nome": "is_milestone",
       "tipo": "bool",
       "required": false,
       "pk": false,
@@ -561,176 +1310,6 @@
       }
     },
     {
-      "nome": "is_blocked_predecessor_label",
-      "tipo": "varchar",
-      "required": false,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Pop-up"
-      },
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "TEXTO",
-        "html_largura": "10",
-        "tamanho_min": "0",
-        "tamanho_max": "20",
-        "obrigatorio": false,
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "is_blocked_tool",
-      "tipo": "bool",
-      "required": false,
-      "pk": false,
-      "opcoes": {
-        "tipo": "checkbox",
-        "origem": "manual",
-        "multipla": false,
-        "opcoes": [
-          {
-            "label": "1",
-            "valor": "1",
-            "padrao": false
-          }
-        ]
-      },
-      "configuracao": {
-        "html_tipo": "CHECKBOX",
-        "tipo_dado": "CHECKBOX",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "is_critical_path",
-      "tipo": "bool",
-      "required": false,
-      "pk": false,
-      "opcoes": {
-        "tipo": "checkbox",
-        "origem": "manual",
-        "multipla": false,
-        "opcoes": [
-          {
-            "label": "1",
-            "valor": "1",
-            "padrao": false
-          }
-        ]
-      },
-      "configuracao": {
-        "html_tipo": "CHECKBOX",
-        "tipo_dado": "CHECKBOX",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "is_milestone",
-      "tipo": "bool",
-      "required": false,
-      "pk": false,
-      "opcoes": {
-        "tipo": "checkbox",
-        "origem": "manual",
-        "multipla": false,
-        "opcoes": [
-          {
-            "label": "1",
-            "valor": "1",
-            "padrao": false
-          }
-        ]
-      },
-      "configuracao": {
-        "html_tipo": "CHECKBOX",
-        "tipo_dado": "CHECKBOX",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "is_nrc",
-      "tipo": "bool",
-      "required": false,
-      "pk": false,
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "TEXTO",
-        "html_largura": "1",
-        "tamanho_min": "0",
-        "tamanho_max": "1",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": true,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "is_oa",
-      "tipo": "bool",
-      "required": false,
-      "pk": false,
-      "opcoes": {
-        "tipo": "checkbox",
-        "origem": "manual",
-        "multipla": false,
-        "opcoes": [
-          {
-            "label": "Yes",
-            "valor": "t",
-            "padrao": false
-          }
-        ]
-      },
-      "configuracao": {
-        "html_tipo": "CHECKBOX",
-        "tipo_dado": "CHECKBOX",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "is_ojt_eligible",
-      "tipo": "bool",
-      "required": false,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "TEXTO",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
       "nome": "is_predecessor_manual",
       "tipo": "bool",
       "required": false,
@@ -750,217 +1329,6 @@
       "configuracao": {
         "html_tipo": "CHECKBOX",
         "tipo_dado": "CHECKBOX",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "is_rii",
-      "tipo": "bool",
-      "required": false,
-      "pk": false,
-      "opcoes": {
-        "tipo": "checkbox",
-        "origem": "manual",
-        "multipla": false,
-        "opcoes": [
-          {
-            "label": "1",
-            "valor": "1",
-            "padrao": false
-          }
-        ]
-      },
-      "configuracao": {
-        "html_tipo": "CHECKBOX",
-        "tipo_dado": "CHECKBOX",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "jic_number",
-      "tipo": "varchar",
-      "required": false,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "TEXTO",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "material",
-      "tipo": "varchar",
-      "required": false,
-      "pk": false,
-      "configuracao": {
-        "tipo_dado": "EMBUTIDA",
-        "obrigatorio": false,
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "mpd_reference",
-      "tipo": "varchar",
-      "required": false,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "TEXTO",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "nrc_status",
-      "tipo": "varchar",
-      "required": false,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "TEXTO",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "oa_batch_id",
-      "tipo": "int4",
-      "required": false,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "NUMEROEDT",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "oa_hours",
-      "tipo": "numeric",
-      "required": false,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "VALOR",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "oa_material_cost",
-      "tipo": "numeric",
-      "required": false,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "VALOR",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "origin_document",
-      "tipo": "varchar",
-      "required": false,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "TEXTO",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "p6_actual_hours",
-      "tipo": "numeric",
-      "required": false,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "VALOR",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "parent_task_id",
-      "tipo": "int4",
-      "required": false,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "TEXTO",
         "aceita_neg": "N",
         "obrigatorio": false,
         "formato_data": "NADA",
@@ -995,98 +1363,69 @@
       }
     },
     {
-      "nome": "phase_code",
+      "nome": "anexos",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false,
+      "configuracao": {
+        "tipo_dado": "EMBUTIDA",
+        "obrigatorio": false,
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "detalhe_predecessoras",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false,
+      "configuracao": {
+        "tipo_dado": "EMBUTIDA",
+        "obrigatorio": false,
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "detalhe_sucessoras",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false,
+      "configuracao": {
+        "tipo_dado": "EMBUTIDA",
+        "obrigatorio": false,
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "is_blocked_predecessor_label",
       "tipo": "varchar",
       "required": false,
       "pk": false,
       "ajuda": {
-        "tipo": "Tippy"
-      },
-      "opcoes": {
-        "tipo": "select",
-        "origem": "lookup",
-        "multipla": false,
-        "sql": "SELECT phase_code, phase_name FROM \"public\".mro_project_phases ORDER BY sort_order"
-      },
-      "configuracao": {
-        "html_tipo": "SELECT",
-        "tipo_dado": "SELECT",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "project_id",
-      "tipo": "int4",
-      "required": true,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
-      "opcoes": {
-        "tipo": "select",
-        "origem": "lookup",
-        "multipla": false,
-        "sql": "SELECT project_id, p6_proj_id FROM \"public\".mro_projects ORDER BY project_name"
-      },
-      "configuracao": {
-        "html_tipo": "SELECT",
-        "tipo_dado": "SELECT",
-        "aceita_neg": "N",
-        "obrigatorio": true,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "requires_rii",
-      "tipo": "bool",
-      "required": false,
-      "pk": false,
-      "opcoes": {
-        "tipo": "checkbox",
-        "origem": "manual",
-        "multipla": false,
-        "opcoes": [
-          {
-            "label": "1",
-            "valor": "1",
-            "padrao": false
-          }
-        ]
-      },
-      "configuracao": {
-        "html_tipo": "CHECKBOX",
-        "tipo_dado": "CHECKBOX",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "resource_list",
-      "tipo": "text",
-      "required": false,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy"
+        "tipo": "Pop-up"
       },
       "configuracao": {
         "html_tipo": "TEXT",
-        "tipo_dado": "MULTITEXTO",
-        "aceita_neg": "N",
+        "tipo_dado": "TEXTO",
+        "html_largura": "10",
+        "tamanho_min": "0",
+        "tamanho_max": "20",
         "obrigatorio": false,
-        "formato_data": "NADA",
         "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "material",
+      "tipo": "varchar",
+      "required": false,
+      "pk": false,
+      "configuracao": {
+        "tipo_dado": "EMBUTIDA",
+        "obrigatorio": false,
         "read_only": false,
         "chave_primaria": false
       }
@@ -1099,25 +1438,6 @@
       "configuracao": {
         "tipo_dado": "EMBUTIDA",
         "obrigatorio": false,
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "root_task_id",
-      "tipo": "int4",
-      "required": false,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "NUMEROEDT",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
         "read_only": false,
         "chave_primaria": false
       }
@@ -1143,224 +1463,6 @@
       }
     },
     {
-      "nome": "safety_warnings",
-      "tipo": "text",
-      "required": false,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "MULTITEXTO",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "skill_code",
-      "tipo": "varchar",
-      "required": true,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
-      "opcoes": {
-        "tipo": "select",
-        "origem": "lookup",
-        "multipla": false,
-        "sql": "SELECT skill_code, description FROM \"public\".mro_skills ORDER BY description"
-      },
-      "configuracao": {
-        "html_tipo": "SELECT",
-        "tipo_dado": "SELECT",
-        "aceita_neg": "N",
-        "obrigatorio": true,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "status_code",
-      "tipo": "varchar",
-      "required": false,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
-      "opcoes": {
-        "tipo": "select",
-        "origem": "lookup",
-        "multipla": false,
-        "sql": "SELECT status_code, label_ptbr FROM \"public\".mro_sys_status WHERE module='TASKS' ORDER BY display_order"
-      },
-      "configuracao": {
-        "html_tipo": "SELECT",
-        "tipo_dado": "SELECT",
-        "html_largura": "30",
-        "tamanho_min": "0",
-        "tamanho_max": "30",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "target_duration_hours",
-      "tipo": "float8",
-      "required": false,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "VALOR",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "target_end",
-      "tipo": "datetime",
-      "required": false,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy",
-        "texto": "Data prevista de conclusão da tarefa (planejamento).\n\nComo é preenchido:\n• Automaticamente (Gantt): ao arrastar a barra da tarefa no Gantt de Fases, esta data é atualizada conforme o novo fim da barra.\n• Manualmente: a equipe de Planejamento pode informar/corrigir a data diretamente neste campo.\n\nOnde é usado:\n• Gantt de Fases: define o fim da barra na timeline (prioridade 1 — junto com target_start, é o que o planejador enxerga e edita; se vazio, o Gantt usa actual_end e depois baseline_end como fallback).\n\nValidação\n• Quando a fase está definida, target_start/target_end são obrigatórios para o planejamento no Gantt"
-      },
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "DATA",
-        "html_largura": "18",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "dd/mm/aaaa",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "target_start",
-      "tipo": "datetime",
-      "required": false,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy",
-        "texto": "Data prevista de início da tarefa (planejamento).\n\nComo é preenchido:\n• Automaticamente (Gantt): ao arrastar a barra da tarefa na timeline do Gantt de Fases, esta data é atualizada conforme a nova posição da barra.\n• Manualmente: a equipe de Planejamento pode informar/corrigir a data diretamente neste campo.\n\nOnde é usado:\n• Gantt de Fases: define a posição da barra na timeline (prioridade 1 — junto com target_end, é o que o planejador enxerga e edita; se vazio, o Gantt usa actual_start e depois baseline_start como fallback).\n\nValidação\n• Quando a fase está definida, target_start/target_end são obrigatórios para o planejamento no Gantt."
-      },
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "DATA",
-        "html_largura": "18",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "dd/mm/aaaa",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "task_code",
-      "tipo": "varchar",
-      "required": true,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "TEXTO",
-        "html_largura": "50",
-        "tamanho_min": "0",
-        "tamanho_max": "50",
-        "aceita_neg": "N",
-        "obrigatorio": true,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "task_id",
-      "tipo": "int4",
-      "required": true,
-      "pk": true,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "NUMEROEDT",
-        "aceita_neg": "N",
-        "obrigatorio": true,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": true,
-        "chave_primaria": true
-      }
-    },
-    {
-      "nome": "task_name",
-      "tipo": "text",
-      "required": true,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "MULTITEXTO",
-        "aceita_neg": "N",
-        "obrigatorio": true,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "task_type",
-      "tipo": "varchar",
-      "required": false,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
-      "opcoes": {
-        "tipo": "select",
-        "origem": "lookup",
-        "multipla": false,
-        "sql": "SELECT type_code, type_name FROM \"public\".mro_task_types ORDER BY type_name"
-      },
-      "configuracao": {
-        "html_tipo": "SELECT",
-        "tipo_dado": "SELECT",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
       "nome": "tools",
       "tipo": "varchar",
       "required": false,
@@ -1368,108 +1470,6 @@
       "configuracao": {
         "tipo_dado": "EMBUTIDA",
         "obrigatorio": false,
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "tools_required",
-      "tipo": "text",
-      "required": false,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "MULTITEXTO",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "updated_at",
-      "tipo": "datetime",
-      "required": false,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "DATAHORA",
-        "html_largura": "18",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "dd/mm/aaaa;hh:ii:ss",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "wbs_id",
-      "tipo": "int4",
-      "required": false,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
-      "opcoes": {
-        "tipo": "select",
-        "origem": "lookup",
-        "multipla": false,
-        "sql": "SELECT wbs_id, concat(wbs_code, ' - ', wbs_name, ' - ', wbs_level) FROM \"public\".mro_wbs order by sort_order"
-      },
-      "configuracao": {
-        "html_tipo": "SELECT",
-        "tipo_dado": "SELECT",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "zone",
-      "tipo": "varchar",
-      "required": false,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "TEXTO",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "zone_area",
-      "tipo": "text",
-      "required": false,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "MULTITEXTO",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
         "read_only": false,
         "chave_primaria": false
       }

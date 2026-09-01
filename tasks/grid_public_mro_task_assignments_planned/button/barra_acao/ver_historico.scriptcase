@@ -1,0 +1,19 @@
+<?php
+// ============================================================
+// BOTÃO DE BARRA DE AÇÃO: ver_historico
+// ============================================================
+// Tipo    : LINK (não exibido)
+// Label   : Ver Histórico
+// Ícone   : fas fa-clock-rotate-left
+// Display : btn
+// Formato : icon_text
+// Estados:
+//   - state1 | label="Ver Histórico" | fas fa-clock-rotate-left | cor=#3b62ff | visual=blue
+//
+// ── LIGAÇÃO ──────────────────────────────────────────
+// App destino: blank_mro_timeline (B)
+// Abertura    : Modal
+// Modal       : 900 x 600
+// Parâmetros:
+//   - [Campo] assignment_id → glo_assignment_id
+// ============================================================

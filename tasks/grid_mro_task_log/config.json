@@ -18,7 +18,45 @@
   ],
   "campos": [
     {
-      "nome": "action_name",
+      "nome": "id",
+      "tipo": "int4",
+      "required": false,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "NUMEROEDT",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "inserted_date",
+      "tipo": "datetime",
+      "required": false,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "DATAHORA",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "dd/mm/aaaa;hh:ii:ss",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "username_login",
       "tipo": "varchar",
       "required": false,
       "pk": false,
@@ -72,71 +110,19 @@
       }
     },
     {
-      "nome": "description",
-      "tipo": "text",
-      "required": false,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "MULTITEXTO",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "description_formated",
+      "nome": "action_name",
       "tipo": "varchar",
       "required": false,
       "pk": false,
-      "configuracao": {
-        "tipo_dado": "MULTITEXTO",
-        "html_largura": "10",
-        "obrigatorio": false,
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "id",
-      "tipo": "int4",
-      "required": false,
-      "pk": false,
       "ajuda": {
         "tipo": "Tippy"
       },
       "configuracao": {
         "html_tipo": "TEXT",
-        "tipo_dado": "NUMEROEDT",
+        "tipo_dado": "TEXTO",
         "aceita_neg": "N",
         "obrigatorio": false,
         "formato_data": "NADA",
-        "texto_transforma": "NADA",
-        "read_only": false,
-        "chave_primaria": false
-      }
-    },
-    {
-      "nome": "inserted_date",
-      "tipo": "datetime",
-      "required": false,
-      "pk": false,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
-      "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "DATAHORA",
-        "aceita_neg": "N",
-        "obrigatorio": false,
-        "formato_data": "dd/mm/aaaa;hh:ii:ss",
         "texto_transforma": "NADA",
         "read_only": false,
         "chave_primaria": false
@@ -153,6 +139,25 @@
       "configuracao": {
         "html_tipo": "TEXT",
         "tipo_dado": "TEXTO",
+        "aceita_neg": "N",
+        "obrigatorio": false,
+        "formato_data": "NADA",
+        "texto_transforma": "NADA",
+        "read_only": false,
+        "chave_primaria": false
+      }
+    },
+    {
+      "nome": "description",
+      "tipo": "text",
+      "required": false,
+      "pk": false,
+      "ajuda": {
+        "tipo": "Tippy"
+      },
+      "configuracao": {
+        "html_tipo": "TEXT",
+        "tipo_dado": "MULTITEXTO",
         "aceita_neg": "N",
         "obrigatorio": false,
         "formato_data": "NADA",
@@ -181,19 +186,14 @@
       }
     },
     {
-      "nome": "username_login",
+      "nome": "description_formated",
       "tipo": "varchar",
       "required": false,
       "pk": false,
-      "ajuda": {
-        "tipo": "Tippy"
-      },
       "configuracao": {
-        "html_tipo": "TEXT",
-        "tipo_dado": "TEXTO",
-        "aceita_neg": "N",
+        "tipo_dado": "MULTITEXTO",
+        "html_largura": "10",
         "obrigatorio": false,
-        "formato_data": "NADA",
         "texto_transforma": "NADA",
         "read_only": false,
         "chave_primaria": false

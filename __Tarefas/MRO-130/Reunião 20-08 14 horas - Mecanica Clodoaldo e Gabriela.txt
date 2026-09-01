@@ -1,4 +1,4 @@
-Ajustes Reunião : Mecânica 20/08 - Leonel, Clodoaldo, Gabriela, Danilo
+Ajustes Reunião : Mecânica 20/08 - Leonel, Clodoaldo, Gabriela, Danilo (MRO-130)
 
 Oi, Leonel! Seguem as anotações que consegui fazer da reunião. Por gentileza, complemente ou me ajude a deixar mais claros os pontos levantados.
 
@@ -10,11 +10,11 @@ Oi, Leonel! Seguem as anotações que consegui fazer da reunião. Por gentileza,
 
 4) O Split, em vez de dividir o tempo ao meio, deve considerar o total atualmente alocado e redistribuí-lo entre as atribuições existentes e a nova atribuição criada.
 Exemplo: hoje, ao fazer um Split de 0,88, o sistema gera 0,44 / 0,44. Se for realizado um novo Split sobre uma das atribuições de 0,44, o resultado atual seria 0,44 / 0,22 / 0,22, deixando a distribuição desproporcional. O esperado é que o total de 0,88 seja redistribuído igualmente entre as três atribuições, resultando em aproximadamente 0,29 / 0,29 / 0,29.
-
+btn_split_assignment
 -----
 *IMPORTANTE*: Foi questionada a necessidade de ter um tempo individual para cada mecânico ou se seria suficiente considerar apenas um tempo total para toda a tarefa, somando o tempo de todos que trabalharam nela. É necessário avaliar o impacto desse tipo de controle nos demais setores, como o de qualidade.
 -----
-
+/////////////// feito até aqui ///////////////
 No CLOCK-OUT:
 * "Pausa Curta" está OK.
 * "Fim de turno / Repasse": as atribuições repassadas devem voltar para o supervisor redistribuir (NÃO DEVEM IR PARA PROGRAMAÇÃO COMO É HOJE).
